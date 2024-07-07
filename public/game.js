@@ -11,6 +11,7 @@ const RIGHT = "RIGHT";
 
 let BlockBody = [];
 let blockType = 0;
+let initialGroundBlock = [];
 let users = [];
 
 /********* Transfer *************/
@@ -54,6 +55,7 @@ const initData = (newUser) => {
 const init = (user) => {
   BlockBody = user.BlockBody;
   blockType = user.blockType;
+  initialGroundBlock = user.groundBlock;
 };
 
 /*********  ACTION  *************/
@@ -72,6 +74,7 @@ const getInputData = () => {
 const draw = () => {
   gameBoard.innerHTML = "";
   drawBlock(gameBoard, BlockBody, blockType);
+  drawGroundBlock(gameBoard, initialGroundBlock);
 };
 
 const handleSet = (event) => {
@@ -99,6 +102,16 @@ const drawBlock = (gameBoard, BlockBody, blockType) => {
     dominoElement.style.gridRowStart = segment.y;
     dominoElement.style.gridColumnStart = segment.x;
     dominoElement.classList.add(`domino-${blockType + 1}`);
+    gameBoard.appendChild(dominoElement);
+  }
+};
+
+const drawGroundBlock = (gameBoard, initialGroundBlock) => {
+  for (segment of initialGroundBlock) {
+    const dominoElement = document.createElement("div");
+    dominoElement.style.gridRowStart = segment.y;
+    dominoElement.style.gridColumnStart = segment.x;
+    dominoElement.classList.add("init-block");
     gameBoard.appendChild(dominoElement);
   }
 };

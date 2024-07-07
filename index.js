@@ -4,9 +4,6 @@ const F_PORT = 3300;
 const express = require("express");
 const server = express();
 const cors = require("cors");
-const { domainToASCII } = require("url");
-const { dir } = require("console");
-
 const server_http = require("http").Server(server);
 
 const socketIO = require("socket.io")(server_http, {
@@ -122,6 +119,27 @@ const DOMINOS = [
   DOMINO_7,
 ];
 
+const initialGroundBlock = [
+  { y: BOARD_SIZE_HEIGHT, x: 0 },
+  { y: BOARD_SIZE_HEIGHT, x: 1 },
+  { y: BOARD_SIZE_HEIGHT, x: 2 },
+  { y: BOARD_SIZE_HEIGHT, x: 3 },
+  { y: BOARD_SIZE_HEIGHT, x: 4 },
+  { y: BOARD_SIZE_HEIGHT, x: 5 },
+  { y: BOARD_SIZE_HEIGHT, x: 7 },
+  { y: BOARD_SIZE_HEIGHT, x: 8 },
+  { y: BOARD_SIZE_HEIGHT, x: 9 },
+  { y: BOARD_SIZE_HEIGHT, x: 10 },
+  { y: BOARD_SIZE_HEIGHT - 1, x: 0 },
+  { y: BOARD_SIZE_HEIGHT - 1, x: 1 },
+  { y: BOARD_SIZE_HEIGHT - 1, x: 2 },
+  { y: BOARD_SIZE_HEIGHT - 1, x: 3 },
+  { y: BOARD_SIZE_HEIGHT - 1, x: 4 },
+  { y: BOARD_SIZE_HEIGHT - 1, x: 5 },
+  { y: BOARD_SIZE_HEIGHT - 1, x: 7 },
+  { y: BOARD_SIZE_HEIGHT - 1, x: 8 },
+];
+
 const mainLoop = () => {
   for (item of users) {
     updateUser(item);
@@ -156,6 +174,7 @@ const createUser = (data) => {
     actionTime: FRAME,
     BlockBody: tmp.body,
     blockType: tmp.num,
+    groundBlock: initialGroundBlock,
     isNeccessaryBlock: false,
   };
 };
