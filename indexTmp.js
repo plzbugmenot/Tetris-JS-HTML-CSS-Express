@@ -120,27 +120,44 @@ const DOMINOS = [
 ];
 
 const initialGroundBlock = [
-  { y: BOARD_SIZE_HEIGHT, x: 0 },
-  { y: BOARD_SIZE_HEIGHT, x: 1 },
-  { y: BOARD_SIZE_HEIGHT, x: 2 },
-  { y: BOARD_SIZE_HEIGHT, x: 3 },
-  { y: BOARD_SIZE_HEIGHT, x: 4 },
-  { y: BOARD_SIZE_HEIGHT, x: 5 },
-  { y: BOARD_SIZE_HEIGHT, x: 7 },
-  { y: BOARD_SIZE_HEIGHT, x: 8 },
-  { y: BOARD_SIZE_HEIGHT, x: 9 },
-  { y: BOARD_SIZE_HEIGHT, x: 10 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 0 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 1 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 2 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 3 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 4 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 5 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 7 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 8 },
+  // { y: BOARD_SIZE_HEIGHT, x: 0 },
+  // { y: BOARD_SIZE_HEIGHT, x: 1 },
+  // { y: BOARD_SIZE_HEIGHT, x: 2 },
+  // { y: BOARD_SIZE_HEIGHT, x: 3 },
+  // { y: BOARD_SIZE_HEIGHT, x: 4 },
+  // { y: BOARD_SIZE_HEIGHT, x: 5 },
+  // { y: BOARD_SIZE_HEIGHT, x: 7 },
+  // { y: BOARD_SIZE_HEIGHT, x: 8 },
+  // { y: BOARD_SIZE_HEIGHT, x: 9 },
+  // { y: BOARD_SIZE_HEIGHT, x: 10 },
+  // { y: BOARD_SIZE_HEIGHT - 1, x: 0 },
+  // { y: BOARD_SIZE_HEIGHT - 1, x: 1 },
+  // { y: BOARD_SIZE_HEIGHT - 1, x: 2 },
+  // { y: BOARD_SIZE_HEIGHT - 1, x: 3 },
+  // { y: BOARD_SIZE_HEIGHT - 1, x: 4 },
+  // { y: BOARD_SIZE_HEIGHT - 1, x: 5 },
+  // { y: BOARD_SIZE_HEIGHT - 1, x: 7 },
+  // { y: BOARD_SIZE_HEIGHT - 1, x: 8 },
 ];
 
-const mainLoop = () => {};
+const mainLoop = () => {
+  for (item of users) {
+    updateUser(item);
+    // if (item.initialGroundBlock.length > 0)
+    console.log("item.groundBlock==>", item.groundBlock);
+  }
+  users = users.map((item) =>
+    item.isNeccessaryBlock
+      ? {
+          ...item,
+          groundBlock: addGroundBlock(item),
+          BlockBody: getRandomDomino().body,
+          blockType: getRandomDomino().num,
+          isNeccessaryBlock: false,
+        }
+      : item
+  );
+};
 
 let broadcast = setInterval(() => {
   mainLoop();
@@ -150,9 +167,29 @@ let broadcast = setInterval(() => {
   socketIO.emit("stateOfUsers", data);
 }, FRAME);
 
-const generateRandomDomino = () => {
-  let tmpNum = Math.floor(Date.now() * Math.random()) % DOMINOS.length;
-  return { body: DOMINOS[tmpNum], num: tmpNum };
+const updateUser = (item) => {
+  // Bug is here=============================>
+  if (item.actionTime === 0) {
+    if (availableBlockMove_Y(item.BlockBody, item.groundBlock)) {
+      updateBlockBody(item.BlockBody);
+
+      item.actionTime = FRAME;
+    }
+    // if (!availableBlockMove_Y(item.BlockBody, item.groundBlock)) {
+    else {
+      console.log("block arrive ground, new block need...  in update user");
+      item.isNeccessaryBlock = true;
+      for (domi of item.BlockBody) item.groundBlock.push(domi);
+      item.BlockBody = [];
+    }
+  } else item.actionTime -= 1;
+};
+
+const addGroundBlock = (item) => {
+  let tmp = item.groundBlock;
+  for (domi of item.BlockBody) tmp.push(domi);
+  return tmp;
+  // return { ...item, initialGroundBlock: tmp };
 };
 
 const getRandomDomino = () => {
@@ -174,6 +211,66 @@ const createUser = (data) => {
   };
 };
 
+const updateBlockBody = (tmpBlockBody) => {
+  for (domi of tmpBlockBody) {
+    domi.y += 1;
+  }
+};
+
+const moveBlock = (tmpBlockBody, direction) => {
+  // console.log(tmpBlockBody);
+  let moveValue = direction === RIGHT ? 1 : -1;
+  if (availableBlockMove_X(tmpBlockBody, moveValue))
+    for (domi of tmpBlockBody) {
+      domi.x += moveValue;
+    }
+  return tmpBlockBody;
+};
+
+const generateRandomDomino = () => {
+  let tmpNum = Math.floor(Date.now() * Math.random()) % DOMINOS.length;
+  return { body: DOMINOS[tmpNum], num: tmpNum };
+};
+
+const availableBlockMove_X = (BlockBody, moveValue) => {
+  let flag = true;
+  for (domi of BlockBody) {
+    let tmp = domi.x + moveValue;
+    if (tmp < 1 || tmp > BOARD_SIZE_WIDTH) flag = false;
+  }
+  return flag;
+};
+
+const availableBlockMove_Y = (BlockBody, groundBlock) => {
+  let flag = true;
+  for (domi of BlockBody) {
+    let tmp = domi.y + 1;
+    if (tmp === BOARD_SIZE_HEIGHT + 1) flag = false;
+    for (bgDomin of groundBlock) {
+      if (bgDomin.x === domi.x && bgDomin.y === tmp) flag = false;
+    }
+  }
+  return flag;
+};
+
+const dropBlock = (item) => {
+  tmpBlockBody = item.BlockBody;
+  while (availableBlockMove_Y(tmpBlockBody, item.groundBlock)) {
+    for (domi of tmpBlockBody) {
+      domi.y += 1;
+    }
+  }
+  for (domi of item.BlockBody) item.groundBlock.push(domi);
+  console.log("new block from ctrl", item.groundBlock.length);
+  return {
+    ...item,
+    groundBlock: item.groundBlock,
+    isNeccessaryBlock: true,
+    actionTime: 0,
+    BlockBody: [],
+  };
+};
+
 const rotateBlock = (tmpBlockBody) => {
   let _x = tmpBlockBody[2].x;
   let _y = tmpBlockBody[2].y;
@@ -187,14 +284,6 @@ const getRotateDomino = (item, _x, _y) => {
   item.x = _x + (y1 - _y);
   item.y = _y - (x1 - _x);
   return item;
-};
-
-const moveBlock = (BlockBody, direction) => {
-  // move block to Right or Left as input value
-  let dx = 0;
-  if (direction === RIGHT) dx = -1;
-  else if (direction === LEFT) dx = 1;
-  for (block of BlockBody) block.x += dx;
 };
 
 /***************** SOCKET **********************/

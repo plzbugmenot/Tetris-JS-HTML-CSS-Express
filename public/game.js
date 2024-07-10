@@ -40,12 +40,12 @@ const sendMessage = () => {
     userName: input.value,
     socketID: socket.id,
   };
-  if (data.userName.trim()) {
-    socket.emit("newUser", data);
-  } else {
-    if (!data.userName.trim()) alert("select your team.");
-    else alert("Input user name.");
-  }
+  // if (data.userName.trim()) {
+  socket.emit("newUser", data);
+  // } else {
+  //   if (!data.userName.trim()) alert("select your team.");
+  //   else alert("Input user name.");
+  // }
 };
 
 const initData = (newUser) => {
