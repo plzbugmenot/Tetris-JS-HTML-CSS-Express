@@ -41,10 +41,10 @@ client.get("/", (req, res) => {
 
 let users = [];
 const BOARD_SIZE_HEIGHT = 21;
-const BOARD_SIZE_WIDTH = 11;
+const BOARD_SIZE_WIDTH = 10;
 const TIMEperS = 50;
 // const FRAME = Math.floor(1000 / TIMEperS); // every 20ms render
-const FRAME = 20; // every 20ms render
+const FRAME = 10; // every 20ms render
 const UP = "UP";
 const DOWN = "DOWN";
 const LEFT = "LEFT";
@@ -52,72 +52,82 @@ const RIGHT = "RIGHT";
 
 const TEAM1 = "TEAM1";
 const TEAM2 = "TEAM2";
-// ----
-const DOMINO_1 = [
-  { x: 5, y: 1 },
-  { x: 6, y: 1 },
-  { x: 7, y: 1 },
-  { x: 8, y: 1 },
-];
-// --
-// --
-const DOMINO_2 = [
-  { x: 5, y: 1 },
-  { x: 6, y: 1 },
-  { x: 5, y: 2 },
-  { x: 6, y: 2 },
-];
-// --
-//  |
-const DOMINO_3 = [
-  { x: 6, y: 1 },
-  { x: 7, y: 1 },
-  { x: 7, y: 2 },
-  { x: 7, y: 3 },
-];
-// --
-// |
-const DOMINO_4 = [
-  { x: 6, y: 1 },
-  { x: 7, y: 1 },
-  { x: 6, y: 2 },
-  { x: 6, y: 3 },
-];
 
-// |_
-// |
-const DOMINO_5 = [
-  { x: 5, y: 2 },
-  { x: 6, y: 1 },
-  { x: 6, y: 2 },
-  { x: 7, y: 2 },
-];
-// |_
-//   |
-const DOMINO_6 = [
-  { x: 6, y: 1 },
-  { x: 6, y: 2 },
-  { x: 7, y: 2 },
-  { x: 7, y: 3 },
-];
-//  _|
-// |
-const DOMINO_7 = [
-  { x: 7, y: 1 },
-  { x: 7, y: 2 },
-  { x: 6, y: 2 },
-  { x: 6, y: 3 },
-];
+let DOMINO_1 = [];
+let DOMINO_2 = [];
+let DOMINO_3 = [];
+let DOMINO_4 = [];
+let DOMINO_5 = [];
+let DOMINO_6 = [];
+let DOMINO_7 = [];
+let DOMINOS = [];
+const init = () => {
+  // ----
+  DOMINO_1 = [
+    { x: 5, y: 1 },
+    { x: 6, y: 1 },
+    { x: 7, y: 1 },
+    { x: 8, y: 1 },
+  ];
+  // --
+  // --
+  DOMINO_2 = [
+    { x: 5, y: 1 },
+    { x: 6, y: 1 },
+    { x: 5, y: 2 },
+    { x: 6, y: 2 },
+  ];
+  // --
+  //  |
+  DOMINO_3 = [
+    { x: 6, y: 1 },
+    { x: 7, y: 1 },
+    { x: 7, y: 2 },
+    { x: 7, y: 3 },
+  ];
+  // --
+  // |
+  DOMINO_4 = [
+    { x: 6, y: 1 },
+    { x: 7, y: 1 },
+    { x: 6, y: 2 },
+    { x: 6, y: 3 },
+  ];
+  // |_
+  // |
+  DOMINO_5 = [
+    { x: 5, y: 2 },
+    { x: 6, y: 1 },
+    { x: 6, y: 2 },
+    { x: 7, y: 2 },
+  ];
+  // |_
+  //   |
+  DOMINO_6 = [
+    { x: 6, y: 1 },
+    { x: 6, y: 2 },
+    { x: 7, y: 2 },
+    { x: 7, y: 3 },
+  ];
+  //  _|
+  // |
+  DOMINO_7 = [
+    { x: 7, y: 1 },
+    { x: 7, y: 2 },
+    { x: 6, y: 2 },
+    { x: 6, y: 3 },
+  ];
 
-const DOMINOS = [
-  DOMINO_1,
-  DOMINO_2,
-  DOMINO_3,
-  DOMINO_4,
-  DOMINO_5,
-  DOMINO_6,
-  DOMINO_7,
-];
+  DOMINOS = [
+    DOMINO_1,
+    DOMINO_2,
+    DOMINO_3,
+    DOMINO_4,
+    DOMINO_5,
+    DOMINO_6,
+    DOMINO_7,
+  ];
+};
 
 const initialGroundBlock = [
   { y: BOARD_SIZE_HEIGHT, x: 0 },
@@ -140,7 +150,22 @@ const initialGroundBlock = [
   { y: BOARD_SIZE_HEIGHT - 1, x: 8 },
 ];
 
-const mainLoop = () => {};
+const mainLoop = () => {
+  users = users.map((item) =>
+    item.actionTime === 0
+      ? movedBlockVertical(item)
+      : {
+          ...item,
+          actionTime: item.actionTime - 1,
+        }
+  );
+
+  users = users.map((item) =>
+    item.itemIsNeccessaryBlock ? newBlockGenerateItem(item) : item
+  );
+
+  users = users.map((item) => sendBlockToOther(item));
+};
 
 let broadcast = setInterval(() => {
   mainLoop();
@@ -151,26 +176,50 @@ let broadcast = setInterval(() => {
 }, FRAME);
 
 const generateRandomDomino = () => {
+  init();
+
   let tmpNum = Math.floor(Date.now() * Math.random()) % DOMINOS.length;
-  return { body: DOMINOS[tmpNum], num: tmpNum };
+  let tmpBody = [];
+  for (domi of DOMINOS[tmpNum]) tmpBody.push(domi);
+  return { body: tmpBody, num: tmpNum };
 };
 
-const getRandomDomino = () => {
-  let tmp = generateRandomDomino();
+const insertBlockBodyToGroundBody = (ground, block) => {
+  let tmp = ground;
+  for (domi of block) tmp.push(domi);
   return tmp;
 };
 
 const createUser = (data) => {
   let tmp = generateRandomDomino();
-
   return {
     userName: data.userName || "a",
     socketID: data.socketID,
     actionTime: FRAME,
-    BlockBody: tmp.body,
-    blockType: tmp.num,
-    groundBlock: initialGroundBlock,
-    isNeccessaryBlock: false,
+    itemBlockBody: tmp.body,
+    itemBlockType: tmp.num,
+    itemGroundBlock: [],
+    itemIsNeccessaryBlock: false,
+  };
+};
+
+const sendBlockToOther = (item) => {
+  return item;
+};
+
+const newBlockGenerateItem = (item) => {
+  let tmpBlock = generateRandomDomino();
+
+  return {
+    ...item,
+    itemGroundBlock: insertBlockBodyToGroundBody(
+      item.itemGroundBlock,
+      item.itemBlockBody
+    ),
+    itemBlockBody: tmpBlock.body,
+    itemBlockType: tmpBlock.num,
+    itemIsNeccessaryBlock: false,
+    actionTime: FRAME,
   };
 };
 
@@ -189,12 +238,59 @@ const getRotateDomino = (item, _x, _y) => {
   return item;
 };
 
-const moveBlock = (BlockBody, direction) => {
+const moveBlockHorizental = (BlockBody, direction) => {
   // move block to Right or Left as input value
-  let dx = 0;
-  if (direction === RIGHT) dx = -1;
-  else if (direction === LEFT) dx = 1;
-  for (block of BlockBody) block.x += dx;
+  let moveValue = direction === RIGHT ? 1 : -1;
+  if (availableMoveBlockHorizental(BlockBody, moveValue))
+    for (domi of BlockBody) {
+      domi.x += moveValue;
+    }
+  return BlockBody;
+};
+
+const availableMoveBlockHorizental = (BlockBody, moveValue) => {
+  let flag = true;
+  for (domi of BlockBody) {
+    let tmp = domi.x + moveValue;
+    if (tmp < 1 || tmp > BOARD_SIZE_WIDTH) flag = false;
+  }
+  return flag;
+};
+
+const movedBlockVertical = (item) => {
+  let tmp = item;
+  if (isAvailableMoveVertical(tmp.itemBlockBody, tmp.itemGroundBlock)) {
+    return {
+      ...item,
+      itemBlockBody: moveBlockVertical(item.itemBlockBody),
+      actionTime: FRAME,
+    };
+  } else {
+    return {
+      ...item,
+      itemIsNeccessaryBlock: true,
+      actionTime: FRAME,
+    };
+  }
+};
+
+const isAvailableMoveVertical = (BlockBody, GroundBlock) => {
+  for (domi of BlockBody) {
+    let tmp = domi.y + 1;
+    if (tmp < 1 || tmp > BOARD_SIZE_HEIGHT) return false;
+
+    for (bgDomin of GroundBlock) {
+      if (bgDomin.x === domi.x && bgDomin.y === domi.y + 1) return false;
+    }
+  }
+  return true;
+};
+
+const moveBlockVertical = (BlockBody) => {
+  // move down as time flow
+  for (block of BlockBody) block.y += 1;
+
+  return BlockBody;
 };
 
 /***************** SOCKET **********************/
@@ -223,7 +319,7 @@ socketIO.on("connect", (socket) => {
       item.socketID === data.socketID
         ? {
             ...item,
-            BlockBody: rotateBlock(item.BlockBody),
+            itemBlockBody: rotateBlock(item.itemBlockBody),
           }
         : item
     );
@@ -234,7 +330,10 @@ socketIO.on("connect", (socket) => {
       item.socketID === data.socketID
         ? {
             ...item,
-            BlockBody: moveBlock(item.BlockBody, data.direction),
+            itemBlockBody: moveBlockHorizental(
+              item.itemBlockBody,
+              data.direction
+            ),
           }
         : item
     );

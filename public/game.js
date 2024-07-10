@@ -11,7 +11,7 @@ const RIGHT = "RIGHT";
 
 let BlockBody = [];
 let blockType = 0;
-let initialGroundBlock = [];
+let GroundBlock = [];
 let users = [];
 
 /********* Transfer *************/
@@ -53,9 +53,9 @@ const initData = (newUser) => {
 };
 
 const init = (user) => {
-  BlockBody = user.BlockBody;
-  blockType = user.blockType;
-  initialGroundBlock = user.groundBlock;
+  BlockBody = user.itemBlockBody;
+  blockType = user.itemBlockType;
+  GroundBlock = user.itemGroundBlock;
 };
 
 /*********  ACTION  *************/
@@ -74,18 +74,18 @@ const getInputData = () => {
 const draw = () => {
   gameBoard.innerHTML = "";
   drawBlock(gameBoard, BlockBody, blockType);
-  drawGroundBlock(gameBoard, initialGroundBlock);
+  drawGroundBlock(gameBoard, GroundBlock);
 };
 
 const handleSet = (event) => {
   // console.log(event);
-  if (event.key === "Control") setDirection(DROP);
-  else if (event.key === "ArrowDown") setDirection(DOWN); // change direction
-  else if (event.key === "ArrowRight") setDirection(RIGHT); // move right
-  else if (event.key === "ArrowLeft") setDirection(LEFT); // move left
+  if (event.key === "Control") setEventByInputKey(DROP);
+  else if (event.key === "ArrowDown") setEventByInputKey(DOWN); // rotate
+  else if (event.key === "ArrowRight") setEventByInputKey(RIGHT); // move right
+  else if (event.key === "ArrowLeft") setEventByInputKey(LEFT); // move left
 };
 
-const setDirection = (direction) => {
+const setEventByInputKey = (direction) => {
   const data = {
     socketID: socket.id,
     direction: direction,

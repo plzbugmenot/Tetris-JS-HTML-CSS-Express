@@ -1,109 +1,102 @@
 body {
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-    background-color: black;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  background-color: black;
 }
 
 #game-board {
-    background-color: black;
-    width: 330px;
-    height: 630px;
-    min-width: 330px;
-    min-height: 630px;
-    display: grid;
-    grid-template-rows: repeat(21, 1fr);
-    grid-template-columns: repeat(11, 1fr);
-    border: 3px solid #eeeeee;
+  background-color: black;
+  width: 300px;
+  height: 630px;
+  min-width: 300px;
+  min-height: 630px;
+  display: grid;
+  grid-template-rows: repeat(21, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  border: 3px solid #eeeeee;
 }
 
 .tank {
-    background-color: rgb(255, 0, 0);
-    border: 1px solid rgb(255, 78, 175);
+  background-color: rgb(255, 0, 0);
+  border: 1px solid rgb(255, 78, 175);
 }
 
 #register {
-    margin-top: 3rem;
-    margin-bottom: 3rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .registerBtn {
-    background-color: black;
-    color: #eeeeee;
-    border-radius: 0.5rem;
-    border: 1px solid #eeeeee;
-    width: 120px;
-    height: 50px;
-    font-size: 22px;
-    margin-top: 10px;
+  background-color: black;
+  color: #eeeeee;
+  border-radius: 0.5rem;
+  border: 1px solid #eeeeee;
+  width: 120px;
+  height: 50px;
+  font-size: 22px;
+  margin-top: 10px;
 }
 
 .registerBtn:hover {
-    cursor: pointer;
-    background-color: #292929;
+  cursor: pointer;
+  background-color: #292929;
 }
 
 #name {
-    font-size: 22px;
-    width: 120px;
-    height: 50px;
-    border-radius: 0.5rem;
-    background-color: black;
-    color: #eeeeee;
-    border-bottom: 1px solid #eeeeee;
-    text-align: center;
-    
+  font-size: 22px;
+  width: 120px;
+  height: 50px;
+  border-radius: 0.5rem;
+  background-color: black;
+  color: #eeeeee;
+  border-bottom: 1px solid #eeeeee;
+  text-align: center;
 }
 
-
 .domino-1 {
-    background-color: rgb(255, 17, 0);
-    border: 1px solid rgb(255, 101, 90);
+  background-color: rgb(255, 17, 0);
+  border: 1px solid rgb(255, 101, 90);
 }
 
 .domino-2 {
-    background-color: rgb(0, 81, 255);
-    border: 1px solid rgb(129, 173, 255);
+  background-color: rgb(0, 81, 255);
+  border: 1px solid rgb(129, 173, 255);
 }
-
 
 .domino-3 {
-    background-color: rgb(174, 0, 255);
-    border: 1px solid rgb(195, 90, 255);
+  background-color: rgb(174, 0, 255);
+  border: 1px solid rgb(195, 90, 255);
 }
-
 
 .domino-4 {
-    background-color: rgb(255, 0, 200);
-    border: 1px solid rgb(255, 113, 184);
+  background-color: rgb(255, 0, 200);
+  border: 1px solid rgb(255, 113, 184);
 }
-
 
 .domino-5 {
-    background-color: rgb(255, 115, 0);
-    border: 1px solid rgb(255, 184, 90);
+  background-color: rgb(255, 115, 0);
+  border: 1px solid rgb(255, 184, 90);
 }
-
 
 .domino-6 {
-    background-color: rgb(165, 255, 243);
-    border: 1px solid rgb(90, 222, 255);
+  background-color: rgb(165, 255, 243);
+  border: 1px solid rgb(90, 222, 255);
 }
 
-
 .domino-7 {
-    background-color: rgb(43, 255, 0);
-    border: 1px solid rgb(159, 255, 156);
+  background-color: rgb(43, 255, 0);
+  border: 1px solid rgb(159, 255, 156);
 }
 
 .init-block {
-    background-color: #646464;
-    border: 1px solid #333333
+  background-color: #646464;
+  border: 1px solid #333333;
 }
