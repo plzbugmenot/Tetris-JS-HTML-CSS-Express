@@ -131,10 +131,10 @@ const init = () => {
 
 const initialGroundBlock = [
   { y: BOARD_SIZE_HEIGHT, x: 0 },
-  { y: BOARD_SIZE_HEIGHT, x: 1 },
+
   { y: BOARD_SIZE_HEIGHT, x: 2 },
   { y: BOARD_SIZE_HEIGHT, x: 3 },
-  { y: BOARD_SIZE_HEIGHT, x: 4 },
+
   { y: BOARD_SIZE_HEIGHT, x: 5 },
   { y: BOARD_SIZE_HEIGHT, x: 7 },
   { y: BOARD_SIZE_HEIGHT, x: 8 },
@@ -143,11 +143,12 @@ const initialGroundBlock = [
   { y: BOARD_SIZE_HEIGHT - 1, x: 0 },
   { y: BOARD_SIZE_HEIGHT - 1, x: 1 },
   { y: BOARD_SIZE_HEIGHT - 1, x: 2 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 3 },
+
   { y: BOARD_SIZE_HEIGHT - 1, x: 4 },
   { y: BOARD_SIZE_HEIGHT - 1, x: 5 },
   { y: BOARD_SIZE_HEIGHT - 1, x: 7 },
   { y: BOARD_SIZE_HEIGHT - 1, x: 8 },
+  { y: BOARD_SIZE_HEIGHT - 1, x: 10 },
 ];
 
 const mainLoop = () => {
@@ -198,13 +199,29 @@ const createUser = (data) => {
     actionTime: FRAME,
     itemBlockBody: tmp.body,
     itemBlockType: tmp.num,
-    itemGroundBlock: [],
+    itemGroundBlock: initialGroundBlock,
     itemIsNeccessaryBlock: false,
   };
 };
 
 const sendBlockToOther = (item) => {
-  return item;
+  let tmpGround = item.itemGroundBlock;
+  let tmpNumber = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  ];
+  for (block of tmpGround) tmpNumber[block.y] = tmpNumber[block.y] + 1;
+  for (let i = 0; i < tmpNumber.length; i++)
+    if (tmpNumber[i] === BOARD_SIZE_WIDTH) {
+      tmpGround = tmpGround.filter((block) => block.y != i);
+      tmpGround = tmpGround.map((block) =>
+        block.y < i ? { x: block.x, y: block.y + 1 } : block
+      );
+    }
+
+  return {
+    ...item,
+    itemGroundBlock: tmpGround,
+  };
 };
 
 const newBlockGenerateItem = (item) => {
@@ -219,6 +236,21 @@ const newBlockGenerateItem = (item) => {
     itemBlockBody: tmpBlock.body,
     itemBlockType: tmpBlock.num,
     itemIsNeccessaryBlock: false,
+    actionTime: FRAME,
+  };
+};
+
+const dropBlock = (item) => {
+  tmpBlockBody = item.itemBlockBody;
+  while (isAvailableMoveVertical(tmpBlockBody, item.itemGroundBlock)) {
+    for (domi of tmpBlockBody) {
+      domi.y += 1;
+    }
+  }
+  return {
+    ...item,
+    itemGroundBlock: item.itemGroundBlock,
+    isNeccessaryBlock: true,
     actionTime: FRAME,
   };
 };
