@@ -10,10 +10,27 @@ body {
 
 #game-board {
   background-color: black;
-  width: 300px;
-  height: 630px;
-  min-width: 300px;
-  min-height: 630px;
+  width: 200px;
+  height: 420px;
+  min-width: 200px;
+  min-height: 420px;
+  display: grid;
+  grid-template-rows: repeat(21, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  border: 3px solid #eeeeee;
+}
+
+.state-board {
+  width: 200px;
+  min-width: 200px;
+}
+
+#game-board-other {
+  background-color: black;
+  width: 200px;
+  height: 420px;
+  min-width: 200px;
+  min-height: 420px;
   display: grid;
   grid-template-rows: repeat(21, 1fr);
   grid-template-columns: repeat(10, 1fr);

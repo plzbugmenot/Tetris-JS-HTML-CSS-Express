@@ -1,4 +1,5 @@
 const gameBoard = document.getElementById("game-board");
+const gameBoard2 = document.getElementById("game-board-other");
 
 /*********GAME Setting*************/
 let gameOver = false;
@@ -19,6 +20,10 @@ let GroundBlock = [];
 let users = [];
 let state = "";
 
+let BlockBody2 = [];
+let blockType2 = 0;
+let GroundBlock2 = [];
+
 /********* Transfer *************/
 
 socket.on("connect", () => {
@@ -31,16 +36,16 @@ socket.on("newUserResponseError", (response) => {
 
 socket.on("sendBlockEvent", (data) => {
   users = data.users;
-  for (item of users) if (item.socketID === socket.id) init(item);
+  for (item of users) init(item);
 });
 
 socket.on("stateOfUsers", (data) => {
   users = data.users;
-  for (item of users) if (item.socketID === socket.id) init(item);
+  for (item of users) init(item);
 });
 
 socket.on("newUserResponse", (newUser) => {
-  if (newUser.socketID === socket.id) initData(newUser);
+  initData(newUser);
 });
 
 const sendMessage = () => {
@@ -57,17 +62,24 @@ const sendMessage = () => {
 };
 
 const initData = (newUser) => {
-  BlockBody = newUser.BlockBody;
+  if (newUser.socketID === socket.id) BlockBody = newUser.BlockBody;
+  else BlockBody2 = newUser.BlockBody;
 };
 
 const init = (user) => {
-  BlockBody = user.itemBlockBody;
-  blockType = user.itemBlockType;
-  GroundBlock = user.itemGroundBlock;
-  state = user.state;
-  if (state === LOSE) {
-    socket.emit("loseStateGet");
-    alert("Lose");
+  if (user.socketID === socket.id) {
+    BlockBody = user.itemBlockBody;
+    blockType = user.itemBlockType;
+    GroundBlock = user.itemGroundBlock;
+    state = user.state;
+    if (state === LOSE) {
+      socket.emit("loseStateGet");
+      alert("Lose");
+    }
+  } else {
+    BlockBody2 = user.itemBlockBody;
+    blockType2 = user.itemBlockType;
+    GroundBlock2 = user.itemGroundBlock;
   }
   drawDataFromServer();
 };
@@ -87,8 +99,12 @@ const getInputData = () => {
 
 const drawDataFromServer = () => {
   gameBoard.innerHTML = "";
-  drawBlock(gameBoard, BlockBody, blockType);
+  if (BlockBody) drawBlock(gameBoard, BlockBody, blockType);
   drawGroundBlock(gameBoard, GroundBlock);
+
+  gameBoard2.innerHTML = "";
+  if (BlockBody2) drawBlock(gameBoard2, BlockBody2, blockType2);
+  drawGroundBlock(gameBoard2, GroundBlock2);
 };
 
 const handleSet = (event) => {
@@ -97,6 +113,9 @@ const handleSet = (event) => {
   else if (event.key === "ArrowDown") setEventByInputKey(DOWN); // rotate
   else if (event.key === "ArrowRight") setEventByInputKey(RIGHT); // move right
   else if (event.key === "ArrowLeft") setEventByInputKey(LEFT); // move left
+  else if (event.key === "s") setEventByInputKey(DOWN); // rotate
+  else if (event.key === "d") setEventByInputKey(RIGHT); // move right
+  else if (event.key === "a") setEventByInputKey(LEFT); // move left
 };
 
 const setEventByInputKey = (direction) => {
@@ -110,22 +129,22 @@ const setEventByInputKey = (direction) => {
   else if (direction === DROP) socket.emit("dropBlock", data);
 };
 
-const drawBlock = (gameBoard, BlockBody, blockType) => {
-  for (segment of BlockBody) {
+const drawBlock = (drawBoard, drawBlockBody, blockType) => {
+  for (segment of drawBlockBody) {
     const dominoElement = document.createElement("div");
     dominoElement.style.gridRowStart = segment.y;
     dominoElement.style.gridColumnStart = segment.x;
     dominoElement.classList.add(`domino-${blockType + 1}`);
-    gameBoard.appendChild(dominoElement);
+    drawBoard.appendChild(dominoElement);
   }
 };
 
-const drawGroundBlock = (gameBoard, GroundBlock) => {
-  for (segment of GroundBlock) {
+const drawGroundBlock = (drawBoard, drawGroundBlock) => {
+  for (segment of drawGroundBlock) {
     const dominoElement = document.createElement("div");
     dominoElement.style.gridRowStart = segment.y;
     dominoElement.style.gridColumnStart = segment.x;
     dominoElement.classList.add("init-block");
-    gameBoard.appendChild(dominoElement);
+    drawBoard.appendChild(dominoElement);
   }
 };

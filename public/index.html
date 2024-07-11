@@ -9,12 +9,15 @@
     <script src="./socket.io/socket.io.js"></script>
     <script src="game.js" defer></script>
   </head>
+
   <body>
     <div id="register">
       <input id="name" type="text" maxlength="4" />
       <button onclick="sendMessage()" class="registerBtn">start</button>
     </div>
     <div id="game-board"></div>
+    <div class="state-board"></div>
+    <div id="game-board-other"></div>
   </body>
   <script>
     console.log("connecting...");

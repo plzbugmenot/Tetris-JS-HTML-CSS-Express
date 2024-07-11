@@ -46,7 +46,7 @@ const BOARD_SIZE_HEIGHT = 21;
 const BOARD_SIZE_WIDTH = 10;
 const TIMEperS = 50;
 // const FRAME = Math.floor(1000 / TIMEperS); // every 20ms render
-const FRAME = 15; // every 20ms render
+const FRAME = 1; // every 20ms render
 const UP = "UP";
 const DOWN = "DOWN";
 const LEFT = "LEFT";
@@ -60,6 +60,7 @@ const LOSE = "LOSE";
 const GAME = "GAME";
 
 const INIT_LEVEL = 0;
+const ACTION_INIT_TIME = 30;
 
 let DOMINO_1 = [];
 let DOMINO_2 = [];
@@ -187,7 +188,7 @@ const createUser = (data) => {
     userName: data.userName || "user",
     socketID: data.socketID,
 
-    actionTime: FRAME,
+    actionTime: ACTION_INIT_TIME,
 
     itemBlockBody: tmp.body,
     itemBlockType: tmp.num,
@@ -360,7 +361,7 @@ const newBlockGenerateItem = (item) => {
     itemBlockBody: tmpBlock.body,
     itemBlockType: tmpBlock.num,
     itemIsNeccessaryBlock: false,
-    actionTime: FRAME,
+    actionTime: ACTION_INIT_TIME,
   };
 };
 
@@ -375,7 +376,7 @@ const dropBlock = (item) => {
     ...item,
     itemGroundBlock: item.itemGroundBlock,
     isNeccessaryBlock: true,
-    actionTime: FRAME,
+    actionTime: 0,
   };
 };
 
@@ -419,13 +420,13 @@ const movedBlockVertical = (item) => {
     return {
       ...item,
       itemBlockBody: moveBlockVertical(item.itemBlockBody),
-      actionTime: FRAME,
+      actionTime: ACTION_INIT_TIME,
     };
   } else {
     return {
       ...item,
       itemIsNeccessaryBlock: true,
-      actionTime: FRAME,
+      actionTime: ACTION_INIT_TIME,
     };
   }
 };
