@@ -1,13 +1,15 @@
 const PORT = 8800;
-const F_PORT = 3300;
+const F_PORT = 3500;
 
 const express = require("express");
 const server = express();
 const cors = require("cors");
+const { stat } = require("fs");
 const server_http = require("http").Server(server);
 
 const socketIO = require("socket.io")(server_http, {
   cors: ["*"],
+  // cors: "http://localhost:3300",
 });
 
 server.use(cors());
@@ -44,7 +46,7 @@ const BOARD_SIZE_HEIGHT = 21;
 const BOARD_SIZE_WIDTH = 10;
 const TIMEperS = 50;
 // const FRAME = Math.floor(1000 / TIMEperS); // every 20ms render
-const FRAME = 10; // every 20ms render
+const FRAME = 15; // every 20ms render
 const UP = "UP";
 const DOWN = "DOWN";
 const LEFT = "LEFT";
@@ -52,6 +54,12 @@ const RIGHT = "RIGHT";
 
 const TEAM1 = "TEAM1";
 const TEAM2 = "TEAM2";
+
+const WIN = "WIN";
+const LOSE = "LOSE";
+const GAME = "GAME";
+
+const INIT_LEVEL = 0;
 
 let DOMINO_1 = [];
 let DOMINO_2 = [];
@@ -129,28 +137,6 @@ const init = () => {
   ];
 };
 
-const initialGroundBlock = [
-  { y: BOARD_SIZE_HEIGHT, x: 0 },
-
-  { y: BOARD_SIZE_HEIGHT, x: 2 },
-  { y: BOARD_SIZE_HEIGHT, x: 3 },
-
-  { y: BOARD_SIZE_HEIGHT, x: 5 },
-  { y: BOARD_SIZE_HEIGHT, x: 7 },
-  { y: BOARD_SIZE_HEIGHT, x: 8 },
-  { y: BOARD_SIZE_HEIGHT, x: 9 },
-  { y: BOARD_SIZE_HEIGHT, x: 10 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 0 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 1 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 2 },
-
-  { y: BOARD_SIZE_HEIGHT - 1, x: 4 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 5 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 7 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 8 },
-  { y: BOARD_SIZE_HEIGHT - 1, x: 10 },
-];
-
 const mainLoop = () => {
   users = users.map((item) =>
     item.actionTime === 0
@@ -166,6 +152,10 @@ const mainLoop = () => {
   );
 
   users = users.map((item) => sendBlockToOther(item));
+
+  users = users.map((item) =>
+    isGameOver(item.itemGroundBlock) === LOSE ? { ...item, state: LOSE } : item
+  );
 };
 
 let broadcast = setInterval(() => {
@@ -194,14 +184,44 @@ const insertBlockBodyToGroundBody = (ground, block) => {
 const createUser = (data) => {
   let tmp = generateRandomDomino();
   return {
-    userName: data.userName || "a",
+    userName: data.userName || "user",
     socketID: data.socketID,
+
     actionTime: FRAME,
+
     itemBlockBody: tmp.body,
     itemBlockType: tmp.num,
-    itemGroundBlock: initialGroundBlock,
+    itemGroundBlock: getinitialGroundBlocks(0),
+    itemLastBlock: [],
+
     itemIsNeccessaryBlock: false,
+
+    state: GAME,
+    level: INIT_LEVEL,
   };
+};
+
+const isGameOver = (GroundBlock) => {
+  let state = GAME;
+  for (block of GroundBlock) if (block.y === 1) state = LOSE;
+  return state;
+};
+
+const getinitialGroundBlocks = (level) => {
+  let tmp = [];
+  for (let line = 0; line < level + 2; line++) {
+    let rand_1 = Math.floor(Date.now() * Math.random()) % BOARD_SIZE_WIDTH;
+    let rand_2 = Math.floor(Date.now() * Math.random()) % BOARD_SIZE_WIDTH;
+    if (rand_1 === rand_2)
+      rand_2 = Math.floor(Date.now() * Math.random()) % BOARD_SIZE_WIDTH;
+    for (let i = 0; i < BOARD_SIZE_WIDTH; i++)
+      if (i !== rand_1 && i !== rand_2)
+        tmp.push({
+          x: i,
+          y: BOARD_SIZE_HEIGHT - line,
+        });
+  }
+  return tmp;
 };
 
 const sendBlockToOther = (item) => {
@@ -209,6 +229,7 @@ const sendBlockToOther = (item) => {
   let tmpNumber = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
+  let sendBlockLines = [];
   for (block of tmpGround) tmpNumber[block.y] = tmpNumber[block.y] + 1;
   for (let i = 0; i < tmpNumber.length; i++)
     if (tmpNumber[i] === BOARD_SIZE_WIDTH) {
@@ -216,7 +237,19 @@ const sendBlockToOther = (item) => {
       tmpGround = tmpGround.map((block) =>
         block.y < i ? { x: block.x, y: block.y + 1 } : block
       );
+      sendBlockLines.push(i);
     }
+
+  // send blocks to the other
+  let sendBlocks = getSendBlockFormLaskBlock(
+    item.itemLastBlock,
+    sendBlockLines
+  );
+
+  if (sendBlockLines.length >= 2 && sendBlocks.length) {
+    receiveBlockFromSender(item.socketID, sendBlocks, sendBlockLines.length);
+    sendBlockLines = [];
+  }
 
   return {
     ...item,
@@ -224,15 +257,106 @@ const sendBlockToOther = (item) => {
   };
 };
 
+const getSendBlockFormLaskBlock = (LastBlock, sendBlockLines) => {
+  let tmp = [];
+  for (let i = 0; i < sendBlockLines.length; i++) {
+    for (block of LastBlock) if (block.y === sendBlockLines[i]) tmp.push(block);
+  }
+  return tmp;
+};
+
+const receiveBlockFromSender = (sender, sendBlocks, blockLines) => {
+  users = users.map((item) =>
+    item.socketID !== sender
+      ? updateReceivedUser(item, sendBlocks, blockLines)
+      : item
+  );
+  for (let i = 0; i < users.length; i++)
+    if (users[i].socketID !== sender) {
+    }
+  const data = {
+    users: users,
+  };
+  socketIO.emit("sendBlockEvent", data);
+};
+
+const updateReceivedUser = (item, sendBlocks, blockLines) => {
+  return {
+    ...item,
+    itemGroundBlock: updateGroundBlockAtReceive(
+      item.itemGroundBlock,
+      sendBlocks,
+      blockLines
+    ),
+  };
+};
+
+const updateGroundBlockAtReceive = (GroundBlock, sendBlocks, blockLines) => {
+  for (block of GroundBlock) block.y -= blockLines;
+
+  let tmpBlock = [];
+  sendBlocks = convertBlock(sendBlocks, blockLines);
+
+  for (let i = 0; i < blockLines; i++) {
+    for (let j = 1; j <= BOARD_SIZE_WIDTH; j++) {
+      tmpBlock.push({ x: j, y: BOARD_SIZE_HEIGHT - i });
+    }
+  }
+
+  for (block of sendBlocks) {
+    for (item of tmpBlock)
+      if (item.x === block.x && item.y === block.y) {
+        item.x = 100;
+        item.y = 100;
+      }
+  }
+
+  for (block of tmpBlock)
+    if (block.x < 100 && block.y < 100) GroundBlock.push(block);
+
+  return GroundBlock;
+};
+
+const convertBlock = (sendBlocks, blockLines) => {
+  let delta = BOARD_SIZE_HEIGHT;
+  for (block of sendBlocks)
+    delta = Math.min(delta, BOARD_SIZE_HEIGHT - block.y);
+  for (block of sendBlocks) block.y += delta;
+
+  if (blockLines === 2) {
+    for (block of sendBlocks) {
+      if (block.y === BOARD_SIZE_HEIGHT) block.y = BOARD_SIZE_HEIGHT - 1;
+      else block.y = BOARD_SIZE_HEIGHT;
+    }
+  } else if (blockLines === 3) {
+    for (block of sendBlocks) {
+      if (block.y === BOARD_SIZE_HEIGHT) block.y = BOARD_SIZE_HEIGHT - 2;
+      else if (block.y === BOARD_SIZE_HEIGHT - 2) block.y = BOARD_SIZE_HEIGHT;
+    }
+  }
+  // else {
+  //   for (block of sendBlocks) {
+  //     if (block.y === BOARD_SIZE_HEIGHT) block.y = BOARD_SIZE_HEIGHT - 3;
+  //     else if (block.y === BOARD_SIZE_HEIGHT - 2)
+  //       block.y = BOARD_SIZE_HEIGHT - 1;
+  //     else if (block.y === BOARD_SIZE_HEIGHT - 1)
+  //       block.y = BOARD_SIZE_HEIGHT - 2;
+  //     else block.y = BOARD_SIZE_HEIGHT;
+  //   }
+  // }
+
+  return sendBlocks;
+};
+
 const newBlockGenerateItem = (item) => {
   let tmpBlock = generateRandomDomino();
-
   return {
     ...item,
     itemGroundBlock: insertBlockBodyToGroundBody(
       item.itemGroundBlock,
       item.itemBlockBody
     ),
+    itemLastBlock: item.itemBlockBody,
     itemBlockBody: tmpBlock.body,
     itemBlockType: tmpBlock.num,
     itemIsNeccessaryBlock: false,
@@ -330,16 +454,20 @@ socketIO.on("connect", (socket) => {
   console.log("connected with client");
 
   socket.on("newUser", (data) => {
-    // if (users.length < 2) {
-    let newUser = createUser(data);
-    users.push(newUser);
-    console.log(newUser.userName, " is connected...", newUser.socketID);
-    console.log("There are ", users.length, " users...");
-    socketIO.emit("newUserResponse", newUser);
-    // } else {
-    //   let errorMsg = "There is full users.";
-    //   socketIO.emit("newUserResponseError", errorMsg);
-    // }
+    if (users.length < 2) {
+      let newUser = createUser(data);
+      users.push(newUser);
+      console.log(newUser.userName, " is connected...", newUser.socketID);
+      console.log("There are ", users.length, " users...");
+      socketIO.emit("newUserResponse", newUser);
+    } else {
+      console.log("There is full users.");
+      let response = {
+        socketID: data.socketID,
+        msg: "There is full users.",
+      };
+      // socketIO.emit("newUserResponseError", response);
+    }
   });
 
   socket.on("test", () => {
@@ -375,6 +503,11 @@ socketIO.on("connect", (socket) => {
     users = users.map((item) =>
       item.socketID === data.socketID ? dropBlock(item) : item
     );
+  });
+
+  socket.on("loseStateGet", () => {
+    clearInterval(broadcast);
+    console.log("Game Over");
   });
 });
 

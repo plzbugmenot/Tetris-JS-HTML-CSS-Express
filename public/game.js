@@ -9,10 +9,15 @@ const DOWN = "DOWN";
 const LEFT = "LEFT";
 const RIGHT = "RIGHT";
 
+const WIN = "WIN";
+const LOSE = "LOSE";
+const GAME = "GAME";
+
 let BlockBody = [];
 let blockType = 0;
 let GroundBlock = [];
 let users = [];
+let state = "";
 
 /********* Transfer *************/
 
@@ -20,8 +25,13 @@ socket.on("connect", () => {
   console.log("connected with server.");
 });
 
-socket.on("newUserResponseError", (data) => {
-  alert(data);
+socket.on("newUserResponseError", (response) => {
+  if (response.socketID === socket.id) alert(response.msg);
+});
+
+socket.on("sendBlockEvent", (data) => {
+  users = data.users;
+  for (item of users) if (item.socketID === socket.id) init(item);
 });
 
 socket.on("stateOfUsers", (data) => {
@@ -42,8 +52,7 @@ const sendMessage = () => {
   if (data.userName.trim()) {
     socket.emit("newUser", data);
   } else {
-    if (!data.userName.trim()) alert("select your team.");
-    else alert("Input user name.");
+    if (!data.userName.trim()) alert("Input user name.");
   }
 };
 
@@ -55,6 +64,12 @@ const init = (user) => {
   BlockBody = user.itemBlockBody;
   blockType = user.itemBlockType;
   GroundBlock = user.itemGroundBlock;
+  state = user.state;
+  if (state === LOSE) {
+    socket.emit("loseStateGet");
+    alert("Lose");
+  }
+  drawDataFromServer();
 };
 
 /*********  ACTION  *************/
@@ -63,7 +78,6 @@ let gamePlay = setInterval(() => {
 }, FRAME);
 
 const mainLoop = () => {
-  drawDataFromServer();
   getInputData();
 };
 
@@ -106,8 +120,8 @@ const drawBlock = (gameBoard, BlockBody, blockType) => {
   }
 };
 
-const drawGroundBlock = (gameBoard, initialGroundBlock) => {
-  for (segment of initialGroundBlock) {
+const drawGroundBlock = (gameBoard, GroundBlock) => {
+  for (segment of GroundBlock) {
     const dominoElement = document.createElement("div");
     dominoElement.style.gridRowStart = segment.y;
     dominoElement.style.gridColumnStart = segment.x;
