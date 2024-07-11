@@ -2,7 +2,7 @@ const gameBoard = document.getElementById("game-board");
 
 /*********GAME Setting*************/
 let gameOver = false;
-const FRAME = 100;
+const FRAME = 10;
 
 const DROP = "DROP";
 const DOWN = "DOWN";
@@ -27,7 +27,6 @@ socket.on("newUserResponseError", (data) => {
 socket.on("stateOfUsers", (data) => {
   users = data.users;
   for (item of users) if (item.socketID === socket.id) init(item);
-  draw();
 });
 
 socket.on("newUserResponse", (newUser) => {
@@ -40,12 +39,12 @@ const sendMessage = () => {
     userName: input.value,
     socketID: socket.id,
   };
-  // if (data.userName.trim()) {
-  socket.emit("newUser", data);
-  // } else {
-  //   if (!data.userName.trim()) alert("select your team.");
-  //   else alert("Input user name.");
-  // }
+  if (data.userName.trim()) {
+    socket.emit("newUser", data);
+  } else {
+    if (!data.userName.trim()) alert("select your team.");
+    else alert("Input user name.");
+  }
 };
 
 const initData = (newUser) => {
@@ -64,6 +63,7 @@ let gamePlay = setInterval(() => {
 }, FRAME);
 
 const mainLoop = () => {
+  drawDataFromServer();
   getInputData();
 };
 
@@ -71,7 +71,7 @@ const getInputData = () => {
   window.addEventListener("keydown", handleSet, false);
 };
 
-const draw = () => {
+const drawDataFromServer = () => {
   gameBoard.innerHTML = "";
   drawBlock(gameBoard, BlockBody, blockType);
   drawGroundBlock(gameBoard, GroundBlock);
