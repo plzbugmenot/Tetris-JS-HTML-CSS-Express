@@ -23,6 +23,12 @@ body {
 .state-board {
   width: 200px;
   min-width: 200px;
+  display: flex;
+  flex-direction: row;
+  color: #eeeeee;
+  font-size: 30px;
+  gap: 1rem;
+  justify-content: center;
 }
 
 #game-board-other {
@@ -78,13 +84,13 @@ body {
   flex-direction: row;
 }
 
-.footer-board {
+#footer-board {
   width: 600px;
-  height: 60px;
+  height: 80px;
   min-width: 600px;
-  min-height: 60px;
+  min-height: 80px;
   display: grid;
-  grid-template-rows: repeat(3, 1fr);
+  grid-template-rows: repeat(4, 1fr);
   grid-template-columns: repeat(30, 1fr);
   /* border: 3px solid #eeeeee; */
 }
@@ -163,6 +169,13 @@ body {
 .domino-7 {
   background-color: rgb(43, 255, 0);
   border: 1px solid rgb(159, 255, 156);
+}
+
+/* send state block */
+
+.domino-8 {
+  background-color: #646464;
+  border: 1px solid #333333;
 }
 
 .init-block {

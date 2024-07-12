@@ -4,6 +4,7 @@ const preBoard = document.getElementById("pre-game-board");
 const gameBoard2 = document.getElementById("game-board-other");
 const preBoard2 = document.getElementById("pre-game-board-other");
 
+const sendBlockBoard = document.getElementById("footer-board");
 /*********GAME Setting*************/
 let gameOver = false;
 const FRAME = 10;
@@ -32,6 +33,13 @@ let GroundBlock2 = [];
 let preBody2 = [];
 let preType2;
 
+let who = "i'm ";
+
+const USER1 = "USER1";
+const USER2 = "USER2";
+
+let sendStateBlocks = [];
+
 /********* Transfer *************/
 
 socket.on("connect", () => {
@@ -49,7 +57,15 @@ socket.on("sendBlockEvent", (data) => {
 
 socket.on("stateOfUsers", (data) => {
   users = data.users;
+  sendStateBlocks = data.sendStateBlocks;
+  convertSendStateBlocks(sendStateBlocks);
+
   for (item of users) init(item);
+
+  updatePreBlock(preBody);
+  updatePreBlock(preBody2);
+
+  drawDataFromServer();
 });
 
 socket.on("newUserResponse", (newUser) => {
@@ -82,6 +98,7 @@ const init = (user) => {
     state = user.state;
     preBody = user.itemPreBody;
     preType = user.itemPreType;
+    who = user.who;
     if (state === LOSE) {
       socket.emit("loseStateGet");
       alert("Lose");
@@ -93,9 +110,9 @@ const init = (user) => {
     preBody2 = user.itemPreBody;
     preType2 = user.itemPreType;
   }
-  updatePreBlock(preBody);
-  updatePreBlock(preBody2);
-  drawDataFromServer();
+  // updatePreBlock(preBody);
+  // updatePreBlock(preBody2);
+  // drawDataFromServer();
 };
 
 /*********  ACTION  *************/
@@ -132,6 +149,13 @@ const drawDataFromServer = () => {
     drawGroundBlock(gameBoard2, GroundBlock2);
     drawBlock(preBoard2, preBody2, preType2);
   }
+  // console.log("who =>", who);
+  sendBlockBoard.innerHTML = "";
+  drawBlock(sendBlockBoard, sendStateBlocks, 6);
+};
+
+const convertSendStateBlocks = (sendStateBlocks) => {
+  if (who === USER2) for (block of sendStateBlocks) block.x = 30 - block.x;
 };
 
 const handleSet = (event) => {

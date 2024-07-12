@@ -46,7 +46,7 @@ const BOARD_SIZE_HEIGHT = 21;
 const BOARD_SIZE_WIDTH = 10;
 const TIMEperS = 50;
 // const FRAME = Math.floor(1000 / TIMEperS); // every 20ms render
-const FRAME = 1; // every 20ms render
+const FRAME = 20; // every 20ms render
 const UP = "UP";
 const DOWN = "DOWN";
 const LEFT = "LEFT";
@@ -60,7 +60,12 @@ const LOSE = "LOSE";
 const GAME = "GAME";
 
 const INIT_LEVEL = 0;
-const ACTION_INIT_TIME = 30;
+const ACTION_INIT_TIME = 15;
+const ACTION_INIT_TIME_SEND = 1;
+const SEND_WIDTH = 2 * BOARD_SIZE_WIDTH;
+
+const USER1 = "USER1";
+const USER2 = "USER2";
 
 let DOMINO_1 = [];
 let DOMINO_2 = [];
@@ -70,6 +75,12 @@ let DOMINO_5 = [];
 let DOMINO_6 = [];
 let DOMINO_7 = [];
 let DOMINOS = [];
+
+let User1;
+let User2;
+
+let sendStateBlocks = [];
+
 const init = () => {
   // ----
   DOMINO_1 = [
@@ -157,12 +168,57 @@ const mainLoop = () => {
   users = users.map((item) =>
     isGameOver(item.itemGroundBlock) === LOSE ? { ...item, state: LOSE } : item
   );
+
+  if (sendStateBlocks.length) {
+    sendStateBlocks = sendStateBlocks.map((item) =>
+      item.actionTime === 0
+        ? {
+            ...item,
+            Blocks: updateSendBlocks(item.Blocks, item.sender),
+            position:
+              item.sender === User1 ? item.position + 1 : item.position - 1,
+            actionTime: ACTION_INIT_TIME_SEND,
+          }
+        : {
+            ...item,
+            actionTime: item.actionTime - 1,
+          }
+    );
+
+    for (item of sendStateBlocks) {
+      if (item.sender === User1 && item.position === SEND_WIDTH - 1) {
+        receiveBlockFromSender(item.sender, item.Blocks, item.lines);
+        item.position += 10;
+      }
+      if (item.sender === User2 && item.position === 1) {
+        receiveBlockFromSender(item.sender, item.Blocks, item.lines);
+        item.position -= 10;
+      }
+    }
+
+    //
+    sendStateBlocks = sendStateBlocks.filter(
+      (item) => item.position <= SEND_WIDTH && item.position >= 0
+    );
+  }
+};
+
+const updateSendBlocks = (sendBlocks, sender) => {
+  if (sender === User1) for (block of sendBlocks) block.x += 1;
+  else for (block of sendBlocks) block.x -= 1;
+  return sendBlocks;
 };
 
 let broadcast = setInterval(() => {
   mainLoop();
+  let sendStateBlocksDomino = [];
+  for (block of sendStateBlocks) {
+    for (item of block.Blocks) sendStateBlocksDomino.push(item);
+  }
+
   const data = {
     users: users,
+    sendStateBlocks: sendStateBlocksDomino,
   };
   socketIO.emit("stateOfUsers", data);
 }, FRAME);
@@ -183,11 +239,13 @@ const insertBlockBodyToGroundBody = (ground, block) => {
 };
 
 const createUser = (data) => {
+  users.length === 0 ? (User1 = data.socketID) : (User2 = data.socketID);
   let tmp = generateRandomDomino();
   let preDomino = generateRandomDomino();
   return {
     userName: data.userName || "user",
     socketID: data.socketID,
+    who: users.length === 0 ? USER1 : USER2,
 
     actionTime: ACTION_INIT_TIME,
 
@@ -207,7 +265,7 @@ const createUser = (data) => {
 
 const isGameOver = (GroundBlock) => {
   let state = GAME;
-  for (block of GroundBlock) if (block.y === 1) state = LOSE;
+  if (GroundBlock) for (block of GroundBlock) if (block.y === 1) state = LOSE;
   return state;
 };
 
@@ -234,7 +292,8 @@ const sendBlockToOther = (item) => {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
   let sendBlockLines = [];
-  for (block of tmpGround) tmpNumber[block.y] = tmpNumber[block.y] + 1;
+  if (tmpGround)
+    for (block of tmpGround) tmpNumber[block.y] = tmpNumber[block.y] + 1;
   for (let i = 0; i < tmpNumber.length; i++)
     if (tmpNumber[i] === BOARD_SIZE_WIDTH) {
       tmpGround = tmpGround.filter((block) => block.y != i);
@@ -245,13 +304,16 @@ const sendBlockToOther = (item) => {
     }
 
   // send blocks to the other
-  let sendBlocks = getSendBlockFormLaskBlock(
+  let sendBlocks = getSendBlockFromLastBlock(
     item.itemLastBlock,
     sendBlockLines
   );
 
   if (sendBlockLines.length >= 2 && sendBlocks.length) {
-    receiveBlockFromSender(item.socketID, sendBlocks, sendBlockLines.length);
+    console.log("initial => ", sendBlocks);
+    let tmptmp = getSendBlocksForSendState(sendBlocks, sendBlockLines.length);
+    pushSendBlockToSendState(item.socketID, tmptmp, sendBlockLines.length);
+
     sendBlockLines = [];
   }
 
@@ -261,44 +323,78 @@ const sendBlockToOther = (item) => {
   };
 };
 
-const getSendBlockFormLaskBlock = (LastBlock, sendBlockLines) => {
-  let tmp = [];
-  for (let i = 0; i < sendBlockLines.length; i++) {
-    for (block of LastBlock) if (block.y === sendBlockLines[i]) tmp.push(block);
+// sender, sendBlocks, lines
+const pushSendBlockToSendState = (sender, sendBlocks, lines) => {
+  if (sender === User2) {
+    for (block of sendBlocks) block.x += 20;
+    console.log("User2 sends block");
   }
-  return tmp;
+  const sendStateBlock = {
+    sender: sender,
+    Blocks: sendBlocks,
+    lines: lines,
+    position: sender === User1 ? 0 : SEND_WIDTH,
+    actionTime: ACTION_INIT_TIME_SEND,
+  };
+  sendStateBlocks.push(sendStateBlock);
+};
+
+const getSendBlockFromLastBlock = (LastBlock, sendBlockLines) => {
+  let sendBlocks = [];
+  for (let i = 0; i < sendBlockLines.length; i++) {
+    for (block of LastBlock)
+      if (block.y === sendBlockLines[i]) sendBlocks.push(block);
+  }
+  return sendBlocks;
 };
 
 const receiveBlockFromSender = (sender, sendBlocks, blockLines) => {
+  // let tmp = item.itemGroundBlock;
+  // if (sender === User1) senderID = User2;
+  // else senderID = User1;
+
   users = users.map((item) =>
     item.socketID !== sender
-      ? updateReceivedUser(item, sendBlocks, blockLines)
+      ? {
+          ...item,
+          itemGroundBlock: updateGroundBlockAtReceive(
+            item.itemGroundBlock,
+            sendBlocks,
+            blockLines
+          ),
+        }
       : item
   );
-  for (let i = 0; i < users.length; i++)
-    if (users[i].socketID !== sender) {
-    }
-  const data = {
-    users: users,
-  };
-  socketIO.emit("sendBlockEvent", data);
 };
 
 const updateReceivedUser = (item, sendBlocks, blockLines) => {
+  // console.log("send blockLines", blockLines);
+  let tmp = item.itemGroundBlock;
   return {
     ...item,
-    itemGroundBlock: updateGroundBlockAtReceive(
-      item.itemGroundBlock,
-      sendBlocks,
-      blockLines
-    ),
+    itemGroundBlock: updateGroundBlockAtReceive(tmp, sendBlocks, blockLines),
   };
 };
 
 const updateGroundBlockAtReceive = (GroundBlock, sendBlocks, blockLines) => {
+  console.log("blockLines ==>", blockLines);
   for (block of GroundBlock) block.y -= blockLines;
 
+  let minX = 100;
+  for (block of sendBlocks) minX = Math.min(minX, block.x);
+  console.log("minX =>", minX);
+  for (block of sendBlocks) {
+    block.x = block.x - minX + 1;
+    block.y = BOARD_SIZE_HEIGHT - blockLines + block.y;
+  }
+  console.log("sendBlocks =>", sendBlocks);
+  for (block of sendBlocks) GroundBlock.push(block);
+  return GroundBlock;
+};
+
+const getSendBlocksForSendState = (sendBlocks, blockLines) => {
   let tmpBlock = [];
+  let GroundBlock = [];
   sendBlocks = convertBlock(sendBlocks, blockLines);
 
   for (let i = 0; i < blockLines; i++) {
@@ -315,8 +411,13 @@ const updateGroundBlockAtReceive = (GroundBlock, sendBlocks, blockLines) => {
       }
   }
 
+  let minY = 100;
   for (block of tmpBlock)
-    if (block.x < 100 && block.y < 100) GroundBlock.push(block);
+    if (block.x < 100 && block.y < 100) {
+      GroundBlock.push(block);
+      minY = block.y;
+    }
+  for (block of GroundBlock) block.y = block.y - minY + 1;
 
   return GroundBlock;
 };
