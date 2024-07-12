@@ -93,6 +93,8 @@ const init = (user) => {
     preBody2 = user.itemPreBody;
     preType2 = user.itemPreType;
   }
+  updatePreBlock(preBody);
+  updatePreBlock(preBody2);
   drawDataFromServer();
 };
 
@@ -107,6 +109,13 @@ const mainLoop = () => {
 
 const getInputData = () => {
   document.addEventListener("keydown", handleSet, false);
+};
+
+const updatePreBlock = (preBlock) => {
+  let down = 0;
+  for (block of preBlock) down = Math.max(down, block.y);
+  let delta = 3 - down;
+  for (block of preBlock) block.y += delta;
 };
 
 const drawDataFromServer = () => {
