@@ -184,6 +184,7 @@ const insertBlockBodyToGroundBody = (ground, block) => {
 
 const createUser = (data) => {
   let tmp = generateRandomDomino();
+  let preDomino = generateRandomDomino();
   return {
     userName: data.userName || "user",
     socketID: data.socketID,
@@ -192,6 +193,8 @@ const createUser = (data) => {
 
     itemBlockBody: tmp.body,
     itemBlockType: tmp.num,
+    itemPreBody: preDomino.body,
+    itemPreType: preDomino.num,
     itemGroundBlock: getinitialGroundBlocks(0),
     itemLastBlock: [],
 
@@ -350,6 +353,8 @@ const convertBlock = (sendBlocks, blockLines) => {
 };
 
 const newBlockGenerateItem = (item) => {
+  let newBlockBody = item.itemPreBody;
+  let newBlockType = item.itemPreType;
   let tmpBlock = generateRandomDomino();
   return {
     ...item,
@@ -358,8 +363,11 @@ const newBlockGenerateItem = (item) => {
       item.itemBlockBody
     ),
     itemLastBlock: item.itemBlockBody,
-    itemBlockBody: tmpBlock.body,
-    itemBlockType: tmpBlock.num,
+    itemPreBody: tmpBlock.body,
+    itemPreType: tmpBlock.num,
+
+    itemBlockBody: newBlockBody,
+    itemBlockType: newBlockType,
     itemIsNeccessaryBlock: false,
     actionTime: ACTION_INIT_TIME,
   };
@@ -487,6 +495,9 @@ socketIO.on("connect", (socket) => {
   });
 
   socket.on("moveBlock", (data) => {
+    // TODO
+    // let start_time = Date.now();
+    // console.log("b_start =>", start_time);
     users = users.map((item) =>
       item.socketID === data.socketID
         ? {
@@ -498,6 +509,8 @@ socketIO.on("connect", (socket) => {
           }
         : item
     );
+    let end_time = Date.now();
+    // console.log("end   =>", end_time);
   });
 
   socket.on("dropBlock", (data) => {

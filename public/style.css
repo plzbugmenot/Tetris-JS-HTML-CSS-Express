@@ -37,6 +37,58 @@ body {
   border: 3px solid #eeeeee;
 }
 
+#pre-game-board {
+  background-color: black;
+  width: 200px;
+  height: 60px;
+  min-width: 200px;
+  min-height: 60px;
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  /* border: 3px solid #eeeeee; */
+}
+
+.pre-state-board {
+  width: 200px;
+  min-width: 200px;
+}
+
+#pre-game-board-other {
+  background-color: black;
+  width: 200px;
+  height: 60px;
+  min-width: 200px;
+  min-height: 60px;
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  /* border: 3px solid #eeeeee; */
+}
+
+.game-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.top-board,
+.main-board {
+  display: flex;
+  flex-direction: row;
+}
+
+.footer-board {
+  width: 600px;
+  height: 60px;
+  min-width: 600px;
+  min-height: 60px;
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(30, 1fr);
+  /* border: 3px solid #eeeeee; */
+}
+
 .tank {
   background-color: rgb(255, 0, 0);
   border: 1px solid rgb(255, 78, 175);

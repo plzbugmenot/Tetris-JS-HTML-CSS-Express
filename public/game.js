@@ -1,5 +1,8 @@
 const gameBoard = document.getElementById("game-board");
+const preBoard = document.getElementById("pre-game-board");
+
 const gameBoard2 = document.getElementById("game-board-other");
+const preBoard2 = document.getElementById("pre-game-board-other");
 
 /*********GAME Setting*************/
 let gameOver = false;
@@ -14,15 +17,20 @@ const WIN = "WIN";
 const LOSE = "LOSE";
 const GAME = "GAME";
 
+let users = [];
+let state = "";
+
 let BlockBody = [];
 let blockType = 0;
 let GroundBlock = [];
-let users = [];
-let state = "";
+let preBody = [];
+let preType;
 
 let BlockBody2 = [];
 let blockType2 = 0;
 let GroundBlock2 = [];
+let preBody2 = [];
+let preType2;
 
 /********* Transfer *************/
 
@@ -72,6 +80,8 @@ const init = (user) => {
     blockType = user.itemBlockType;
     GroundBlock = user.itemGroundBlock;
     state = user.state;
+    preBody = user.itemPreBody;
+    preType = user.itemPreType;
     if (state === LOSE) {
       socket.emit("loseStateGet");
       alert("Lose");
@@ -80,6 +90,8 @@ const init = (user) => {
     BlockBody2 = user.itemBlockBody;
     blockType2 = user.itemBlockType;
     GroundBlock2 = user.itemGroundBlock;
+    preBody2 = user.itemPreBody;
+    preType2 = user.itemPreType;
   }
   drawDataFromServer();
 };
@@ -94,20 +106,28 @@ const mainLoop = () => {
 };
 
 const getInputData = () => {
-  window.addEventListener("keydown", handleSet, false);
+  document.addEventListener("keydown", handleSet, false);
 };
 
 const drawDataFromServer = () => {
   gameBoard.innerHTML = "";
+  preBoard.innerHTML = "";
   if (BlockBody) drawBlock(gameBoard, BlockBody, blockType);
   drawGroundBlock(gameBoard, GroundBlock);
+  drawBlock(preBoard, preBody, preType);
 
   gameBoard2.innerHTML = "";
-  if (BlockBody2) drawBlock(gameBoard2, BlockBody2, blockType2);
-  drawGroundBlock(gameBoard2, GroundBlock2);
+  preBoard2.innerHTML = "";
+  if (BlockBody2) {
+    drawBlock(gameBoard2, BlockBody2, blockType2);
+    drawGroundBlock(gameBoard2, GroundBlock2);
+    drawBlock(preBoard2, preBody2, preType2);
+  }
 };
 
 const handleSet = (event) => {
+  // let start_time = Date.now();
+  // console.log("f_start =>", start_time);
   // console.log(event);
   if (event.key === "Control") setEventByInputKey(DROP);
   else if (event.key === "ArrowDown") setEventByInputKey(DOWN); // rotate

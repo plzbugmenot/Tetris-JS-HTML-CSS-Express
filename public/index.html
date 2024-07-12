@@ -1,26 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <link rel="stylesheet" href="style.css" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>TANK</title>
+    <title>Tetris</title>
     <script src="./socket.io/socket.io.js"></script>
     <script src="game.js" defer></script>
-  </head>
+</head>
 
-  <body>
+<body>
     <div id="register">
-      <input id="name" type="text" maxlength="4" />
-      <button onclick="sendMessage()" class="registerBtn">start</button>
+        <input id="name" type="text" maxlength="4" />
+        <button onclick="sendMessage()" class="registerBtn">start</button>
     </div>
-    <div id="game-board"></div>
-    <div class="state-board"></div>
-    <div id="game-board-other"></div>
-  </body>
-  <script>
+    <div class="game-body">
+        <div class="top-board">
+            <div id="pre-game-board"></div>
+            <div class="pre-state-board"></div>
+            <div id="pre-game-board-other"></div>
+        </div>
+        <div class="main-board">
+            <div id="game-board"></div>
+            <div class="state-board"></div>
+            <div id="game-board-other"></div>
+        </div>
+        <div class="footer-board">
+        </div>
+</body>
+<script>
     console.log("connecting...");
     const socket = io.connect("http://192.168.144.110:8800");
-  </script>
+</script>
+
 </html>
