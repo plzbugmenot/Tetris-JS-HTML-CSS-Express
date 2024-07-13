@@ -61,6 +61,9 @@ const WIN = "WIN";
 const LOSE = "LOSE";
 const GAME = "GAME";
 
+const READY = "READY";
+let GAME_STATE;
+
 const INIT_LEVEL = 0;
 const ACTION_INIT_TIME = 15;
 const ACTION_INIT_TIME_SEND = 1;
@@ -359,14 +362,12 @@ const getSendBlockFromLastBlock = (LastBlock, sendBlockLines) => {
 };
 
 const receiveBlockFromSender = (sender, sendBlocks, blockLines) => {
-  // let tmp = item.itemGroundBlock;
-  // if (sender === User1) senderID = User2;
-  // else senderID = User1;
-
   users = users.map((item) =>
     item.socketID !== sender
       ? {
           ...item,
+          itemBlockBody: [],
+          itemIsNeccessaryBlock: true,
           itemGroundBlock: updateGroundBlockAtReceive(
             item.itemGroundBlock,
             sendBlocks,
@@ -632,6 +633,7 @@ socketIO.on("connect", (socket) => {
   });
 
   socket.on("loseStateGet", () => {
+    GAME_STATE = READY;
     clearInterval(broadcast);
 
     users = users.map((item) => updateUser(item, item.state));
@@ -649,8 +651,10 @@ socketIO.on("connect", (socket) => {
           for (item of block.Blocks) sendStateBlocksDomino.push(item);
         }
 
+        GAME_STATE = GAME;
         const data = {
           users: users,
+          gameState: GAME_STATE,
           sendStateBlocks: sendStateBlocksDomino,
         };
         socketIO.emit("stateOfUsers", data);

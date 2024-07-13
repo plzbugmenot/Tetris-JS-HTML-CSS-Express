@@ -26,6 +26,9 @@ const WIN = "WIN";
 const LOSE = "LOSE";
 const GAME = "GAME";
 
+const READY = "READY";
+let GAME_STATE = READY;
+
 const LIMIT_LEVEL = 10;
 
 let users = [];
@@ -72,6 +75,8 @@ socket.on("sendBlockEvent", (data) => {
 socket.on("stateOfUsers", (data) => {
   users = data.users;
   sendStateBlocks = data.sendStateBlocks;
+
+  GAME_STATE = data.gameState;
   convertSendStateBlocks(sendStateBlocks);
 
   for (item of users) init(item);
@@ -121,6 +126,7 @@ const init = (user) => {
 
     if (state === LOSE) {
       socket.emit("loseStateGet");
+      GAME_STATE = READY;
       // alert("Lose");
     }
   } else {
@@ -203,7 +209,7 @@ const handleSet = (event) => {
   else if (event.key === "d") setEventByInputKey(RIGHT); // move right
   else if (event.key === "a") setEventByInputKey(LEFT); // move left
   else if (event.key === " ") {
-    // if (users[0].state === GAME && users[1].state === GAME) return;
+    if (GAME_STATE === GAME) return;
     socket.emit("startGameWithCouplePlayer");
   }
 };
