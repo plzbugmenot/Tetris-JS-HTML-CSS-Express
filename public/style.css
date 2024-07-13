@@ -24,10 +24,47 @@ body {
   width: 200px;
   min-width: 200px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   color: #eeeeee;
   font-size: 30px;
   gap: 1rem;
+  justify-content: space-between;
+}
+
+.state-name,
+.state-level {
+  display: flex;
+  flex-direction: row;
+}
+
+.state-name {
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.state-level {
+  height: 200px;
+  justify-content: space-between;
+}
+
+.level-item {
+  color: #eeeeee;
+  margin: 0;
+  height: 20px;
+}
+
+#user1-level,
+#user2-level {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+
+#state-start {
+  display: flex;
+  height: 150px;
+  align-items: center;
   justify-content: center;
 }
 

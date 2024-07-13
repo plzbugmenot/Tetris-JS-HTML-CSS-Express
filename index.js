@@ -52,6 +52,8 @@ const DOWN = "DOWN";
 const LEFT = "LEFT";
 const RIGHT = "RIGHT";
 
+const SPACE = "SPACE";
+
 const TEAM1 = "TEAM1";
 const TEAM2 = "TEAM2";
 
@@ -80,6 +82,8 @@ let User1;
 let User2;
 
 let sendStateBlocks = [];
+
+let broadcast;
 
 const init = () => {
   // ----
@@ -209,20 +213,6 @@ const updateSendBlocks = (sendBlocks, sender) => {
   return sendBlocks;
 };
 
-let broadcast = setInterval(() => {
-  mainLoop();
-  let sendStateBlocksDomino = [];
-  for (block of sendStateBlocks) {
-    for (item of block.Blocks) sendStateBlocksDomino.push(item);
-  }
-
-  const data = {
-    users: users,
-    sendStateBlocks: sendStateBlocksDomino,
-  };
-  socketIO.emit("stateOfUsers", data);
-}, FRAME);
-
 const generateRandomDomino = () => {
   init();
 
@@ -260,6 +250,26 @@ const createUser = (data) => {
 
     state: GAME,
     level: INIT_LEVEL,
+  };
+};
+
+const updateUser = (data, iswin) => {
+  let tmp = generateRandomDomino();
+  let preDomino = generateRandomDomino();
+  let newLevel = iswin === GAME ? data.level + 1 : data.level;
+  return {
+    ...data,
+    itemBlockBody: tmp.body,
+    itemBlockType: tmp.num,
+    itemPreBody: preDomino.body,
+    itemPreType: preDomino.num,
+    itemGroundBlock: getinitialGroundBlocks(newLevel),
+    itemLastBlock: [],
+
+    itemIsNeccessaryBlock: false,
+
+    state: GAME,
+    level: newLevel,
   };
 };
 
@@ -310,7 +320,7 @@ const sendBlockToOther = (item) => {
   );
 
   if (sendBlockLines.length >= 2 && sendBlocks.length) {
-    console.log("initial => ", sendBlocks);
+    // console.log("initial => ", sendBlocks);
     let tmptmp = getSendBlocksForSendState(sendBlocks, sendBlockLines.length);
     pushSendBlockToSendState(item.socketID, tmptmp, sendBlockLines.length);
 
@@ -387,7 +397,7 @@ const updateGroundBlockAtReceive = (GroundBlock, sendBlocks, blockLines) => {
     block.x = block.x - minX + 1;
     block.y = BOARD_SIZE_HEIGHT - blockLines + block.y;
   }
-  console.log("sendBlocks =>", sendBlocks);
+  // console.log("sendBlocks =>", sendBlocks);
   for (block of sendBlocks) GroundBlock.push(block);
   return GroundBlock;
 };
@@ -520,6 +530,7 @@ const availableMoveBlockHorizental = (BlockBody, moveValue) => {
     let tmp = domi.x + moveValue;
     if (tmp < 1 || tmp > BOARD_SIZE_WIDTH) flag = false;
   }
+
   return flag;
 };
 
@@ -610,7 +621,7 @@ socketIO.on("connect", (socket) => {
           }
         : item
     );
-    let end_time = Date.now();
+    // let end_time = Date.now();
     // console.log("end   =>", end_time);
   });
 
@@ -622,7 +633,29 @@ socketIO.on("connect", (socket) => {
 
   socket.on("loseStateGet", () => {
     clearInterval(broadcast);
-    console.log("Game Over");
+
+    users = users.map((item) => updateUser(item, item.state));
+
+    // console.log(users[0].level, "vs", users[1].level);
+    // console.log(users[0].who, "vs", users[1].who);
+  });
+
+  socket.on("startGameWithCouplePlayer", () => {
+    if (users.length === 2) {
+      broadcast = setInterval(() => {
+        mainLoop();
+        let sendStateBlocksDomino = [];
+        for (block of sendStateBlocks) {
+          for (item of block.Blocks) sendStateBlocksDomino.push(item);
+        }
+
+        const data = {
+          users: users,
+          sendStateBlocks: sendStateBlocksDomino,
+        };
+        socketIO.emit("stateOfUsers", data);
+      }, FRAME);
+    }
   });
 });
 
