@@ -1,5 +1,5 @@
-const PORT = 8800;
-const F_PORT = 3500;
+const PORT = process.env.REACT_APP_SERVER_PORT || 8800;
+const F_PORT = process.env.REACT_APP_CLIENT_PORT || 3500;
 
 const express = require("express");
 const server = express();
@@ -9,7 +9,6 @@ const server_http = require("http").Server(server);
 
 const socketIO = require("socket.io")(server_http, {
   cors: ["*"],
-  // cors: "http://localhost:3300",
 });
 
 server.use(cors());
@@ -39,20 +38,31 @@ client.get("/", (req, res) => {
  * +----------------+
  ***********************/
 
+/************************
+    Aurthor: ARMY
+    Date: July 12, 2024
+    Tool: Express, node, socket, html, css, javaScript
+ ***********************/
+
+/************************
+   ___ ___ ___  _   _
+    |  |_   |  |_> <_ 
+    |  |__  |  | \  _>
+ _______________________>>>>
+ ***********************/
+
 /*********TETRIS Setting*************/
 
 let users = [];
 const BOARD_SIZE_HEIGHT = 21;
 const BOARD_SIZE_WIDTH = 10;
 const TIMEperS = 50;
-// const FRAME = Math.floor(1000 / TIMEperS); // every 20ms render
+
 const FRAME = 20; // every 20ms render
-const UP = "UP";
+
 const DOWN = "DOWN";
 const LEFT = "LEFT";
 const RIGHT = "RIGHT";
-
-const SPACE = "SPACE";
 
 const TEAM1 = "TEAM1";
 const TEAM2 = "TEAM2";
@@ -316,14 +326,12 @@ const sendBlockToOther = (item) => {
       sendBlockLines.push(i);
     }
 
-  // send blocks to the other
   let sendBlocks = getSendBlockFromLastBlock(
     item.itemLastBlock,
     sendBlockLines
   );
 
   if (sendBlockLines.length >= 2 && sendBlocks.length) {
-    // console.log("initial => ", sendBlocks);
     let tmptmp = getSendBlocksForSendState(sendBlocks, sendBlockLines.length);
     pushSendBlockToSendState(item.socketID, tmptmp, sendBlockLines.length);
 
@@ -340,7 +348,6 @@ const sendBlockToOther = (item) => {
 const pushSendBlockToSendState = (sender, sendBlocks, lines) => {
   if (sender === User2) {
     for (block of sendBlocks) block.x += 20;
-    console.log("User2 sends block");
   }
   const sendStateBlock = {
     sender: sender,
@@ -379,7 +386,6 @@ const receiveBlockFromSender = (sender, sendBlocks, blockLines) => {
 };
 
 const updateReceivedUser = (item, sendBlocks, blockLines) => {
-  // console.log("send blockLines", blockLines);
   let tmp = item.itemGroundBlock;
   return {
     ...item,
@@ -388,17 +394,14 @@ const updateReceivedUser = (item, sendBlocks, blockLines) => {
 };
 
 const updateGroundBlockAtReceive = (GroundBlock, sendBlocks, blockLines) => {
-  console.log("blockLines ==>", blockLines);
   for (block of GroundBlock) block.y -= blockLines;
 
   let minX = 100;
   for (block of sendBlocks) minX = Math.min(minX, block.x);
-  console.log("minX =>", minX);
   for (block of sendBlocks) {
     block.x = block.x - minX + 1;
     block.y = BOARD_SIZE_HEIGHT - blockLines + block.y;
   }
-  // console.log("sendBlocks =>", sendBlocks);
   for (block of sendBlocks) GroundBlock.push(block);
   return GroundBlock;
 };
@@ -450,17 +453,6 @@ const convertBlock = (sendBlocks, blockLines) => {
       else if (block.y === BOARD_SIZE_HEIGHT - 2) block.y = BOARD_SIZE_HEIGHT;
     }
   }
-  // else {
-  //   for (block of sendBlocks) {
-  //     if (block.y === BOARD_SIZE_HEIGHT) block.y = BOARD_SIZE_HEIGHT - 3;
-  //     else if (block.y === BOARD_SIZE_HEIGHT - 2)
-  //       block.y = BOARD_SIZE_HEIGHT - 1;
-  //     else if (block.y === BOARD_SIZE_HEIGHT - 1)
-  //       block.y = BOARD_SIZE_HEIGHT - 2;
-  //     else block.y = BOARD_SIZE_HEIGHT;
-  //   }
-  // }
-
   return sendBlocks;
 };
 
@@ -500,11 +492,34 @@ const dropBlock = (item) => {
   };
 };
 
-const rotateBlock = (tmpBlockBody) => {
+const rotateBlock = (tmpBlockBody, GroundBlock) => {
+  // TODO
+
   let _x = tmpBlockBody[2].x;
   let _y = tmpBlockBody[2].y;
-  tmpBlockBody = tmpBlockBody.map((item) => getRotateDomino(item, _x, _y));
+
+  console.log("pre =>", tmpBlockBody);
+  if (availableRotateBlock(tmpBlockBody, GroundBlock))
+    tmpBlockBody = tmpBlockBody.map((item) => getRotateDomino(item, _x, _y));
+
+  console.log("aft =>", tmpBlockBody);
+
   return tmpBlockBody;
+};
+
+const availableRotateBlock = (tmpBlockBody, GroundBlock) => {
+  let flag = true;
+
+  for (block of tmpBlockBody) {
+    let tmpBlock = getRotateDomino(block, block.x, block.y);
+    if (tmpBlock.x <= 1 || tmpBlock.x >= BOARD_SIZE_WIDTH) flag = false;
+
+    for (gblock of GroundBlock) {
+      if (tmpBlock.x === gblock.x && tmpBlock.y === gblock.y) flag = false;
+    }
+  }
+  console.log(flag);
+  return flag;
 };
 
 const getRotateDomino = (item, _x, _y) => {
@@ -515,23 +530,26 @@ const getRotateDomino = (item, _x, _y) => {
   return item;
 };
 
-const moveBlockHorizental = (BlockBody, direction) => {
+const moveBlockHorizental = (BlockBody, GroundBlock, direction) => {
   // move block to Right or Left as input value
   let moveValue = direction === RIGHT ? 1 : -1;
-  if (availableMoveBlockHorizental(BlockBody, moveValue))
+  if (availableMoveBlockHorizental(BlockBody, GroundBlock, moveValue))
     for (domi of BlockBody) {
       domi.x += moveValue;
     }
   return BlockBody;
 };
 
-const availableMoveBlockHorizental = (BlockBody, moveValue) => {
+const availableMoveBlockHorizental = (BlockBody, GroundBlock, moveValue) => {
   let flag = true;
   for (domi of BlockBody) {
-    let tmp = domi.x + moveValue;
-    if (tmp < 1 || tmp > BOARD_SIZE_WIDTH) flag = false;
+    let tmpx = domi.x + moveValue;
+    let tmpy = domi.y;
+    if (tmpx < 1 || tmpx > BOARD_SIZE_WIDTH) flag = false;
+    for (block of GroundBlock) {
+      if (block.x === tmpx && block.y === tmpy) flag = false;
+    }
   }
-
   return flag;
 };
 
@@ -598,10 +616,13 @@ socketIO.on("connect", (socket) => {
 
   socket.on("changeDirection", (data) => {
     users = users.map((item) =>
-      item.socketID === data.socketID
+      item.socketID === data.socketID && item.itemBlockType != 1
         ? {
             ...item,
-            itemBlockBody: rotateBlock(item.itemBlockBody),
+            itemBlockBody: rotateBlock(
+              item.itemBlockBody,
+              item.itemGroundBlock
+            ),
           }
         : item
     );
@@ -609,21 +630,19 @@ socketIO.on("connect", (socket) => {
 
   socket.on("moveBlock", (data) => {
     // TODO
-    // let start_time = Date.now();
-    // console.log("b_start =>", start_time);
+
     users = users.map((item) =>
       item.socketID === data.socketID
         ? {
             ...item,
             itemBlockBody: moveBlockHorizental(
               item.itemBlockBody,
+              item.itemGroundBlock,
               data.direction
             ),
           }
         : item
     );
-    // let end_time = Date.now();
-    // console.log("end   =>", end_time);
   });
 
   socket.on("dropBlock", (data) => {
@@ -634,6 +653,7 @@ socketIO.on("connect", (socket) => {
 
   socket.on("loseStateGet", () => {
     GAME_STATE = READY;
+    socket.emit("readyStateEmit");
     clearInterval(broadcast);
 
     users = users.map((item) => updateUser(item, item.state));

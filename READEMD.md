@@ -1,11 +1,11 @@
 # Getting Started with Tank-box
 
-Relax with Tank-box
+Relax with Tetris
 
 ## Creator
 
 Aurthor: ARMY
-Date: July 2, 2024
+Date: July 12, 2024
 Tool: Express, node, socket, html, css, javaScript
 
 ## `yarn start`
@@ -18,4 +18,4 @@ You may also see any lint errors in the console.
 
 ## version
 
-Tank1.1
+Tetris.3.0
