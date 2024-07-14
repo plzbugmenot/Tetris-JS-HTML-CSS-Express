@@ -626,7 +626,8 @@ const verifyHash = (hash) => {
 socketIO.on("connect", (socket) => {
   console.log("connected with client");
 
-  socket.on("newUser", (data) => {
+  //newUser
+  socket.on("Il1I111lII1l1Il1lIl1I111lII1lIIlll", (data) => {
     if (isExistSameUser(data.socketID) && users.length < 2) {
       let newUser = createUser(data);
       users.push(newUser);
@@ -637,11 +638,12 @@ socketIO.on("connect", (socket) => {
         size: users.length,
         userHash: newUser.userHash,
       };
-      socketIO.emit("newUserResponse", sendData);
+      //newUserResponse
+      socketIO.emit("llIl1I111lII1l1Il1l1l1l1IlIllI", sendData);
     }
   });
-
-  socket.on("changeDirection", (data) => {
+  //changeDirection
+  socket.on("llIl1I111l11111Il1l1l1l1IlIllI", (data) => {
     users = users.map((item) =>
       item.socketID === data.socketID &&
       item.itemBlockType != 1 &&
@@ -656,8 +658,8 @@ socketIO.on("connect", (socket) => {
         : item
     );
   });
-
-  socket.on("moveBlock", (data) => {
+  //moveBlock
+  socket.on("llIl1I111l11111Il1l1l11l1l1l1lll", (data) => {
     users = users.map((item) =>
       item.socketID === data.socketID && verifyHash(data.hash)
         ? {
@@ -671,8 +673,8 @@ socketIO.on("connect", (socket) => {
         : item
     );
   });
-
-  socket.on("dropBlock", (data) => {
+  //dropBlock
+  socket.on("IIII111I111l11111Il1l1l11l1l1l1lll", (data) => {
     users = users.map((item) =>
       item.socketID === data.socketID && verifyHash(data.hash)
         ? dropBlock(item)
@@ -680,17 +682,19 @@ socketIO.on("connect", (socket) => {
     );
   });
 
-  socket.on("loseStateGet", (hash) => {
+  //loseStateGet
+  socket.on("I111I111l11111II111I111l111111I", (hash) => {
     if (!verifyHash(hash)) return;
     GAME_STATE = READY;
-    socket.emit("readyStateEmit");
+    // readyStateEmit
+    socket.emit("11llII1ll11l1l11l1l1lllIlIllI1l");
     clearInterval(broadcast);
 
     users = users.map((item) => updateUser(item, item.state));
     sendStateBlocks = [];
   });
-
-  socket.on("startGameWithCouplePlayer", (hash) => {
+  //startGameWithCouplePlayer
+  socket.on("11llII1ll11l1l11l1l1lllIlIlll11", (hash) => {
     if (users.length === 2 && verifyHash(hash)) {
       broadcast = setInterval(() => {
         mainLoop();
@@ -717,7 +721,8 @@ socketIO.on("connect", (socket) => {
           gameState: GAME_STATE,
           sendStateBlocks: sendStateBlocksDomino,
         };
-        socketIO.emit("stateOfUsers", data);
+        //stateOfUsers
+        socketIO.emit("1l1l1l1llll1lIlIlI1lI1lI1", data);
       }, FRAME);
     }
   });
