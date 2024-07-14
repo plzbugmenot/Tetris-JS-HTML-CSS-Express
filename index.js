@@ -493,32 +493,29 @@ const dropBlock = (item) => {
 };
 
 const rotateBlock = (tmpBlockBody, GroundBlock) => {
-  // TODO
-
   let _x = tmpBlockBody[2].x;
   let _y = tmpBlockBody[2].y;
 
-  console.log("pre =>", tmpBlockBody);
-  if (availableRotateBlock(tmpBlockBody, GroundBlock))
+  if (availableRotateBlock(tmpBlockBody, GroundBlock, _x, _y))
     tmpBlockBody = tmpBlockBody.map((item) => getRotateDomino(item, _x, _y));
-
-  console.log("aft =>", tmpBlockBody);
 
   return tmpBlockBody;
 };
 
-const availableRotateBlock = (tmpBlockBody, GroundBlock) => {
+const availableRotateBlock = (BlockBody, GroundBlock, _x, _y) => {
   let flag = true;
 
-  for (block of tmpBlockBody) {
-    let tmpBlock = getRotateDomino(block, block.x, block.y);
-    if (tmpBlock.x <= 1 || tmpBlock.x >= BOARD_SIZE_WIDTH) flag = false;
-
+  for (block of BlockBody) {
+    let tmpBlock = {
+      x: block.x,
+      y: block.y,
+    };
+    tmpBlock = getRotateDomino(tmpBlock, _x, _y);
+    if (tmpBlock.x < 1 || tmpBlock.x > BOARD_SIZE_WIDTH) flag = false;
     for (gblock of GroundBlock) {
       if (tmpBlock.x === gblock.x && tmpBlock.y === gblock.y) flag = false;
     }
   }
-  console.log(flag);
   return flag;
 };
 
@@ -546,10 +543,12 @@ const availableMoveBlockHorizental = (BlockBody, GroundBlock, moveValue) => {
     let tmpx = domi.x + moveValue;
     let tmpy = domi.y;
     if (tmpx < 1 || tmpx > BOARD_SIZE_WIDTH) flag = false;
+
     for (block of GroundBlock) {
       if (block.x === tmpx && block.y === tmpy) flag = false;
     }
   }
+
   return flag;
 };
 
@@ -589,24 +588,24 @@ const moveBlockVertical = (BlockBody) => {
   return BlockBody;
 };
 
+const isExistSameUser = (id) => {
+  // if true, u can create
+  let tmp = true;
+  for (item of users) if (item.socketID === id) tmp = false;
+  return tmp;
+};
+
 /***************** SOCKET **********************/
 socketIO.on("connect", (socket) => {
   console.log("connected with client");
 
   socket.on("newUser", (data) => {
-    if (users.length < 2) {
+    if (isExistSameUser(data.socketID) && users.length < 2) {
       let newUser = createUser(data);
       users.push(newUser);
       console.log(newUser.userName, " is connected...", newUser.socketID);
       console.log("There are ", users.length, " users...");
       socketIO.emit("newUserResponse", newUser);
-    } else {
-      console.log("There is full users.");
-      let response = {
-        socketID: data.socketID,
-        msg: "There is full users.",
-      };
-      // socketIO.emit("newUserResponseError", response);
     }
   });
 
