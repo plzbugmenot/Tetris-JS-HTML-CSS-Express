@@ -99,11 +99,11 @@ let sendStateBlocks = [];
 let broadcast;
 
 const init = () => {
-  // ----
+  // -.--
   DOMINO_1 = [
     { x: 4, y: 1 },
-    { x: 5, y: 1 },
     { x: 6, y: 1 },
+    { x: 5, y: 1 },
     { x: 7, y: 1 },
   ];
   // --
@@ -114,45 +114,45 @@ const init = () => {
     { x: 5, y: 2 },
     { x: 6, y: 2 },
   ];
-  // --
-  //  |
-  DOMINO_3 = [
-    { x: 6, y: 1 },
-    { x: 7, y: 1 },
-    { x: 7, y: 2 },
-    { x: 7, y: 3 },
-  ];
-  // --
+  // _ . _
   // |
-  DOMINO_4 = [
-    { x: 6, y: 1 },
+  DOMINO_3 = [
+    { x: 5, y: 1 },
     { x: 7, y: 1 },
-    { x: 6, y: 2 },
-    { x: 6, y: 3 },
+    { x: 6, y: 1 },
+    { x: 5, y: 2 },
+  ];
+  // _ . _
+  //      |
+  DOMINO_4 = [
+    { x: 5, y: 1 },
+    { x: 7, y: 1 },
+    { x: 6, y: 1 },
+    { x: 7, y: 2 },
   ];
   // |_
   // |
   DOMINO_5 = [
     { x: 5, y: 2 },
-    { x: 6, y: 1 },
-    { x: 6, y: 2 },
     { x: 7, y: 2 },
+    { x: 6, y: 2 },
+    { x: 6, y: 1 },
   ];
-  // |_
-  //   |
+  //   _
+  // _|
   DOMINO_6 = [
     { x: 6, y: 1 },
-    { x: 6, y: 2 },
-    { x: 7, y: 2 },
-    { x: 7, y: 3 },
-  ];
-  //  _|
-  // |
-  DOMINO_7 = [
     { x: 7, y: 1 },
-    { x: 7, y: 2 },
     { x: 6, y: 2 },
-    { x: 6, y: 3 },
+    { x: 5, y: 2 },
+  ];
+  //  _
+  //   |_
+  DOMINO_7 = [
+    { x: 5, y: 1 },
+    { x: 6, y: 1 },
+    { x: 6, y: 2 },
+    { x: 7, y: 2 },
   ];
 
   DOMINOS = [
@@ -511,7 +511,8 @@ const availableRotateBlock = (BlockBody, GroundBlock, _x, _y) => {
       y: block.y,
     };
     tmpBlock = getRotateDomino(tmpBlock, _x, _y);
-    if (tmpBlock.x < 1 || tmpBlock.x > BOARD_SIZE_WIDTH) flag = false;
+    if (tmpBlock.x < 1 || tmpBlock.x > BOARD_SIZE_WIDTH || tmpBlock.y < 1)
+      flag = false;
     for (gblock of GroundBlock) {
       if (tmpBlock.x === gblock.x && tmpBlock.y === gblock.y) flag = false;
     }
