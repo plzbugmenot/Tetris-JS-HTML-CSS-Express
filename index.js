@@ -166,6 +166,8 @@ const init = () => {
   ];
 };
 
+let level1, level2;
+
 const mainLoop = () => {
   users = users.map((item) =>
     item.actionTime === 0
@@ -218,6 +220,9 @@ const mainLoop = () => {
       (item) => item.position <= SEND_WIDTH && item.position >= 0
     );
   }
+
+  level1 = users[0].level;
+  level2 = users[1].level;
 };
 
 const updateSendBlocks = (sendBlocks, sender) => {
@@ -270,6 +275,7 @@ const updateUser = (data, iswin) => {
   let tmp = generateRandomDomino();
   let preDomino = generateRandomDomino();
   let newLevel = iswin === GAME ? data.level + 1 : data.level;
+
   return {
     ...data,
     itemBlockBody: tmp.body,
@@ -511,7 +517,7 @@ const availableRotateBlock = (BlockBody, GroundBlock, _x, _y) => {
       y: block.y,
     };
     tmpBlock = getRotateDomino(tmpBlock, _x, _y);
-    if (tmpBlock.x < 1 || tmpBlock.x > BOARD_SIZE_WIDTH || tmpBlock.y < 1)
+    if (tmpBlock.x < 1 || tmpBlock.x > BOARD_SIZE_WIDTH || tmpBlock.y < 0)
       flag = false;
     for (gblock of GroundBlock) {
       if (tmpBlock.x === gblock.x && tmpBlock.y === gblock.y) flag = false;
@@ -606,7 +612,11 @@ socketIO.on("connect", (socket) => {
       users.push(newUser);
       console.log(newUser.userName, " is connected...", newUser.socketID);
       console.log("There are ", users.length, " users...");
-      socketIO.emit("newUserResponse", newUser);
+      const sendData = {
+        newUser: newUser,
+        size: users.length,
+      };
+      socketIO.emit("newUserResponse", sendData);
     }
   });
 
@@ -629,8 +639,6 @@ socketIO.on("connect", (socket) => {
   });
 
   socket.on("moveBlock", (data) => {
-    // TODO
-
     users = users.map((item) =>
       item.socketID === data.socketID
         ? {
@@ -657,7 +665,7 @@ socketIO.on("connect", (socket) => {
     clearInterval(broadcast);
 
     users = users.map((item) => updateUser(item, item.state));
-
+    sendStateBlocks = [];
     // console.log(users[0].level, "vs", users[1].level);
     // console.log(users[0].who, "vs", users[1].who);
   });

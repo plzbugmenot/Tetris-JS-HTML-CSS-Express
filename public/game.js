@@ -57,6 +57,8 @@ const USER2 = "USER2";
 
 let sendStateBlocks = [];
 
+const stateText = ["", "Wait Another Player...", "Please Press Enter..."];
+
 /********* Transfer *************/
 
 socket.on("connect", () => {
@@ -82,6 +84,7 @@ socket.on("stateOfUsers", (data) => {
   sendStateBlocks = data.sendStateBlocks;
 
   GAME_STATE = data.gameState;
+  if (GAME_STATE === GAME) setStateBoardText(0);
   convertSendStateBlocks(sendStateBlocks);
 
   for (item of users) init(item);
@@ -93,9 +96,24 @@ socket.on("stateOfUsers", (data) => {
   drawStateDataFromServer();
 });
 
-socket.on("newUserResponse", (newUser) => {
-  initData(newUser);
+socket.on("newUserResponse", (data) => {
+  initData(data.newUser);
+
+  setStateBoardText(data.size);
+  // if (data.size === 1) {
+  //   console.log("await another player...");
+  // } else if (data.size === 2) {
+  //   console.log("presss Enter");
+  // }
 });
+
+const setStateBoardText = (size) => {
+  stateBoard.innerHTML = "";
+  let leveltxt1 = document.createElement("div");
+  leveltxt1.innerHTML = stateText[size];
+  leveltxt1.classList.add("state-text");
+  stateBoard.appendChild(leveltxt1);
+};
 
 const sendMessage = () => {
   const input = document.getElementById("name");
@@ -127,11 +145,11 @@ const init = (user) => {
     userName1 = user.userName;
     who === USER1 ? (level1 = user.level) : (level2 = user.level);
 
-    // console.log("user1 => ", user.level);
-
     if (state === LOSE) {
+      console.log("Lose State get... ready state");
       socket.emit("loseStateGet");
       GAME_STATE = READY;
+      setStateBoardText(2);
     }
   } else {
     BlockBody2 = user.itemBlockBody;
@@ -206,6 +224,7 @@ const handleSet = (event) => {
   else if (event.key === " ") {
     if (GAME_STATE === GAME) return;
     socket.emit("startGameWithCouplePlayer");
+    setStateBoardText(0);
   }
 };
 

@@ -53,6 +53,12 @@ body {
   height: 20px;
 }
 
+#user1-title,
+#user2-title {
+  color: #eeeeee;
+  /* font-size: 40px; */
+}
+
 #user1-level,
 #user2-level {
   display: flex;
@@ -63,9 +69,15 @@ body {
 
 #state-start {
   display: flex;
-  height: 150px;
+  height: 100%;
   align-items: center;
   justify-content: center;
+}
+
+.state-text {
+  color: #eeeeee;
+  text-align: center;
+  font-size: 32px;
 }
 
 #game-board-other {
