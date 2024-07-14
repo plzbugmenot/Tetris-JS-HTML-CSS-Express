@@ -246,13 +246,27 @@ const insertBlockBodyToGroundBody = (ground, block) => {
   return tmp;
 };
 
+const NAMELENGTH = 32;
+const Serials = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+
+const getHashFromUsername = () => {
+  let tmp = "";
+  for (let i = 0; i < NAMELENGTH; i++) {
+    let c = Serials[Math.floor(Date.now() * Math.random()) % Serials.length];
+    tmp += c;
+  }
+  return tmp;
+};
+
 const createUser = (data) => {
   users.length === 0 ? (User1 = data.socketID) : (User2 = data.socketID);
   let tmp = generateRandomDomino();
   let preDomino = generateRandomDomino();
+  let tmpUserHash = getHashFromUsername();
   return {
     userName: data.userName || "user",
     socketID: data.socketID,
+    userHash: tmpUserHash,
     who: users.length === 0 ? USER1 : USER2,
 
     actionTime: ACTION_INIT_TIME,
@@ -305,7 +319,7 @@ const getinitialGroundBlocks = (level) => {
     let rand_2 = Math.floor(Date.now() * Math.random()) % BOARD_SIZE_WIDTH;
     if (rand_1 === rand_2)
       rand_2 = Math.floor(Date.now() * Math.random()) % BOARD_SIZE_WIDTH;
-    for (let i = 0; i < BOARD_SIZE_WIDTH; i++)
+    for (let i = 1; i <= BOARD_SIZE_WIDTH; i++)
       if (i !== rand_1 && i !== rand_2)
         tmp.push({
           x: i,
@@ -602,6 +616,12 @@ const isExistSameUser = (id) => {
   return tmp;
 };
 
+const verifyHash = (hash) => {
+  if (hash === users[0].userHash) return true;
+  else if (hash === users[1].userHash) return true;
+  return false;
+};
+
 /***************** SOCKET **********************/
 socketIO.on("connect", (socket) => {
   console.log("connected with client");
@@ -610,23 +630,22 @@ socketIO.on("connect", (socket) => {
     if (isExistSameUser(data.socketID) && users.length < 2) {
       let newUser = createUser(data);
       users.push(newUser);
-      console.log(newUser.userName, " is connected...", newUser.socketID);
+      console.log(newUser.userName, " is connected...", newUser.userHash);
       console.log("There are ", users.length, " users...");
       const sendData = {
         newUser: newUser,
         size: users.length,
+        userHash: newUser.userHash,
       };
       socketIO.emit("newUserResponse", sendData);
     }
   });
 
-  socket.on("test", () => {
-    console.log("working now");
-  });
-
   socket.on("changeDirection", (data) => {
     users = users.map((item) =>
-      item.socketID === data.socketID && item.itemBlockType != 1
+      item.socketID === data.socketID &&
+      item.itemBlockType != 1 &&
+      verifyHash(data.hash)
         ? {
             ...item,
             itemBlockBody: rotateBlock(
@@ -640,7 +659,7 @@ socketIO.on("connect", (socket) => {
 
   socket.on("moveBlock", (data) => {
     users = users.map((item) =>
-      item.socketID === data.socketID
+      item.socketID === data.socketID && verifyHash(data.hash)
         ? {
             ...item,
             itemBlockBody: moveBlockHorizental(
@@ -655,23 +674,24 @@ socketIO.on("connect", (socket) => {
 
   socket.on("dropBlock", (data) => {
     users = users.map((item) =>
-      item.socketID === data.socketID ? dropBlock(item) : item
+      item.socketID === data.socketID && verifyHash(data.hash)
+        ? dropBlock(item)
+        : item
     );
   });
 
-  socket.on("loseStateGet", () => {
+  socket.on("loseStateGet", (hash) => {
+    if (!verifyHash(hash)) return;
     GAME_STATE = READY;
     socket.emit("readyStateEmit");
     clearInterval(broadcast);
 
     users = users.map((item) => updateUser(item, item.state));
     sendStateBlocks = [];
-    // console.log(users[0].level, "vs", users[1].level);
-    // console.log(users[0].who, "vs", users[1].who);
   });
 
-  socket.on("startGameWithCouplePlayer", () => {
-    if (users.length === 2) {
+  socket.on("startGameWithCouplePlayer", (hash) => {
+    if (users.length === 2 && verifyHash(hash)) {
       broadcast = setInterval(() => {
         mainLoop();
         let sendStateBlocksDomino = [];
@@ -680,8 +700,20 @@ socketIO.on("connect", (socket) => {
         }
 
         GAME_STATE = GAME;
+        // send nessessary data for secure
         const data = {
-          users: users,
+          users: users.map((item) => ({
+            itemBlockBody: item.itemBlockBody,
+            itemBlockType: item.itemBlockType,
+            itemGroundBlock: item.itemGroundBlock,
+            itemPreBody: item.itemPreBody,
+            itemPreType: item.itemPreType,
+            level: item.level,
+            socketID: item.socketID,
+            state: item.state,
+            userName: item.userName,
+            who: item.who,
+          })),
           gameState: GAME_STATE,
           sendStateBlocks: sendStateBlocksDomino,
         };

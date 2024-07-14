@@ -50,6 +50,8 @@ let preType2;
 let userName2;
 let level2;
 
+let UserHash = "";
+
 let who = "";
 
 const USER1 = "USER1";
@@ -57,16 +59,12 @@ const USER2 = "USER2";
 
 let sendStateBlocks = [];
 
-const stateText = ["", "Wait Another Player...", "Please Press Enter..."];
+const stateText = ["", "Wait Another Player...", "Please Press Space..."];
 
 /********* Transfer *************/
 
 socket.on("connect", () => {
   console.log("connected with server.");
-});
-
-socket.on("newUserResponseError", (response) => {
-  if (response.socketID === socket.id) alert(response.msg);
 });
 
 socket.on("sendBlockEvent", (data) => {
@@ -75,7 +73,6 @@ socket.on("sendBlockEvent", (data) => {
 });
 
 socket.on("readyStateEmit", () => {
-  console.log("GAME_STATE => ", GAME_STATE);
   GAME_STATE = READY;
 });
 
@@ -97,14 +94,8 @@ socket.on("stateOfUsers", (data) => {
 });
 
 socket.on("newUserResponse", (data) => {
-  initData(data.newUser);
-
+  initData(data.newUser, data.userHash);
   setStateBoardText(data.size);
-  // if (data.size === 1) {
-  //   console.log("await another player...");
-  // } else if (data.size === 2) {
-  //   console.log("presss Enter");
-  // }
 });
 
 const setStateBoardText = (size) => {
@@ -128,9 +119,12 @@ const sendMessage = () => {
   }
 };
 
-const initData = (newUser) => {
-  if (newUser.socketID === socket.id) BlockBody = newUser.BlockBody;
-  else BlockBody2 = newUser.BlockBody;
+const initData = (newUser, hash) => {
+  if (newUser.socketID === socket.id) {
+    BlockBody = newUser.BlockBody;
+    UserHash = hash;
+    localStorage.setItem("UserHash", UserHash);
+  } else BlockBody2 = newUser.BlockBody;
 };
 
 const init = (user) => {
@@ -146,8 +140,7 @@ const init = (user) => {
     who === USER1 ? (level1 = user.level) : (level2 = user.level);
 
     if (state === LOSE) {
-      console.log("Lose State get... ready state");
-      socket.emit("loseStateGet");
+      socket.emit("loseStateGet", localStorage.getItem("UserHash"));
       GAME_STATE = READY;
       setStateBoardText(2);
     }
@@ -198,7 +191,7 @@ const drawDataFromServer = () => {
   preBoard2.innerHTML = "";
   if (BlockBody2) {
     drawBlock(gameBoard2, BlockBody2, blockType2);
-    drawGroundBlock(gameBoard2, GroundBlock2);
+    drawGroundBlock2(gameBoard2, GroundBlock2);
     drawBlock(preBoard2, preBody2, preType2);
   }
   sendBlockBoard.innerHTML = "";
@@ -214,6 +207,10 @@ const getInputData = () => {
 };
 
 const handleSet = (event) => {
+  if (event.ctrlKey && event.key === "s") {
+    event.preventDefault();
+  }
+
   if (event.key === "Control") setEventByInputKey(DROP);
   else if (event.key === "ArrowDown") setEventByInputKey(DOWN); // rotate
   else if (event.key === "ArrowRight") setEventByInputKey(RIGHT); // move right
@@ -223,7 +220,7 @@ const handleSet = (event) => {
   else if (event.key === "a") setEventByInputKey(LEFT); // move left
   else if (event.key === " ") {
     if (GAME_STATE === GAME) return;
-    socket.emit("startGameWithCouplePlayer");
+    socket.emit("startGameWithCouplePlayer", localStorage.getItem("UserHash"));
     setStateBoardText(0);
   }
 };
@@ -232,6 +229,7 @@ const setEventByInputKey = (direction) => {
   const data = {
     socketID: socket.id,
     direction: direction,
+    hash: localStorage.getItem("UserHash"),
   };
   if (direction === DOWN) socket.emit("changeDirection", data);
   else if (direction === RIGHT || direction === LEFT)
@@ -259,6 +257,16 @@ const drawGroundBlock = (drawBoard, drawGroundBlock) => {
   }
 };
 
+const drawGroundBlock2 = (drawBoard, drawGroundBlock) => {
+  for (segment of drawGroundBlock) {
+    const dominoElement = document.createElement("div");
+    dominoElement.style.gridRowStart = segment.y;
+    dominoElement.style.gridColumnStart = segment.x;
+    dominoElement.classList.add("init-block-2");
+    drawBoard.appendChild(dominoElement);
+  }
+};
+
 const drawStateDataFromServer = () => {
   NameBoard1.innerHTML = "";
   let nameText = document.createElement("div");
@@ -277,8 +285,6 @@ const drawStateDataFromServer = () => {
     LevelBoard1 = document.getElementById("user2-level");
     LevelBoard2 = document.getElementById("user1-level");
   }
-
-  // if (Date.now() % 1000 < 50) console.log(level1, " vs ", level2);
   LevelBoard1.innerHTML = "";
   for (let i = 0; i < level1; i++) {
     let leveltxt1 = document.createElement("div");
