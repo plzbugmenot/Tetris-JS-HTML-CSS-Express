@@ -13,34 +13,45 @@
 
 <body>
     <div id="register">
-        <input id="name" type="text" maxlength="3" />
-        <button onclick="sendMessage()" class="registerBtn">start</button>
+        <input id="name" type="text" maxlength="3" placeholder="input user name" />
+        <button onclick="btnRegister()" class="registerBtn">Join</button>
     </div>
-    <div class="game-body">
-        <div class="top-board">
-            <div id="pre-game-board"></div>
-            <div class="pre-state-board"></div>
-            <div id="pre-game-board-other"></div>
-        </div>
-        <div class="main-board">
-            <div id="game-board"></div>
-            <div class="state-board">
-                <div class="state-name">
-                    <div id="user1-title"></div>
-                    <div>vs</div>
-                    <div id="user2-title"></div>
-                </div>
-                <div id="state-start">
 
-                </div>
-                <div class="state-level">
-                    <div id="user1-level"></div>
-                    <div id="user2-level"></div>
-                </div>
-            </div>
-            <div id="game-board-other"></div>
+    <div id="room-body">
+        <div style="display: flex; justify-content: center; margin-bottom: 1rem; gap: 1rem;">
+            <input id="roomName" type="text" maxlength="6" placeholder="input room name" />
+            <button onclick="btnCreateRoom()" class="registerBtn">Create</button>
         </div>
-        <div id="footer-board">
+        <div id="rooms">
+        </div>
+    </div>
+    <div id="game-body">
+        <div class="main-game-board">
+            <div class="top-board">
+                <div id="pre-game-board"></div>
+                <div id="pre-state-board"></div>
+                <div id="pre-game-board-other"></div>
+            </div>
+            <div class="main-board">
+                <div id="game-board"></div>
+                <div class="state-board">
+                    <div class="state-name">
+                        <div id="user1-title"></div>
+                        <div>vs</div>
+                        <div id="user2-title"></div>
+                    </div>
+                    <div id="state-start">
+
+                    </div>
+                    <div class="state-level">
+                        <div id="user1-level"></div>
+                        <div id="user2-level"></div>
+                    </div>
+                </div>
+                <div id="game-board-other"></div>
+            </div>
+            <div id="footer-board">
+            </div>
         </div>
 </body>
 <script>

@@ -1,3 +1,9 @@
+const gamebody = document.getElementById("game-body");
+const registerbody = document.getElementById("register");
+const roombody = document.getElementById("room-body");
+
+const roomList = document.getElementById("rooms");
+
 const gameBoard = document.getElementById("game-board");
 const preBoard = document.getElementById("pre-game-board");
 
@@ -10,6 +16,7 @@ const NameBoard1 = document.getElementById("user1-title");
 const NameBoard2 = document.getElementById("user2-title");
 
 const stateBoard = document.getElementById("state-start");
+const roomNameBoard = document.getElementById("pre-state-board");
 
 /*********GAME Setting*************/
 let gameOver = false;
@@ -50,14 +57,17 @@ let preType2;
 let userName2;
 let level2;
 
-let who = "";
-
 const USER1 = "USER1";
 const USER2 = "USER2";
+let who = "";
+let roomName = "";
 
 let sendStateBlocks = [];
 
 const stateText = ["", "Wait Another Player...", "Please Press Enter..."];
+
+gamebody.classList.add("hide-body");
+roombody.classList.add("hide-body");
 
 /********* Transfer *************/
 
@@ -79,32 +89,54 @@ socket.on("readyStateEmit", () => {
   GAME_STATE = READY;
 });
 
-socket.on("stateOfUsers", (data) => {
-  users = data.users;
-  sendStateBlocks = data.sendStateBlocks;
-
-  GAME_STATE = data.gameState;
-  if (GAME_STATE === GAME) setStateBoardText(0);
-  convertSendStateBlocks(sendStateBlocks);
-
-  for (item of users) init(item);
-
-  updatePreBlock(preBody);
-  updatePreBlock(preBody2);
-
-  drawDataFromServer();
-  drawStateDataFromServer();
+socket.on("registerResponse", (data) => {
+  addRoomItemToRoomBody(data);
 });
 
-socket.on("newUserResponse", (data) => {
-  initData(data.newUser);
+socket.on("stateOfUsers", (data) => {
+  // data: gameRoom
+  // room: state roomName, roomID, sendStateBlock, users[], User1, User2
 
-  setStateBoardText(data.size);
-  // if (data.size === 1) {
-  //   console.log("await another player...");
-  // } else if (data.size === 2) {
-  //   console.log("presss Enter");
-  // }
+  for (room of data.gameRooms)
+    if (room.roomID === localStorage.getItem("roomID")) {
+      roomName = room.roomName;
+      users = room.users;
+      sendStateBlocks = room.sendStateBlocks;
+      GAME_STATE = room.state;
+
+      if (GAME_STATE === GAME) setStateBoardText(0);
+      convertSendStateBlocks(sendStateBlocks);
+
+      for (item of users) init(item);
+
+      updatePreBlock(preBody);
+      updatePreBlock(preBody2);
+
+      if (GAME_STATE === GAME) drawDataFromServer();
+      drawStateDataFromServer();
+    }
+});
+
+socket.on("createRoomResponse", (data) => {
+  // console.log("cre res =>", data);
+  if (data.socketID === socket.id) {
+    localStorage.setItem("roomID", data.roomID);
+    roombody.classList.remove("show-body");
+    roombody.classList.add("hide-body");
+    gamebody.classList.remove("hide-body");
+    gamebody.classList.add("show-body");
+  }
+});
+
+socket.on("joinRoomResponse", (data) => {
+  // console.log("join res =>", data);
+  if (data.socketID === socket.id) {
+    localStorage.setItem("roomID", data.roomID);
+    roombody.classList.remove("show-body");
+    roombody.classList.add("hide-body");
+    gamebody.classList.remove("hide-body");
+    gamebody.classList.add("show-body");
+  }
 });
 
 const setStateBoardText = (size) => {
@@ -115,22 +147,42 @@ const setStateBoardText = (size) => {
   stateBoard.appendChild(leveltxt1);
 };
 
-const sendMessage = () => {
+const btnRegister = () => {
   const input = document.getElementById("name");
   const data = {
     userName: input.value,
     socketID: socket.id,
   };
   if (data.userName.trim()) {
-    socket.emit("newUser", data);
+    localStorage.setItem("userName", input.value);
+
+    registerbody.classList.add("hide-body");
+    roombody.classList.remove("hide-body");
+    roombody.classList.add("show-body");
+
+    socket.emit("register");
   } else {
     if (!data.userName.trim()) alert("Input user name.");
   }
 };
 
-const initData = (newUser) => {
-  if (newUser.socketID === socket.id) BlockBody = newUser.BlockBody;
-  else BlockBody2 = newUser.BlockBody;
+const btnCreateRoom = () => {
+  const input = document.getElementById("roomName");
+  const data = {
+    roomName: input.value,
+    userName: localStorage.getItem("userName"),
+    socketID: socket.id,
+  };
+  if (data.roomName.trim()) {
+    roombody.classList.remove("show-body");
+
+    gamebody.classList.add("hide-body");
+    roombody.classList.add("show-body");
+
+    socket.emit("createRoom", data);
+  } else {
+    if (!data.roomName.trim()) alert("Input Room name.");
+  }
 };
 
 const init = (user) => {
@@ -146,9 +198,10 @@ const init = (user) => {
     who === USER1 ? (level1 = user.level) : (level2 = user.level);
 
     if (state === LOSE) {
-      console.log("Lose State get... ready state");
-      socket.emit("loseStateGet");
-      GAME_STATE = READY;
+      const data = {
+        roomID: localStorage.getItem("roomID"),
+      };
+      socket.emit("loseStateGet", data);
       setStateBoardText(2);
     }
   } else {
@@ -201,8 +254,9 @@ const drawDataFromServer = () => {
     drawGroundBlock(gameBoard2, GroundBlock2);
     drawBlock(preBoard2, preBody2, preType2);
   }
+
   sendBlockBoard.innerHTML = "";
-  drawBlock(sendBlockBoard, sendStateBlocks, 6);
+  drawBlock(sendBlockBoard, sendStateBlocks, 7);
 };
 
 const convertSendStateBlocks = (sendStateBlocks) => {
@@ -222,14 +276,17 @@ const handleSet = (event) => {
   else if (event.key === "d") setEventByInputKey(RIGHT); // move right
   else if (event.key === "a") setEventByInputKey(LEFT); // move left
   else if (event.key === " ") {
-    if (GAME_STATE === GAME) return;
-    socket.emit("startGameWithCouplePlayer");
-    setStateBoardText(0);
+    const data = {
+      roomID: localStorage.getItem("roomID"),
+    };
+    socket.emit("startGameWithCouplePlayer", data);
   }
 };
 
 const setEventByInputKey = (direction) => {
+  if (GAME_STATE === READY) return;
   const data = {
+    roomID: localStorage.getItem("roomID"),
     socketID: socket.id,
     direction: direction,
   };
@@ -295,5 +352,71 @@ const drawStateDataFromServer = () => {
     leveltxt2.innerHTML = tmpText;
     leveltxt2.classList.add("level-item");
     LevelBoard2.appendChild(leveltxt2);
+  }
+
+  roomNameBoard.innerHTML = "";
+  let roomNametxt = document.createElement("div");
+  roomNametxt.innerHTML = roomName;
+  roomNametxt.classList.add("room-name-text");
+  roomNameBoard.appendChild(roomNametxt);
+};
+
+const addRoomItemToRoomBody = (data) => {
+  // data: gameRoom
+  // room: state roomName, roomID, sendStateBlock, users[], User1, User2
+  roomList.innerHTML = "";
+  for (room of data.gameRooms) {
+    let newRoom = document.createElement("div");
+
+    // add game number
+    let roomName = document.createElement("div");
+    roomName.innerHTML = room.roomName;
+    newRoom.classList.add("room-item-level");
+    newRoom.appendChild(roomName);
+
+    // add title  player1 vs player2
+    let Title = document.createElement("div");
+    let tmpTitle =
+      room.users.length === 2
+        ? room.users[0].userName + " : " + room.users[1].userName
+        : room.users[0].userName;
+    Title.innerHTML = tmpTitle;
+    Title.classList.add("room-item-title");
+    newRoom.appendChild(Title);
+
+    //add btns
+    let btnGroup = document.createElement("div");
+    let btnJoin = document.createElement("div");
+    btnJoin.innerHTML = "Join";
+    btnJoin.classList.add("room-item-btn");
+    btnJoin.onclick = () => {
+      if (room.users.length === 2) return;
+      const data = {
+        roomID: room.roomID,
+        userName: localStorage.getItem("userName"),
+        socketID: socket.id,
+      };
+      socket.emit("joinRoom", data);
+    };
+    btnGroup.appendChild(btnJoin);
+
+    let btnView = document.createElement("div");
+    btnView.innerHTML = "View";
+    btnView.classList.add("room-item-btn");
+    btnGroup.appendChild(btnView);
+    btnGroup.classList.add("room-item-btnGroup");
+    btnView.onclick = () => {
+      localStorage.getItem("roomID", room.roomID);
+      roombody.classList.remove("show-body");
+      roombody.classList.add("hide-body");
+      gamebody.classList.remove("hide-body");
+      gamebody.classList.add("show-body");
+    };
+    newRoom.appendChild(btnGroup);
+
+    // new room add
+    newRoom.classList.add("room-item");
+
+    roomList.appendChild(newRoom);
   }
 };
