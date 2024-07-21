@@ -199,14 +199,25 @@ const mainLoop = (room) => {
             actionTime: item.actionTime - 1,
           }
     );
-
     for (item of tmpSendStateBlock) {
       if (item.sender === room.User1 && item.position === SEND_WIDTH - 1) {
-        receiveBlockFromSender(item.sender, item.Blocks, item.lines, room);
+        tmpUsers = receiveBlockFromSender(
+          item.sender,
+          item.Blocks,
+          item.lines,
+          room,
+          tmpUsers
+        );
         item.position += 10;
       }
       if (item.sender === room.User2 && item.position === 1) {
-        receiveBlockFromSender(item.sender, item.Blocks, item.lines, room);
+        tmpUsers = receiveBlockFromSender(
+          item.sender,
+          item.Blocks,
+          item.lines,
+          room,
+          tmpUsers
+        );
         item.position -= 10;
       }
     }
@@ -330,29 +341,35 @@ const getSendBlockFromLastBlock = (LastBlock, sendBlockLines) => {
   return sendBlocks;
 };
 
-const receiveBlockFromSender = (sender, sendBlocks, blockLines, room) => {
-  room.users = room.users.map((item) =>
+const receiveBlockFromSender = (
+  sender,
+  sendBlocks,
+  blockLines,
+  room,
+  tmpUsers
+) => {
+  tmpUsers = tmpUsers.map((item) =>
     item.socketID !== sender
-      ? {
-          ...item,
-          itemBlockBody: [],
-          itemIsNeccessaryBlock: true,
-          itemGroundBlock: updateGroundBlockAtReceive(
-            item.itemGroundBlock,
-            sendBlocks,
-            blockLines
-          ),
-        }
+      ? userReceivedSendData(item, sendBlocks, blockLines)
       : item
   );
+  return tmpUsers;
 };
 
-const updateReceivedUser = (item, sendBlocks, blockLines) => {
-  let tmp = item.itemGroundBlock;
-  return {
+const userReceivedSendData = (item, sendBlocks, blockLines) => {
+  // console.log("pre => ", item);
+  let tmp = {
     ...item,
-    itemGroundBlock: updateGroundBlockAtReceive(tmp, sendBlocks, blockLines),
+    itemBlockBody: [],
+    itemIsNeccessaryBlock: true,
+    itemGroundBlock: updateGroundBlockAtReceive(
+      item.itemGroundBlock,
+      sendBlocks,
+      blockLines
+    ),
   };
+  // console.log("aft => ", tmp);
+  return tmp;
 };
 
 const updateGroundBlockAtReceive = (GroundBlock, sendBlocks, blockLines) => {
@@ -449,7 +466,7 @@ const dropBlock = (item) => {
   return {
     ...item,
     itemGroundBlock: item.itemGroundBlock,
-    isNeccessaryBlock: true,
+    itemIsNeccessaryBlock: true,
     actionTime: 0,
   };
 };
@@ -789,6 +806,11 @@ socketIO.on("connect", (socket) => {
             ...room,
             state: GAME,
           }
+        : room
+    );
+    gameRooms = gameRooms.filter((room) =>
+      room.users.length === 2
+        ? room.users[0].level < 3 && room.users[1].level < 3
         : room
     );
   });

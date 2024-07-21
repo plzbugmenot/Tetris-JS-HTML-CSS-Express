@@ -46,7 +46,7 @@ let blockType = 0;
 let GroundBlock = [];
 let preBody = [];
 let preType;
-let userName1;
+let userName1 = "";
 let level1;
 
 let BlockBody2 = [];
@@ -54,7 +54,7 @@ let blockType2 = 0;
 let GroundBlock2 = [];
 let preBody2 = [];
 let preType2;
-let userName2;
+let userName2 = "";
 let level2;
 
 const USER1 = "USER1";
@@ -65,7 +65,7 @@ let roomName = "";
 let sendStateBlocks = [];
 
 const stateText = ["", "Wait Another Player...", "Please Press Enter..."];
-
+registerbody.classList.add("show-body");
 gamebody.classList.add("hide-body");
 roombody.classList.add("hide-body");
 
@@ -186,6 +186,37 @@ const btnCreateRoom = () => {
 };
 
 const init = (user) => {
+  // view mode
+  if (localStorage.getItem("view") === socket.id) {
+    if (user.who === USER1) {
+      BlockBody = user.itemBlockBody;
+      blockType = user.itemBlockType;
+      GroundBlock = user.itemGroundBlock;
+      state = user.state;
+      preBody = user.itemPreBody;
+      preType = user.itemPreType;
+      who = user.who;
+      userName1 = user.userName;
+      who === USER1 ? (level1 = user.level) : (level2 = user.level);
+
+      if (state === LOSE) {
+        const data = {
+          roomID: localStorage.getItem("roomID"),
+        };
+        socket.emit("loseStateGet", data);
+        setStateBoardText(2);
+      }
+    } else {
+      BlockBody2 = user.itemBlockBody;
+      blockType2 = user.itemBlockType;
+      GroundBlock2 = user.itemGroundBlock;
+      preBody2 = user.itemPreBody;
+      preType2 = user.itemPreType;
+      userName2 = user.userName;
+      user.who === USER1 ? (level1 = user.level) : (level2 = user.level);
+    }
+  }
+  // game mode
   if (user.socketID === socket.id) {
     BlockBody = user.itemBlockBody;
     blockType = user.itemBlockType;
@@ -212,15 +243,6 @@ const init = (user) => {
     preType2 = user.itemPreType;
     userName2 = user.userName;
     user.who === USER1 ? (level1 = user.level) : (level2 = user.level);
-  }
-  if (level1 === LIMIT_LEVEL || level2 === LIMIT_LEVEL) {
-    if (who === USER1) {
-      if (level1 === LIMIT_LEVEL) alert("Win");
-      else alert("Lose");
-    } else {
-      if (level2 === LIMIT_LEVEL) alert("Win");
-      else alert("Lose");
-    }
   }
 };
 
@@ -268,6 +290,10 @@ const getInputData = () => {
 };
 
 const handleSet = (event) => {
+  if (event.ctrlKey && event.key === "s") {
+    event.preventDefault();
+  }
+
   if (event.key === "Control") setEventByInputKey(DROP);
   else if (event.key === "ArrowDown") setEventByInputKey(DOWN); // rotate
   else if (event.key === "ArrowRight") setEventByInputKey(RIGHT); // move right
@@ -406,7 +432,9 @@ const addRoomItemToRoomBody = (data) => {
     btnGroup.appendChild(btnView);
     btnGroup.classList.add("room-item-btnGroup");
     btnView.onclick = () => {
-      localStorage.getItem("roomID", room.roomID);
+      localStorage.setItem("roomID", room.roomID);
+      who = USER1;
+      localStorage.setItem("view", socket.id);
       roombody.classList.remove("show-body");
       roombody.classList.add("hide-body");
       gamebody.classList.remove("hide-body");
