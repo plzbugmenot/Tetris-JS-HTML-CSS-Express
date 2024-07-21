@@ -9,6 +9,8 @@
     <title>Tetris</title>
     <script src="./socket.io/socket.io.js"></script>
     <script src="game.js" defer></script>
+    <script src="transfer.js" defer></script>
+    <script src="drawData.js" defer></script>
 </head>
 
 <body>
@@ -57,6 +59,26 @@
 <script>
     console.log("connecting...");
     const socket = io.connect("http://192.168.144.110:8800");
+
+    const gamebody = document.getElementById("game-body");
+    const registerbody = document.getElementById("register");
+    const roombody = document.getElementById("room-body");
+
+    const roomList = document.getElementById("rooms");
+
+    const gameBoard = document.getElementById("game-board");
+    const preBoard = document.getElementById("pre-game-board");
+
+    const gameBoard2 = document.getElementById("game-board-other");
+    const preBoard2 = document.getElementById("pre-game-board-other");
+
+    const sendBlockBoard = document.getElementById("footer-board");
+
+    const NameBoard1 = document.getElementById("user1-title");
+    const NameBoard2 = document.getElementById("user2-title");
+
+    const stateBoard = document.getElementById("state-start");
+    const roomNameBoard = document.getElementById("pre-state-board");
 </script>
 
 </html>
