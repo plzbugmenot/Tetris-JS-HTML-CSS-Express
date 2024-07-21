@@ -81,7 +81,7 @@ broadcast = setInterval(() => {
   const data = {
     gameRooms: tmpGameRooms,
   };
-  socketIO.emit("stateOfUsers", data);
+  socketIO.emit("IlII1I1llI11ll1Illll1IIIllIIIIlI", data);
 }, FRAME);
 
 const getOnlySendStateBody = (sendStateBlocks) => {
@@ -679,7 +679,7 @@ const JoinNewUserUpdate = (room, data) => {
 socketIO.on("connect", (socket) => {
   console.log("connected with client");
 
-  socket.on("createRoom", (data) => {
+  socket.on("Il1IllII1I1l1I1Il11II11l1Il1I11l", (data) => {
     //data : roomName, userName, socketID
     let tmpRoomID = getRandomHash();
     let newRoom = createRoom(data, tmpRoomID);
@@ -688,10 +688,10 @@ socketIO.on("connect", (socket) => {
       socketID: data.socketID,
       roomID: tmpRoomID,
     };
-    socket.emit("createRoomResponse", sendData);
+    socket.emit("IIl1lIIlIIlI1lIIIlI11llIIIII11ll", sendData);
   });
 
-  socket.on("joinRoom", (data) => {
+  socket.on("IlI1IlllII1ll1l1llII1I1I1IIIlIlI", (data) => {
     gameRooms = gameRooms.map((room) =>
       room.roomID === data.roomID && room.users.length === 1
         ? JoinNewUserUpdate(room, data)
@@ -701,30 +701,17 @@ socketIO.on("connect", (socket) => {
       socketID: data.socketID,
       roomID: data.roomID,
     };
-    socket.emit("joinRoomResponse", sendData);
+    socket.emit("Il1llI11I1l1I1llII1lll1II111IlI1", sendData);
   });
 
-  socket.on("register", () => {
+  socket.on("I111II1llllIII11111I11lIlIIl1Ill", () => {
     const data = {
       gameRooms: gameRooms,
     };
-    socket.emit("registerResponse", data);
+    socket.emit("I11l1l1lllllII1IlII11llI11IIlII1", data);
   });
-  // socket.on("newUser", (data) => {
-  //   if (isExistSameUser(data.socketID) && users.length < 2) {
-  //     let newUser = createUser(data);
-  //     users.push(newUser);
-  //     console.log(newUser.userName, " is connected...", newUser.socketID);
-  //     console.log("There are ", users.length, " users...");
-  //     const sendData = {
-  //       newUser: newUser,
-  //       size: users.length,
-  //     };
-  //     socketIO.emit("newUserResponse", sendData);
-  //   }
-  // });
 
-  socket.on("changeDirection", (data) => {
+  socket.on("l1I11IIIIIl1lllII1III1Il111IIlII", (data) => {
     // data: roomID, socketID, direction
     gameRooms = gameRooms.map((room) =>
       data.roomID === room.roomID
@@ -746,7 +733,7 @@ socketIO.on("connect", (socket) => {
     );
   });
 
-  socket.on("moveBlock", (data) => {
+  socket.on("1lll1Il11l1II11IIIlI1lIllIIII1Il", (data) => {
     // data: roomID, socketID, direction
     gameRooms = gameRooms.map((room) =>
       room.roomID === data.roomID
@@ -769,7 +756,7 @@ socketIO.on("connect", (socket) => {
     );
   });
 
-  socket.on("dropBlock", (data) => {
+  socket.on("IlllIllIlII111ll1I1l1I1lI1lI1l1l", (data) => {
     // data: roomID, socketID, direction
     gameRooms = gameRooms.map((room) =>
       room.roomID === data.roomID
@@ -783,7 +770,7 @@ socketIO.on("connect", (socket) => {
     );
   });
 
-  socket.on("loseStateGet", (data) => {
+  socket.on("1IlllIlI1IIl1l1l1III1llIIIllllII", (data) => {
     // socket.emit("readyStateEmit");
     // clearInterval(broadcast);
     gameRooms = gameRooms.map((room) =>
@@ -798,7 +785,7 @@ socketIO.on("connect", (socket) => {
     );
   });
 
-  socket.on("startGameWithCouplePlayer", (data) => {
+  socket.on("Il11Il1l1IlIII1ll1llll1lII11ll1l", (data) => {
     // data: roomID
     gameRooms = gameRooms.map((room) =>
       room.roomID == data.roomID && room.users.length === 2

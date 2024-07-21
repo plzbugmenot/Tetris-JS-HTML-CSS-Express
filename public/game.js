@@ -51,7 +51,7 @@ roombody.classList.add("hide-body");
 
 /********* Transfer *************/
 
-const setStateBoardText = (size) => {
+const IIIlII1lIlll111llI11lIl1l1lII1l1 = (size) => {
   stateBoard.innerHTML = "";
   let leveltxt1 = document.createElement("div");
   leveltxt1.innerHTML = stateText[size];
@@ -59,7 +59,7 @@ const setStateBoardText = (size) => {
   stateBoard.appendChild(leveltxt1);
 };
 
-const btnRegister = () => {
+const I1lIIl111l1lIlll111ll1l1I1ll11II = () => {
   const input = document.getElementById("name");
   const data = {
     userName: input.value,
@@ -72,13 +72,13 @@ const btnRegister = () => {
     roombody.classList.remove("hide-body");
     roombody.classList.add("show-body");
 
-    socket.emit("register");
+    socket.emit("I111II1llllIII11111I11lIlIIl1Ill");
   } else {
     if (!data.userName.trim()) alert("Input user name.");
   }
 };
 
-const btnCreateRoom = () => {
+const llII1IIIIIl11lI1l1l1IllIlI1II1l1 = () => {
   const input = document.getElementById("roomName");
   const data = {
     roomName: input.value,
@@ -91,13 +91,13 @@ const btnCreateRoom = () => {
     gamebody.classList.add("hide-body");
     roombody.classList.add("show-body");
 
-    socket.emit("createRoom", data);
+    socket.emit("Il1IllII1I1l1I1Il11II11l1Il1I11l", data);
   } else {
     if (!data.roomName.trim()) alert("Input Room name.");
   }
 };
 
-const init = (user) => {
+const lI111I1II1III11111I1ll1l111I1IIl = (user) => {
   // view mode
   if (localStorage.getItem("view") === socket.id) {
     if (user.who === USER1) {
@@ -115,8 +115,8 @@ const init = (user) => {
         const data = {
           roomID: localStorage.getItem("roomID"),
         };
-        socket.emit("loseStateGet", data);
-        setStateBoardText(2);
+        socket.emit("1IlllIlI1IIl1l1l1III1llIIIllllII", data);
+        IIIlII1lIlll111llI11lIl1l1lII1l1(2);
       }
     } else {
       BlockBody2 = user.itemBlockBody;
@@ -144,8 +144,8 @@ const init = (user) => {
       const data = {
         roomID: localStorage.getItem("roomID"),
       };
-      socket.emit("loseStateGet", data);
-      setStateBoardText(2);
+      socket.emit("1IlllIlI1IIl1l1l1III1llIIIllllII", data);
+      IIIlII1lIlll111llI11lIl1l1lII1l1(2);
     }
   } else {
     BlockBody2 = user.itemBlockBody;
@@ -160,58 +160,56 @@ const init = (user) => {
 
 /*********  ACTION  *************/
 let gamePlay = setInterval(() => {
-  mainLoop();
+  l1I1l11lI1IIIlIllI1IIIlI1l1I1I1lI();
 }, FRAME);
 
-const mainLoop = () => {
-  getInputData();
+const l1I1l11lI1IIIlIllI1IIIlI1l1I1I1lI = () => {
+  I11II1IllllllIIIllIlIlIlIl1Ill1I();
 };
 
-const updatePreBlock = (preBlock) => {
+const llII1IllI11IIlIl1I1l1l1111lllIl1 = (preBlock) => {
   let down = 0;
   for (block of preBlock) down = Math.max(down, block.y);
   let delta = 3 - down;
   for (block of preBlock) block.y += delta;
 };
 
-const convertSendStateBlocks = (sendStateBlocks) => {
+const lIlIIIlIIIl1I1II1I1Il1llll11l11l = (sendStateBlocks) => {
   if (who === USER2) for (block of sendStateBlocks) block.x = 30 - block.x;
 };
 
-const getInputData = () => {
-  document.addEventListener("keydown", handleSet, false);
+const I11II1IllllllIIIllIlIlIlIl1Ill1I = () => {
+  document.addEventListener("keydown", I1lII1lIl1lI1II1I1llIlIIl1II1Ill, false);
 };
 
-const handleSet = (event) => {
+const I1lII1lIl1lI1II1I1llIlIIl1II1Ill = (event) => {
   if (event.ctrlKey && event.key === "s") event.preventDefault();
 
-  if (event.key === "Control") setEventByInputKey(DROP);
+  if (event.key === "Control") l11ll11IIIII1l1Ill1II1lIIl1Illl1(DROP);
   else if (event.key === "ArrowDown" || event.key === "s")
-    setEventByInputKey(DOWN); // rotate
+    l11ll11IIIII1l1Ill1II1lIIl1Illl1(DOWN); // rotate
   else if (event.key === "ArrowRight" || event.key === "d")
-    setEventByInputKey(RIGHT); // move right
+    l11ll11IIIII1l1Ill1II1lIIl1Illl1(RIGHT); // move right
   else if (event.key === "ArrowLeft" || event.key === "a")
-    setEventByInputKey(LEFT); // move left
-  // else if (event.key === "s") setEventByInputKey(DOWN); // rotate
-  // else if (event.key === "d") setEventByInputKey(RIGHT); // move right
-  // else if (event.key === "a") setEventByInputKey(LEFT); // move left
+    l11ll11IIIII1l1Ill1II1lIIl1Illl1(LEFT); // move left
   else if (event.key === " ") {
     const data = {
       roomID: localStorage.getItem("roomID"),
     };
-    socket.emit("startGameWithCouplePlayer", data);
+    socket.emit("Il11Il1l1IlIII1ll1llll1lII11ll1l", data);
   }
 };
 
-const setEventByInputKey = (direction) => {
+const l11ll11IIIII1l1Ill1II1lIIl1Illl1 = (direction) => {
   if (GAME_STATE === READY) return;
   const data = {
     roomID: localStorage.getItem("roomID"),
     socketID: socket.id,
     direction: direction,
   };
-  if (direction === DOWN) socket.emit("changeDirection", data);
+  if (direction === DOWN) socket.emit("l1I11IIIIIl1lllII1III1Il111IIlII", data);
   else if (direction === RIGHT || direction === LEFT)
-    socket.emit("moveBlock", data);
-  else if (direction === DROP) socket.emit("dropBlock", data);
+    socket.emit("1lll1Il11l1II11IIIlI1lIllIIII1Il", data);
+  else if (direction === DROP)
+    socket.emit("IlllIllIlII111ll1I1l1I1lI1lI1l1l", data);
 };

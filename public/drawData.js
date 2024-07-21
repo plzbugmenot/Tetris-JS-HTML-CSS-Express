@@ -1,23 +1,28 @@
-const drawDataFromServer = () => {
+const l1IIIl1I1II1IllIll1ll1IIll11111ll = () => {
   gameBoard.innerHTML = "";
   preBoard.innerHTML = "";
-  if (BlockBody) drawBlock(gameBoard, BlockBody, blockType);
-  drawGroundBlock(gameBoard, GroundBlock);
-  drawBlock(preBoard, preBody, preType);
+  if (BlockBody)
+    llIlllIll111l11Illll1lIll1I1l1I1(gameBoard, BlockBody, blockType);
+  l1111llllIlI11lll1I1IlI1llIIll111(gameBoard, GroundBlock);
+  llIlllIll111l11Illll1lIll1I1l1I1(preBoard, preBody, preType);
 
   gameBoard2.innerHTML = "";
   preBoard2.innerHTML = "";
   if (BlockBody2) {
-    drawBlock(gameBoard2, BlockBody2, blockType2);
-    drawGroundBlock(gameBoard2, GroundBlock2);
-    drawBlock(preBoard2, preBody2, preType2);
+    llIlllIll111l11Illll1lIll1I1l1I1(gameBoard2, BlockBody2, blockType2);
+    l1111llllIlI11lll1I1IlI1llIIll111(gameBoard2, GroundBlock2);
+    llIlllIll111l11Illll1lIll1I1l1I1(preBoard2, preBody2, preType2);
   }
 
   sendBlockBoard.innerHTML = "";
-  drawBlock(sendBlockBoard, sendStateBlocks, 7);
+  llIlllIll111l11Illll1lIll1I1l1I1(sendBlockBoard, sendStateBlocks, 7);
 };
 
-const drawBlock = (drawBoard, drawBlockBody, blockType) => {
+const llIlllIll111l11Illll1lIll1I1l1I1 = (
+  drawBoard,
+  drawBlockBody,
+  blockType
+) => {
   for (segment of drawBlockBody) {
     const dominoElement = document.createElement("div");
     dominoElement.style.gridRowStart = segment.y;
@@ -27,7 +32,7 @@ const drawBlock = (drawBoard, drawBlockBody, blockType) => {
   }
 };
 
-const drawGroundBlock = (drawBoard, drawGroundBlock) => {
+const l1111llllIlI11lll1I1IlI1llIIll111 = (drawBoard, drawGroundBlock) => {
   for (segment of drawGroundBlock) {
     const dominoElement = document.createElement("div");
     dominoElement.style.gridRowStart = segment.y;
@@ -37,7 +42,7 @@ const drawGroundBlock = (drawBoard, drawGroundBlock) => {
   }
 };
 
-const drawStateDataFromServer = () => {
+const l1llll1I11Il1lII1I11III1lI1IIlII1 = () => {
   NameBoard1.innerHTML = "";
   let nameText = document.createElement("div");
   nameText.innerHTML = userName1;
@@ -56,7 +61,6 @@ const drawStateDataFromServer = () => {
     LevelBoard2 = document.getElementById("user1-level");
   }
 
-  // if (Date.now() % 1000 < 50) console.log(level1, " vs ", level2);
   LevelBoard1.innerHTML = "";
   for (let i = 0; i < level1; i++) {
     let leveltxt1 = document.createElement("div");
@@ -82,7 +86,7 @@ const drawStateDataFromServer = () => {
   roomNameBoard.appendChild(roomNametxt);
 };
 
-const addRoomItemToRoomBody = (data) => {
+const IllI1II1l1lIlll11lI1I111l1II111l = (data) => {
   // data: gameRoom
   // room: state roomName, roomID, sendStateBlock, users[], User1, User2
   roomList.innerHTML = "";
@@ -117,7 +121,7 @@ const addRoomItemToRoomBody = (data) => {
         userName: localStorage.getItem("userName"),
         socketID: socket.id,
       };
-      socket.emit("joinRoom", data);
+      socket.emit("IlI1IlllII1ll1l1llII1I1I1IIIlIlI", data);
     };
     btnGroup.appendChild(btnJoin);
 
@@ -137,7 +141,7 @@ const addRoomItemToRoomBody = (data) => {
     };
     newRoom.appendChild(btnGroup);
 
-    // new room add
+    // new room addgetInputData
     newRoom.classList.add("room-item");
 
     roomList.appendChild(newRoom);
