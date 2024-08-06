@@ -49,8 +49,6 @@ registerbody.classList.add("show-body");
 gamebody.classList.add("hide-body");
 roombody.classList.add("hide-body");
 
-/********* Transfer *************/
-
 const IIIlII1lIlll111llI11lIl1l1lII1l1 = (size) => {
   stateBoard.innerHTML = "";
   let leveltxt1 = document.createElement("div");
@@ -98,7 +96,6 @@ const llII1IIIIIl11lI1l1l1IllIlI1II1l1 = () => {
 };
 
 const lI111I1II1III11111I1ll1l111I1IIl = (user) => {
-  // view mode
   if (localStorage.getItem("view") === socket.id) {
     if (user.who === USER1) {
       BlockBody = user.itemBlockBody;
@@ -128,7 +125,6 @@ const lI111I1II1III11111I1ll1l111I1IIl = (user) => {
       user.who === USER1 ? (level1 = user.level) : (level2 = user.level);
     }
   }
-  // game mode
   if (user.socketID === socket.id) {
     BlockBody = user.itemBlockBody;
     blockType = user.itemBlockType;
@@ -158,7 +154,6 @@ const lI111I1II1III11111I1ll1l111I1IIl = (user) => {
   }
 };
 
-/*********  ACTION  *************/
 let gamePlay = setInterval(() => {
   l1I1l11lI1IIIlIllI1IIIlI1l1I1I1lI();
 }, FRAME);
@@ -187,11 +182,11 @@ const I1lII1lIl1lI1II1I1llIlIIl1II1Ill = (event) => {
 
   if (event.key === "Control") l11ll11IIIII1l1Ill1II1lIIl1Illl1(DROP);
   else if (event.key === "ArrowDown" || event.key === "s")
-    l11ll11IIIII1l1Ill1II1lIIl1Illl1(DOWN); // rotate
+    l11ll11IIIII1l1Ill1II1lIIl1Illl1(DOWN);
   else if (event.key === "ArrowRight" || event.key === "d")
-    l11ll11IIIII1l1Ill1II1lIIl1Illl1(RIGHT); // move right
+    l11ll11IIIII1l1Ill1II1lIIl1Illl1(RIGHT);
   else if (event.key === "ArrowLeft" || event.key === "a")
-    l11ll11IIIII1l1Ill1II1lIIl1Illl1(LEFT); // move left
+    l11ll11IIIII1l1Ill1II1lIIl1Illl1(LEFT);
   else if (event.key === " ") {
     const data = {
       roomID: localStorage.getItem("roomID"),

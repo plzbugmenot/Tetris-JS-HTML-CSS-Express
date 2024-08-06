@@ -20,9 +20,6 @@ socket.on("I11l1l1lllllII1IlII11llI11IIlII1", (data) => {
 });
 
 socket.on("IlII1I1llI11ll1Illll1IIIllIIIIlI", (data) => {
-  // data: gameRoom
-  // room: state roomName, roomID, sendStateBlock, users[], User1, User2
-
   for (room of data.gameRooms)
     if (room.roomID === localStorage.getItem("roomID")) {
       roomName = room.roomName;

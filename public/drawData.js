@@ -87,19 +87,15 @@ const l1llll1I11Il1lII1I11III1lI1IIlII1 = () => {
 };
 
 const IllI1II1l1lIlll11lI1I111l1II111l = (data) => {
-  // data: gameRoom
-  // room: state roomName, roomID, sendStateBlock, users[], User1, User2
   roomList.innerHTML = "";
   for (room of data.gameRooms) {
     let newRoom = document.createElement("div");
 
-    // add game number
     let roomName = document.createElement("div");
     roomName.innerHTML = room.roomName;
     newRoom.classList.add("room-item-level");
     newRoom.appendChild(roomName);
 
-    // add title  player1 vs player2
     let Title = document.createElement("div");
     let tmpTitle =
       room.users.length === 2
@@ -109,7 +105,6 @@ const IllI1II1l1lIlll11lI1I111l1II111l = (data) => {
     Title.classList.add("room-item-title");
     newRoom.appendChild(Title);
 
-    //add btns
     let btnGroup = document.createElement("div");
     let btnJoin = document.createElement("div");
     btnJoin.innerHTML = "Join";
@@ -141,7 +136,6 @@ const IllI1II1l1lIlll11lI1I111l1II111l = (data) => {
     };
     newRoom.appendChild(btnGroup);
 
-    // new room addgetInputData
     newRoom.classList.add("room-item");
 
     roomList.appendChild(newRoom);
