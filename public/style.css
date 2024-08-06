@@ -1,0 +1,233 @@
+body {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  background-color: black;
+}
+
+#game-board {
+  background-color: black;
+  width: 200px;
+  height: 420px;
+  min-width: 200px;
+  min-height: 420px;
+  display: grid;
+  grid-template-rows: repeat(21, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  border: 3px solid #474747;
+}
+
+.state-board {
+  width: 200px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  color: #eeeeee;
+  font-size: 30px;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.state-name,
+.state-level {
+  display: flex;
+  flex-direction: row;
+}
+
+.state-name {
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.state-level {
+  height: 200px;
+  justify-content: space-between;
+}
+
+.level-item {
+  color: #eeeeee;
+  margin: 0;
+  height: 20px;
+}
+
+#user1-title,
+#user2-title {
+  color: #eeeeee;
+  /* font-size: 40px; */
+}
+
+#user1-level,
+#user2-level {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+
+#state-start {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.state-text {
+  color: #eeeeee;
+  text-align: center;
+  font-size: 32px;
+}
+
+#game-board-other {
+  background-color: black;
+  width: 200px;
+  height: 420px;
+  min-width: 200px;
+  min-height: 420px;
+  display: grid;
+  grid-template-rows: repeat(21, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  border: 3px solid #474747;
+}
+
+#pre-game-board {
+  background-color: black;
+  width: 200px;
+  height: 60px;
+  min-width: 200px;
+  min-height: 60px;
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  /* border: 3px solid #eeeeee; */
+}
+
+.pre-state-board {
+  width: 200px;
+  min-width: 200px;
+}
+
+#pre-game-board-other {
+  background-color: black;
+  width: 200px;
+  height: 60px;
+  min-width: 200px;
+  min-height: 60px;
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  /* border: 3px solid #eeeeee; */
+}
+
+.game-body {
+  display: flex;
+  flex-direction: column;
+  /* gap: 1rem; */
+}
+
+.top-board,
+.main-board {
+  display: flex;
+  flex-direction: row;
+}
+
+#footer-board {
+  width: 600px;
+  height: 80px;
+  min-width: 600px;
+  min-height: 80px;
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(30, 1fr);
+  /* border: 3px solid #eeeeee; */
+}
+
+.tank {
+  background-color: rgb(255, 0, 0);
+  border: 1px solid rgb(255, 78, 175);
+}
+
+#register {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.registerBtn {
+  background-color: black;
+  color: #eeeeee;
+  border-radius: 0.5rem;
+  border: 1px solid #eeeeee;
+  width: 120px;
+  height: 50px;
+  font-size: 22px;
+  margin-top: 10px;
+}
+
+.registerBtn:hover {
+  cursor: pointer;
+  background-color: #292929;
+}
+
+#name {
+  font-size: 22px;
+  width: 120px;
+  height: 50px;
+  border-radius: 0.5rem;
+  background-color: black;
+  color: #eeeeee;
+  border-bottom: 1px solid #eeeeee;
+  text-align: center;
+}
+
+.domino-1 {
+  background-color: rgb(255, 17, 0);
+  border: 1px solid rgb(255, 101, 90);
+}
+
+.domino-2 {
+  background-color: rgb(0, 81, 255);
+  border: 1px solid rgb(129, 173, 255);
+}
+
+.domino-3 {
+  background-color: rgb(174, 0, 255);
+  border: 1px solid rgb(195, 90, 255);
+}
+
+.domino-4 {
+  background-color: rgb(73, 73, 73);
+  border: 1px solid rgb(134, 134, 134);
+}
+
+.domino-5 {
+  background-color: rgb(255, 115, 0);
+  border: 1px solid rgb(255, 184, 90);
+}
+
+.domino-6 {
+  background-color: rgb(165, 255, 243);
+  border: 1px solid rgb(90, 222, 255);
+}
+
+.domino-7 {
+  background-color: rgb(43, 255, 0);
+  border: 1px solid rgb(159, 255, 156);
+}
+
+/* send state block */
+
+.domino-8 {
+  background-color: #646464;
+  border: 1px solid #333333;
+}
+
+.init-block {
+  background-color: #1c2a6b;
+  border: 1px solid #2a40a5;
+}

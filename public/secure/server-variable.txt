@@ -1,0 +1,46 @@
+// server variable
+
+users
+BOARD_SIZE_HEIGHT
+BOARD_SIZE_WIDTH
+TIMEperS
+
+FRAME = 20;
+
+DOWN = "DOWN";
+LEFT = "LEFT";
+RIGHT = "RIGHT";
+
+TEAM1 = "TEAM1";
+TEAM2 = "TEAM2";
+
+WIN = "WIN";
+LOSE = "LOSE";
+GAME = "GAME";
+
+READY = "READY"
+GAME_STATE;
+
+INIT_LEVEL
+ACTION_INIT_TIME
+ACTION_INIT_TIME_SEND
+SEND_WIDTH
+
+USER1 = "USER1";
+USER2 = "USER2";
+
+let DOMINO_1 = [];
+let DOMINO_2 = [];
+let DOMINO_3 = [];
+let DOMINO_4 = [];
+let DOMINO_5 = [];
+let DOMINO_6 = [];
+let DOMINO_7 = [];
+let DOMINOS = [];
+
+let User1;
+let User2;
+
+let sendStateBlocks = [];
+
+let broadcast;

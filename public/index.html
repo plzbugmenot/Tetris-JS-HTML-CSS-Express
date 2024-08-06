@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Tetris</title>
+    <script src="./socket.io/socket.io.js"></script>
+    <script src="game.js" defer></script>
+</head>
+
+<body>
+    <div id="register">
+        <input id="name" type="text" maxlength="3" />
+        <button onclick="sendMessage()" class="registerBtn">start</button>
+    </div>
+    <div class="game-body">
+        <div class="top-board">
+            <div id="pre-game-board"></div>
+            <div class="pre-state-board"></div>
+            <div id="pre-game-board-other"></div>
+        </div>
+        <div class="main-board">
+            <div id="game-board"></div>
+            <div class="state-board">
+                <div class="state-name">
+                    <div id="user1-title"></div>
+                    <div>vs</div>
+                    <div id="user2-title"></div>
+                </div>
+                <div id="state-start">
+
+                </div>
+                <div class="state-level">
+                    <div id="user1-level"></div>
+                    <div id="user2-level"></div>
+                </div>
+            </div>
+            <div id="game-board-other"></div>
+        </div>
+        <div id="footer-board">
+        </div>
+</body>
+<script>
+    console.log("connecting...");
+    const socket = io.connect("http://192.168.144.110:8800");
+</script>
+
+</html>
