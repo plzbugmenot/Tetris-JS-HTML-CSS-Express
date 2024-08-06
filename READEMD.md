@@ -4,7 +4,6 @@ Relax with Tetris
 
 ## Creator
 
-Aurthor: ARMY
 Date: July 12, 2024
 Tool: Express, node, socket, html, css, javaScript
 
