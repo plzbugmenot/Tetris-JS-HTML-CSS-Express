@@ -9,49 +9,66 @@
     <title>Tetris</title>
     <script src="./socket.io/socket.io.js"></script>
     <script src="game.js" defer></script>
+<<<<<<< HEAD
     <script src="const.js" defer></script>
     <script src="input.js" defer></script>
     <script src="transfer.js" defer></script>
     <script src="view.js" defer></script>
 
 
+=======
+    <script src="transfer.js" defer></script>
+    <script src="drawData.js" defer></script>
+>>>>>>> 3f2ca1b
 </head>
 
 <body>
     <div id="register">
-        <input id="name" type="text" maxlength="3" />
-        <button onclick="sendMessage()" class="registerBtn">start</button>
+        <input id="name" type="text" maxlength="3" placeholder="input user name" />
+        <button onclick="I1lIIl111l1lIlll111ll1l1I1ll11II()" class="registerBtn">Join</button>
     </div>
-    <div class="game-body">
-        <div class="top-board">
-            <div id="pre-game-board"></div>
-            <div class="pre-state-board"></div>
-            <div id="pre-game-board-other"></div>
-        </div>
-        <div class="main-board">
-            <div id="game-board"></div>
-            <div class="state-board">
-                <div class="state-name">
-                    <div id="user1-title"></div>
-                    <div>vs</div>
-                    <div id="user2-title"></div>
-                </div>
-                <div id="state-start">
 
-                </div>
-                <div class="state-level">
-                    <div id="user1-level"></div>
-                    <div id="user2-level"></div>
-                </div>
-            </div>
-            <div id="game-board-other"></div>
+    <div id="room-body">
+        <div style="display: flex; justify-content: center; margin-bottom: 1rem; gap: 1rem;">
+            <input id="roomName" type="number" maxlength="6" placeholder="input room name" />
+            <button onclick="llII1IIIIIl11lI1l1l1IllIlI1II1l1()" class="registerBtn">Create</button>
         </div>
-        <div id="footer-board">
+        <div id="rooms">
+        </div>
+    </div>
+    <div id="game-body">
+        <div class="main-game-board">
+            <div class="top-board">
+                <div id="pre-game-board"></div>
+                <div id="pre-state-board"></div>
+                <div id="pre-game-board-other"></div>
+            </div>
+            <div class="main-board">
+                <div id="game-board"></div>
+                <div class="state-board">
+                    <div class="state-name">
+                        <div id="user1-title"></div>
+                        <div>vs</div>
+                        <div id="user2-title"></div>
+                    </div>
+                    <div id="state-start">
+
+                    </div>
+                    <div class="state-level">
+                        <div id="user1-level"></div>
+                        <div id="user2-level"></div>
+                    </div>
+                </div>
+                <div id="game-board-other"></div>
+            </div>
+            <div id="footer-board">
+            </div>
         </div>
 </body>
 <script>
     console.log("connecting...");
     const socket = io.connect("http://192.168.144.110:8800");
+<<<<<<< HEAD
     const gameBoard = document.getElementById("game-board");
     const gameBoard2 = document.getElementById("game-board-other");
     const preBoard = document.getElementById("pre-game-board");
@@ -60,6 +77,28 @@
     const NameBoard2 = document.getElementById("user2-title");
     const stateBoard = document.getElementById("state-start");
     const sendBlockBoard = document.getElementById("footer-board");
+=======
+
+    const gamebody = document.getElementById("game-body");
+    const registerbody = document.getElementById("register");
+    const roombody = document.getElementById("room-body");
+
+    const roomList = document.getElementById("rooms");
+
+    const gameBoard = document.getElementById("game-board");
+    const preBoard = document.getElementById("pre-game-board");
+
+    const gameBoard2 = document.getElementById("game-board-other");
+    const preBoard2 = document.getElementById("pre-game-board-other");
+
+    const sendBlockBoard = document.getElementById("footer-board");
+
+    const NameBoard1 = document.getElementById("user1-title");
+    const NameBoard2 = document.getElementById("user2-title");
+
+    const stateBoard = document.getElementById("state-start");
+    const roomNameBoard = document.getElementById("pre-state-board");
+>>>>>>> 3f2ca1b
 </script>
 
 </html>

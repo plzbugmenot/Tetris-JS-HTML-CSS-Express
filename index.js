@@ -4,11 +4,10 @@ const F_PORT = process.env.REACT_APP_CLIENT_PORT || 3500;
 const express = require("express");
 const server = express();
 const cors = require("cors");
-const { stat } = require("fs");
 const server_http = require("http").Server(server);
 
 const socketIO = require("socket.io")(server_http, {
-  cors: ["*"],
+  cors: [`http://192.168.144.110:${F_PORT}`],
 });
 
 server.use(cors());
@@ -28,32 +27,8 @@ client.get("/", (req, res) => {
   res.send("client is running");
 });
 
-/********* TETRIS Board*************/
+let gameRooms = [];
 
-/************************
- * +----------------+
- * |        |       |
- * | User1  | User2 |
- * |        |       |
- * +----------------+
- ***********************/
-
-/************************
-    Aurthor: ARMY
-    Date: July 12, 2024
-    Tool: Express, node, socket, html, css, javaScript
- ***********************/
-
-/************************
-   ___ ___ ___  _   _
-    |  |_   |  |_> <_ 
-    |  |__  |  | \  _>
- _______________________>>>>
- ***********************/
-
-/*********TETRIS Setting*************/
-
-let users = [];
 const BOARD_SIZE_HEIGHT = 21;
 const BOARD_SIZE_WIDTH = 10;
 const TIMEperS = 50;
@@ -69,10 +44,9 @@ const TEAM2 = "TEAM2";
 
 const WIN = "WIN";
 const LOSE = "LOSE";
-const GAME = "GAME";
 
+const GAME = "GAME";
 const READY = "READY";
-let GAME_STATE;
 
 const INIT_LEVEL = 0;
 const ACTION_INIT_TIME = 15;
@@ -91,12 +65,32 @@ let DOMINO_6 = [];
 let DOMINO_7 = [];
 let DOMINOS = [];
 
-let User1;
-let User2;
-
 let sendStateBlocks = [];
 
 let broadcast;
+broadcast = setInterval(() => {
+  gameRooms = gameRooms.map((room) =>
+    room.state === GAME ? mainLoop(room) : room
+  );
+
+  let tmpGameRooms = gameRooms;
+  tmpGameRooms = tmpGameRooms.map((room) => ({
+    ...room,
+    sendStateBlocks: getOnlySendStateBody(room.sendStateBlocks),
+  }));
+  const data = {
+    gameRooms: tmpGameRooms,
+  };
+  socketIO.emit("IlII1I1llI11ll1Illll1IIIllIIIIlI", data);
+}, FRAME);
+
+const getOnlySendStateBody = (sendStateBlocks) => {
+  let sendStateBlocksDomino = [];
+  for (block of sendStateBlocks) {
+    for (item of block.Blocks) sendStateBlocksDomino.push(item);
+  }
+  return sendStateBlocksDomino;
+};
 
 const init = () => {
   // -.--
@@ -166,10 +160,11 @@ const init = () => {
   ];
 };
 
-let level1, level2;
+const mainLoop = (room) => {
+  let tmpUsers = room.users;
+  let tmpSendStateBlock = room.sendStateBlocks;
 
-const mainLoop = () => {
-  users = users.map((item) =>
+  tmpUsers = tmpUsers.map((item) =>
     item.actionTime === 0
       ? movedBlockVertical(item)
       : {
@@ -178,24 +173,25 @@ const mainLoop = () => {
         }
   );
 
-  users = users.map((item) =>
+  tmpUsers = tmpUsers.map((item) =>
     item.itemIsNeccessaryBlock ? newBlockGenerateItem(item) : item
   );
 
-  users = users.map((item) => sendBlockToOther(item));
+  tmpUsers = tmpUsers.map((item) => sendBlockToOther(item, room));
 
-  users = users.map((item) =>
+  tmpUsers = tmpUsers.map((item) =>
     isGameOver(item.itemGroundBlock) === LOSE ? { ...item, state: LOSE } : item
   );
-
-  if (sendStateBlocks.length) {
-    sendStateBlocks = sendStateBlocks.map((item) =>
+  if (tmpSendStateBlock.length) {
+    tmpSendStateBlock = tmpSendStateBlock.map((item) =>
       item.actionTime === 0
         ? {
             ...item,
-            Blocks: updateSendBlocks(item.Blocks, item.sender),
+            Blocks: updateSendBlocks(item.Blocks, item.sender, room),
             position:
-              item.sender === User1 ? item.position + 1 : item.position - 1,
+              item.sender === room.User1
+                ? item.position + 1
+                : item.position - 1,
             actionTime: ACTION_INIT_TIME_SEND,
           }
         : {
@@ -203,30 +199,42 @@ const mainLoop = () => {
             actionTime: item.actionTime - 1,
           }
     );
-
-    for (item of sendStateBlocks) {
-      if (item.sender === User1 && item.position === SEND_WIDTH - 1) {
-        receiveBlockFromSender(item.sender, item.Blocks, item.lines);
+    for (item of tmpSendStateBlock) {
+      if (item.sender === room.User1 && item.position === SEND_WIDTH - 1) {
+        tmpUsers = receiveBlockFromSender(
+          item.sender,
+          item.Blocks,
+          item.lines,
+          room,
+          tmpUsers
+        );
         item.position += 10;
       }
-      if (item.sender === User2 && item.position === 1) {
-        receiveBlockFromSender(item.sender, item.Blocks, item.lines);
+      if (item.sender === room.User2 && item.position === 1) {
+        tmpUsers = receiveBlockFromSender(
+          item.sender,
+          item.Blocks,
+          item.lines,
+          room,
+          tmpUsers
+        );
         item.position -= 10;
       }
     }
 
-    //
-    sendStateBlocks = sendStateBlocks.filter(
+    tmpSendStateBlock = tmpSendStateBlock.filter(
       (item) => item.position <= SEND_WIDTH && item.position >= 0
     );
   }
-
-  level1 = users[0].level;
-  level2 = users[1].level;
+  return {
+    ...room,
+    users: tmpUsers,
+    sendStateBlocks: tmpSendStateBlock,
+  };
 };
 
-const updateSendBlocks = (sendBlocks, sender) => {
-  if (sender === User1) for (block of sendBlocks) block.x += 1;
+const updateSendBlocks = (sendBlocks, sender, room) => {
+  if (sender === room.User1) for (block of sendBlocks) block.x += 1;
   else for (block of sendBlocks) block.x -= 1;
   return sendBlocks;
 };
@@ -246,6 +254,7 @@ const insertBlockBodyToGroundBody = (ground, block) => {
   return tmp;
 };
 
+<<<<<<< HEAD
 const NAMELENGTH = 32;
 const Serials = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
 
@@ -306,6 +315,8 @@ const updateUser = (data, iswin) => {
   };
 };
 
+=======
+>>>>>>> 3f2ca1b
 const isGameOver = (GroundBlock) => {
   let state = GAME;
   if (GroundBlock) for (block of GroundBlock) if (block.y === 1) state = LOSE;
@@ -329,7 +340,7 @@ const getinitialGroundBlocks = (level) => {
   return tmp;
 };
 
-const sendBlockToOther = (item) => {
+const sendBlockToOther = (item, room) => {
   let tmpGround = item.itemGroundBlock;
   let tmpNumber = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -353,7 +364,12 @@ const sendBlockToOther = (item) => {
 
   if (sendBlockLines.length >= 2 && sendBlocks.length) {
     let tmptmp = getSendBlocksForSendState(sendBlocks, sendBlockLines.length);
-    pushSendBlockToSendState(item.socketID, tmptmp, sendBlockLines.length);
+    pushSendBlockToSendState(
+      item.socketID,
+      tmptmp,
+      sendBlockLines.length,
+      room
+    );
 
     sendBlockLines = [];
   }
@@ -365,18 +381,18 @@ const sendBlockToOther = (item) => {
 };
 
 // sender, sendBlocks, lines
-const pushSendBlockToSendState = (sender, sendBlocks, lines) => {
-  if (sender === User2) {
+const pushSendBlockToSendState = (sender, sendBlocks, lines, room) => {
+  if (sender === room.User2) {
     for (block of sendBlocks) block.x += 20;
   }
   const sendStateBlock = {
     sender: sender,
     Blocks: sendBlocks,
     lines: lines,
-    position: sender === User1 ? 0 : SEND_WIDTH,
+    position: sender === room.User1 ? 0 : SEND_WIDTH,
     actionTime: ACTION_INIT_TIME_SEND,
   };
-  sendStateBlocks.push(sendStateBlock);
+  room.sendStateBlocks.push(sendStateBlock);
 };
 
 const getSendBlockFromLastBlock = (LastBlock, sendBlockLines) => {
@@ -388,29 +404,35 @@ const getSendBlockFromLastBlock = (LastBlock, sendBlockLines) => {
   return sendBlocks;
 };
 
-const receiveBlockFromSender = (sender, sendBlocks, blockLines) => {
-  users = users.map((item) =>
+const receiveBlockFromSender = (
+  sender,
+  sendBlocks,
+  blockLines,
+  room,
+  tmpUsers
+) => {
+  tmpUsers = tmpUsers.map((item) =>
     item.socketID !== sender
-      ? {
-          ...item,
-          itemBlockBody: [],
-          itemIsNeccessaryBlock: true,
-          itemGroundBlock: updateGroundBlockAtReceive(
-            item.itemGroundBlock,
-            sendBlocks,
-            blockLines
-          ),
-        }
+      ? userReceivedSendData(item, sendBlocks, blockLines)
       : item
   );
+  return tmpUsers;
 };
 
-const updateReceivedUser = (item, sendBlocks, blockLines) => {
-  let tmp = item.itemGroundBlock;
-  return {
+const userReceivedSendData = (item, sendBlocks, blockLines) => {
+  // console.log("pre => ", item);
+  let tmp = {
     ...item,
-    itemGroundBlock: updateGroundBlockAtReceive(tmp, sendBlocks, blockLines),
+    itemBlockBody: [],
+    itemIsNeccessaryBlock: true,
+    itemGroundBlock: updateGroundBlockAtReceive(
+      item.itemGroundBlock,
+      sendBlocks,
+      blockLines
+    ),
   };
+  // console.log("aft => ", tmp);
+  return tmp;
 };
 
 const updateGroundBlockAtReceive = (GroundBlock, sendBlocks, blockLines) => {
@@ -507,7 +529,7 @@ const dropBlock = (item) => {
   return {
     ...item,
     itemGroundBlock: item.itemGroundBlock,
-    isNeccessaryBlock: true,
+    itemIsNeccessaryBlock: true,
     actionTime: 0,
   };
 };
@@ -609,23 +631,125 @@ const moveBlockVertical = (BlockBody) => {
   return BlockBody;
 };
 
-const isExistSameUser = (id) => {
-  // if true, u can create
-  let tmp = true;
-  for (item of users) if (item.socketID === id) tmp = false;
+const serial = "qwertyuiopasdfghjklzxcvbnm1234567890";
+const HASH_LEN = 32;
+
+const getRandomHash = () => {
+  let tmp = "";
+  for (let i = 0; i < HASH_LEN; i++)
+    tmp += serial[Math.floor(Math.random() * Date.now()) % serial.length];
   return tmp;
 };
 
+<<<<<<< HEAD
 const verifyHash = (hash) => {
   if (hash === users[0].userHash) return true;
   else if (hash === users[1].userHash) return true;
   return false;
+=======
+const createUser = (data) => {
+  let tmp = generateRandomDomino();
+  let preDomino = generateRandomDomino();
+  return {
+    userName: data.userName || "user1",
+    socketID: data.socketID,
+    who: USER1,
+
+    actionTime: ACTION_INIT_TIME,
+
+    itemBlockBody: tmp.body,
+    itemBlockType: tmp.num,
+    itemPreBody: preDomino.body,
+    itemPreType: preDomino.num,
+    itemGroundBlock: getinitialGroundBlocks(0),
+    itemLastBlock: [],
+
+    itemIsNeccessaryBlock: false,
+
+    state: GAME,
+    level: INIT_LEVEL,
+  };
+};
+
+const joinUser = (data) => {
+  let tmp = generateRandomDomino();
+  let preDomino = generateRandomDomino();
+  return {
+    userName: data.userName || "user2",
+    socketID: data.socketID,
+    who: USER2,
+
+    actionTime: ACTION_INIT_TIME,
+
+    itemBlockBody: tmp.body,
+    itemBlockType: tmp.num,
+    itemPreBody: preDomino.body,
+    itemPreType: preDomino.num,
+    itemGroundBlock: getinitialGroundBlocks(0),
+    itemLastBlock: [],
+
+    itemIsNeccessaryBlock: false,
+
+    state: GAME,
+    level: INIT_LEVEL,
+  };
+};
+
+const updateUser = (data, iswin) => {
+  let tmp = generateRandomDomino();
+  let preDomino = generateRandomDomino();
+  let newLevel = iswin === GAME ? data.level + 1 : data.level;
+
+  return {
+    ...data,
+    itemBlockBody: tmp.body,
+    itemBlockType: tmp.num,
+    itemPreBody: preDomino.body,
+    itemPreType: preDomino.num,
+    itemGroundBlock: getinitialGroundBlocks(newLevel),
+    itemLastBlock: [],
+
+    itemIsNeccessaryBlock: false,
+
+    state: GAME,
+    level: newLevel,
+  };
+};
+
+const createRoom = (data, tmpRoomID) => {
+  let users = [];
+  let newUser = createUser(data);
+  users.push(newUser);
+
+  return {
+    state: READY,
+
+    roomName: data.roomName,
+    roomID: tmpRoomID,
+
+    sendStateBlocks: [],
+    User1: data.socketID,
+    User2: "",
+    users: users,
+  };
+};
+
+const JoinNewUserUpdate = (room, data) => {
+  let tmpUsers = room.users;
+  tmpUsers.push(joinUser(data));
+  return {
+    ...room,
+    User2: data.socketID,
+    users: tmpUsers,
+  };
+>>>>>>> 3f2ca1b
 };
 
 /***************** SOCKET **********************/
 socketIO.on("connect", (socket) => {
   console.log("connected with client");
 
+<<<<<<< HEAD
   //newUser
   socket.on("Il1I111lII1l1Il1lIl1I111lII1lIIlll", (data) => {
     if (isExistSameUser(data.socketID) && users.length < 2) {
@@ -648,31 +772,92 @@ socketIO.on("connect", (socket) => {
       item.socketID === data.socketID &&
       item.itemBlockType != 1 &&
       verifyHash(data.hash)
+=======
+  socket.on("Il1IllII1I1l1I1Il11II11l1Il1I11l", (data) => {
+    //data : roomName, userName, socketID
+    let tmpRoomID = getRandomHash();
+    let newRoom = createRoom(data, tmpRoomID);
+    gameRooms.push(newRoom);
+    const sendData = {
+      socketID: data.socketID,
+      roomID: tmpRoomID,
+    };
+    socket.emit("IIl1lIIlIIlI1lIIIlI11llIIIII11ll", sendData);
+  });
+
+  socket.on("IlI1IlllII1ll1l1llII1I1I1IIIlIlI", (data) => {
+    gameRooms = gameRooms.map((room) =>
+      room.roomID === data.roomID && room.users.length === 1
+        ? JoinNewUserUpdate(room, data)
+        : room
+    );
+    const sendData = {
+      socketID: data.socketID,
+      roomID: data.roomID,
+    };
+    socket.emit("Il1llI11I1l1I1llII1lll1II111IlI1", sendData);
+  });
+
+  socket.on("I111II1llllIII11111I11lIlIIl1Ill", () => {
+    const data = {
+      gameRooms: gameRooms,
+    };
+    socket.emit("I11l1l1lllllII1IlII11llI11IIlII1", data);
+  });
+
+  socket.on("l1I11IIIIIl1lllII1III1Il111IIlII", (data) => {
+    // data: roomID, socketID, direction
+    gameRooms = gameRooms.map((room) =>
+      data.roomID === room.roomID
+>>>>>>> 3f2ca1b
         ? {
-            ...item,
-            itemBlockBody: rotateBlock(
-              item.itemBlockBody,
-              item.itemGroundBlock
+            ...room,
+            users: room.users.map((item) =>
+              item.socketID === data.socketID && item.itemBlockType != 1
+                ? {
+                    ...item,
+                    itemBlockBody: rotateBlock(
+                      item.itemBlockBody,
+                      item.itemGroundBlock
+                    ),
+                  }
+                : item
             ),
           }
-        : item
+        : room
     );
   });
+<<<<<<< HEAD
   //moveBlock
   socket.on("llIl1I111l11111Il1l1l11l1l1l1lll", (data) => {
     users = users.map((item) =>
       item.socketID === data.socketID && verifyHash(data.hash)
+=======
+
+  socket.on("1lll1Il11l1II11IIIlI1lIllIIII1Il", (data) => {
+    // data: roomID, socketID, direction
+    gameRooms = gameRooms.map((room) =>
+      room.roomID === data.roomID
+>>>>>>> 3f2ca1b
         ? {
-            ...item,
-            itemBlockBody: moveBlockHorizental(
-              item.itemBlockBody,
-              item.itemGroundBlock,
-              data.direction
+            ...room,
+            users: room.users.map((item) =>
+              item.socketID === data.socketID
+                ? {
+                    ...item,
+                    itemBlockBody: moveBlockHorizental(
+                      item.itemBlockBody,
+                      item.itemGroundBlock,
+                      data.direction
+                    ),
+                  }
+                : item
             ),
           }
-        : item
+        : room
     );
   });
+<<<<<<< HEAD
   //dropBlock
   socket.on("IIII111I111l11111Il1l1l11l1l1l1lll", (data) => {
     users = users.map((item) =>
@@ -725,6 +910,53 @@ socketIO.on("connect", (socket) => {
         socketIO.emit("1l1l1l1llll1lIlIlI1lI1lI1", data);
       }, FRAME);
     }
+=======
+
+  socket.on("IlllIllIlII111ll1I1l1I1lI1lI1l1l", (data) => {
+    // data: roomID, socketID, direction
+    gameRooms = gameRooms.map((room) =>
+      room.roomID === data.roomID
+        ? {
+            ...room,
+            users: room.users.map((item) =>
+              item.socketID === data.socketID ? dropBlock(item) : item
+            ),
+          }
+        : room
+    );
+  });
+
+  socket.on("1IlllIlI1IIl1l1l1III1llIIIllllII", (data) => {
+    // socket.emit("readyStateEmit");
+    // clearInterval(broadcast);
+    gameRooms = gameRooms.map((room) =>
+      room.roomID === data.roomID
+        ? {
+            ...room,
+            state: READY,
+            sendStateBlocks: [],
+            users: room.users.map((item) => updateUser(item, item.state)),
+          }
+        : room
+    );
+  });
+
+  socket.on("Il11Il1l1IlIII1ll1llll1lII11ll1l", (data) => {
+    // data: roomID
+    gameRooms = gameRooms.map((room) =>
+      room.roomID == data.roomID && room.users.length === 2
+        ? {
+            ...room,
+            state: GAME,
+          }
+        : room
+    );
+    gameRooms = gameRooms.filter((room) =>
+      room.users.length === 2
+        ? room.users[0].level < 3 && room.users[1].level < 3
+        : room
+    );
+>>>>>>> 3f2ca1b
   });
 });
 
