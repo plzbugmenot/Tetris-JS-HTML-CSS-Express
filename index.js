@@ -27,6 +27,18 @@ server.get("/config", (req, res) => {
 
 server_http.listen(PORT, () => {
   console.log(`Server listening on ${HOST}:${PORT}`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ 錯誤：端口 ${PORT} 已被占用！`);
+    console.log(`💡 請嘗試以下解決方案：`);
+    console.log(`   1. 關閉占用該端口的其他程序`);
+    console.log(`   2. 使用不同的端口（設置環境變量 REACT_APP_SERVER_PORT）`);
+    console.log(`   例如: set REACT_APP_SERVER_PORT=8801 (Windows) 或 export REACT_APP_SERVER_PORT=8801 (Linux/Mac)`);
+    process.exit(1);
+  } else {
+    console.error('伺服器錯誤:', err);
+    process.exit(1);
+  }
 });
 
 /********* C L I E N T *************/
@@ -191,9 +203,9 @@ const mainLoop = () => {
     item.actionTime === 0
       ? movedBlockVertical(item)
       : {
-          ...item,
-          actionTime: item.actionTime - 1,
-        }
+        ...item,
+        actionTime: item.actionTime - 1,
+      }
   );
 
   users = users.map((item) =>
@@ -210,16 +222,16 @@ const mainLoop = () => {
     sendStateBlocks = sendStateBlocks.map((item) =>
       item.actionTime === 0
         ? {
-            ...item,
-            Blocks: updateSendBlocks(item.Blocks, item.sender),
-            position:
-              item.sender === User1 ? item.position + 1 : item.position - 1,
-            actionTime: ACTION_INIT_TIME_SEND,
-          }
+          ...item,
+          Blocks: updateSendBlocks(item.Blocks, item.sender),
+          position:
+            item.sender === User1 ? item.position + 1 : item.position - 1,
+          actionTime: ACTION_INIT_TIME_SEND,
+        }
         : {
-            ...item,
-            actionTime: item.actionTime - 1,
-          }
+          ...item,
+          actionTime: item.actionTime - 1,
+        }
     );
 
     for (item of sendStateBlocks) {
@@ -396,15 +408,15 @@ const receiveBlockFromSender = (sender, sendBlocks, blockLines) => {
   users = users.map((item) =>
     item.socketID !== sender
       ? {
-          ...item,
-          itemBlockBody: [],
-          itemIsNeccessaryBlock: true,
-          itemGroundBlock: updateGroundBlockAtReceive(
-            item.itemGroundBlock,
-            sendBlocks,
-            blockLines
-          ),
-        }
+        ...item,
+        itemBlockBody: [],
+        itemIsNeccessaryBlock: true,
+        itemGroundBlock: updateGroundBlockAtReceive(
+          item.itemGroundBlock,
+          sendBlocks,
+          blockLines
+        ),
+      }
       : item
   );
 };
@@ -646,12 +658,12 @@ socketIO.on("connect", (socket) => {
     users = users.map((item) =>
       item.socketID === data.socketID && item.itemBlockType != 1
         ? {
-            ...item,
-            itemBlockBody: rotateBlock(
-              item.itemBlockBody,
-              item.itemGroundBlock
-            ),
-          }
+          ...item,
+          itemBlockBody: rotateBlock(
+            item.itemBlockBody,
+            item.itemGroundBlock
+          ),
+        }
         : item
     );
   });
@@ -660,13 +672,13 @@ socketIO.on("connect", (socket) => {
     users = users.map((item) =>
       item.socketID === data.socketID
         ? {
-            ...item,
-            itemBlockBody: moveBlockHorizental(
-              item.itemBlockBody,
-              item.itemGroundBlock,
-              data.direction
-            ),
-          }
+          ...item,
+          itemBlockBody: moveBlockHorizental(
+            item.itemBlockBody,
+            item.itemGroundBlock,
+            data.direction
+          ),
+        }
         : item
     );
   });
@@ -711,4 +723,16 @@ socketIO.on("connect", (socket) => {
 
 client_http.listen(F_PORT, () => {
   console.log(`Client listening on ${F_PORT}`);
+}).on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`❌ 錯誤：端口 ${F_PORT} 已被占用！`);
+    console.log(`💡 請嘗試以下解決方案：`);
+    console.log(`   1. 關閉占用該端口的其他程序`);
+    console.log(`   2. 使用不同的端口（設置環境變量 REACT_APP_CLIENT_PORT）`);
+    console.log(`   例如: set REACT_APP_CLIENT_PORT=3501 (Windows) 或 export REACT_APP_CLIENT_PORT=3501 (Linux/Mac)`);
+    process.exit(1);
+  } else {
+    console.error('客戶端伺服器錯誤:', err);
+    process.exit(1);
+  }
 });
