@@ -89,6 +89,7 @@ const BOARD_SIZE_WIDTH = 10;
 const TIMEperS = 50;
 
 const FRAME = 20; // every 20ms render
+const MAX_PLAYERS = 4; // 最大玩家數，可以調整為任意數字（建議2-8人）
 
 const DOWN = "DOWN";
 const LEFT = "LEFT";
@@ -251,8 +252,9 @@ const mainLoop = () => {
     );
   }
 
-  level1 = users[0].level;
-  level2 = users[1].level;
+  // 動態處理多玩家等級，避免硬編碼索引
+  if (users.length >= 1) level1 = users[0].level;
+  if (users.length >= 2) level2 = users[1].level;
 };
 
 const updateSendBlocks = (sendBlocks, sender) => {
@@ -277,13 +279,17 @@ const insertBlockBodyToGroundBody = (ground, block) => {
 };
 
 const createUser = (data) => {
-  users.length === 0 ? (User1 = data.socketID) : (User2 = data.socketID);
+  // 動態分配玩家編號，支援多人遊戲
+  const playerNumber = users.length + 1;
+  const playerId = `USER${playerNumber}`;
+
   let tmp = generateRandomDomino();
   let preDomino = generateRandomDomino();
   return {
-    userName: data.userName || "user",
+    userName: data.userName || `Player${playerNumber}`,
     socketID: data.socketID,
-    who: users.length === 0 ? USER1 : USER2,
+    who: playerId,
+    playerNumber: playerNumber,
 
     actionTime: ACTION_INIT_TIME,
 
@@ -637,16 +643,22 @@ socketIO.on("connect", (socket) => {
   console.log("connected with client");
 
   socket.on("newUser", (data) => {
-    if (isExistSameUser(data.socketID) && users.length < 2) {
+    if (isExistSameUser(data.socketID) && users.length < MAX_PLAYERS) {
       let newUser = createUser(data);
       users.push(newUser);
       console.log(newUser.userName, " is connected...", newUser.socketID);
-      console.log("There are ", users.length, " users...");
+      console.log("There are ", users.length, "/", MAX_PLAYERS, " users...");
       const sendData = {
         newUser: newUser,
         size: users.length,
+        maxPlayers: MAX_PLAYERS,
       };
       socketIO.emit("newUserResponse", sendData);
+    } else if (users.length >= MAX_PLAYERS) {
+      console.log("Maximum players reached. Connection rejected for:", data.socketID);
+      socket.emit("connectionRejected", {
+        reason: `遊戲房間已滿 (${MAX_PLAYERS}/${MAX_PLAYERS})，請稍後再試`
+      });
     }
   });
 
@@ -701,12 +713,14 @@ socketIO.on("connect", (socket) => {
   });
 
   socket.on("startGameWithCouplePlayer", () => {
-    if (users.length === 2) {
+    // 允許2到MAX_PLAYERS個玩家開始遊戲
+    if (users.length >= 2 && users.length <= MAX_PLAYERS) {
+      console.log(`🎮 遊戲開始！玩家數：${users.length}/${MAX_PLAYERS}`);
       broadcast = setInterval(() => {
         mainLoop();
         let sendStateBlocksDomino = [];
-        for (block of sendStateBlocks) {
-          for (item of block.Blocks) sendStateBlocksDomino.push(item);
+        for (let block of sendStateBlocks) {
+          for (let item of block.Blocks) sendStateBlocksDomino.push(item);
         }
 
         GAME_STATE = GAME;
@@ -717,6 +731,28 @@ socketIO.on("connect", (socket) => {
         };
         socketIO.emit("stateOfUsers", data);
       }, FRAME);
+    } else {
+      console.log(`⚠️ 無法開始遊戲。玩家數：${users.length}，需要：2-${MAX_PLAYERS}人`);
+      socket.emit("gameStartFailed", {
+        reason: `需要2-${MAX_PLAYERS}個玩家才能開始遊戲，目前有${users.length}個玩家`
+      });
+    }
+  });
+
+  // 處理玩家斷線
+  socket.on("disconnect", () => {
+    const disconnectedUser = users.find(user => user.socketID === socket.id);
+    if (disconnectedUser) {
+      console.log(`👋 玩家離開：${disconnectedUser.userName} (${disconnectedUser.who})`);
+      users = users.filter(user => user.socketID !== socket.id);
+      console.log(`目前玩家數：${users.length}/${MAX_PLAYERS}`);
+
+      // 通知其他玩家有人離開
+      socketIO.emit("playerDisconnected", {
+        socketID: socket.id,
+        userName: disconnectedUser.userName,
+        remainingPlayers: users.length
+      });
     }
   });
 });
