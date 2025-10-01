@@ -6,47 +6,34 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Tetris</title>
+    <title>多人俄羅斯方塊</title>
     <script src="./socket.io/socket.io.js"></script>
-    <script src="game.js" defer></script>
+    <script src="game-new.js" defer></script>
 </head>
 
 <body>
     <div id="register">
-        <input id="name" type="text" maxlength="3" />
-        <button onclick="sendMessage()" class="registerBtn">start</button>
+        <input id="name" type="text" maxlength="10" placeholder="輸入玩家名稱" />
+        <button onclick="registerPlayer()" class="registerBtn">加入遊戲</button>
     </div>
-    <div class="game-body">
-        <div class="top-board">
-            <div id="pre-game-board"></div>
-            <div class="pre-state-board"></div>
-            <div id="pre-game-board-other"></div>
-        </div>
-        <div class="main-board">
-            <div id="game-board"></div>
-            <div class="state-board">
-                <div class="state-name">
-                    <div id="user1-title"></div>
-                    <div>vs</div>
-                    <div id="user2-title"></div>
-                </div>
-                <div id="state-start">
 
-                </div>
-                <div class="state-level">
-                    <div id="user1-level"></div>
-                    <div id="user2-level"></div>
-                </div>
-            </div>
-            <div id="game-board-other"></div>
-        </div>
-        <div id="footer-board">
-        </div>
+    <!-- 玩家信息區 -->
+    <div id="players-info" style="display: none;">
+        <div id="room-status"></div>
+        <button id="start-game-btn" onclick="requestStartGame()" style="display: none;">開始遊戲</button>
+    </div>
+
+    <!-- 動態遊戲區域 -->
+    <div id="game-container" class="game-container">
+        <!-- 玩家棋盤將動態生成在這裡 -->
+    </div>
+
+    <div id="message-display"></div>
 </body>
 <script>
     console.log("connecting...");
 
-    // 全域 socket 變數，供 game.js 使用
+    // 全域 socket 變數，供 game-new.js 使用
     let socket;
     let isSocketReady = false;
 
@@ -61,22 +48,24 @@
             console.log(`Connecting to: ${socketUrl}`);
 
             socket = io.connect(socketUrl);
-            
+            window.socket = socket; // 賦值給window以便game-new.js訪問
+
             // 監聽連接成功事件
             socket.on('connect', () => {
                 console.log('Socket connected successfully');
                 isSocketReady = true;
-                // 觸發自定義事件，通知 game.js socket 已準備好
+                // 觸發自定義事件，通知 game-new.js socket 已準備好
                 window.dispatchEvent(new CustomEvent('socketReady'));
             });
-            
+
         } catch (error) {
             console.error('Failed to get server config, using fallback:', error);
             // 如果無法獲取配置，使用環境變數或預設值
             const fallbackHost = window.location.hostname || 'localhost';
             const fallbackPort = '8800'; // 使用預設的 socket 伺服器端口
             socket = io.connect(`http://${fallbackHost}:${fallbackPort}`);
-            
+            window.socket = socket;
+
             socket.on('connect', () => {
                 console.log('Socket connected successfully (fallback)');
                 isSocketReady = true;

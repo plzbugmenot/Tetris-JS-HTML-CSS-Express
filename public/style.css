@@ -2,23 +2,250 @@ body {
   height: 100vh;
   width: 100vw;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   margin: 0;
-  background-color: black;
+  background-color: #1a1a1a;
+  color: #eeeeee;
+  font-family: "Arial", sans-serif;
 }
 
-#game-board {
-  background-color: black;
+/* 註冊區域 */
+#register {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #2a2a2a;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+#register input {
+  padding: 0.5rem 1rem;
+  font-size: 1.2rem;
+  border: 2px solid #474747;
+  border-radius: 5px;
+  margin-right: 0.5rem;
+  background: #1a1a1a;
+  color: #eeeeee;
+}
+
+#register button {
+  padding: 0.5rem 1.5rem;
+  font-size: 1.2rem;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#register button:hover {
+  background: #45a049;
+}
+
+/* 玩家信息區 */
+#players-info {
+  position: fixed;
+  top: 20px;
+  width: 100%;
+  text-align: center;
+  z-index: 100;
+  display: none;
+}
+
+#room-status {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #4caf50;
+}
+
+#start-game-btn {
+  padding: 0.8rem 2rem;
+  font-size: 1.2rem;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+  display: none;
+}
+
+#start-game-btn:hover {
+  background: #0b7dda;
+}
+
+/* 訊息顯示 */
+#message-display {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 152, 0, 0.9);
+  padding: 1rem 2rem;
+  border-radius: 5px;
+  display: none;
+  z-index: 1000;
+}
+
+/* 遊戲容器 - 動態網格佈局 */
+.game-container {
+  display: grid;
+  gap: 2rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 1800px;
+  justify-content: center;
+}
+
+/* 2人模式：左右分屏 */
+.game-container.players-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* 3人模式：3列 */
+.game-container.players-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* 4人模式：2x2 */
+.game-container.players-4 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* 5-6人模式：3x2 */
+.game-container.players-5,
+.game-container.players-6 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* 7-8人模式：4x2 */
+.game-container.players-7,
+.game-container.players-8 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* 單個玩家容器 */
+.player-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #2a2a2a;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.player-container.my-player {
+  border: 3px solid #4caf50;
+  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.5);
+}
+
+.player-container.other-player {
+  border: 3px solid #474747;
+}
+
+/* 玩家信息頭部 */
+.player-header {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.player-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4caf50;
+  margin-bottom: 0.5rem;
+}
+
+.player-container.other-player .player-name {
+  color: #2196f3;
+}
+
+.player-status {
+  font-size: 1rem;
+  color: #aaa;
+}
+
+.player-level {
+  font-size: 1.2rem;
+  color: #ffd700;
+}
+
+/* 預覽方塊區域 */
+.pre-game-board {
+  background-color: #1a1a1a;
+  width: 200px;
+  height: 60px;
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  border: 2px solid #474747;
+  border-radius: 5px;
+  margin-bottom: 0.5rem;
+}
+
+/* 主遊戲棋盤 */
+.game-board {
+  background-color: #000;
   width: 200px;
   height: 420px;
-  min-width: 200px;
-  min-height: 420px;
   display: grid;
   grid-template-rows: repeat(21, 1fr);
   grid-template-columns: repeat(10, 1fr);
   border: 3px solid #474747;
+  border-radius: 5px;
 }
+
+/* 方塊樣式 */
+.block {
+  border: 1px solid #333;
+}
+
+.block-0 {
+  background-color: #ff0d72;
+}
+
+.block-1 {
+  background-color: #0dc2ff;
+}
+
+.block-2 {
+  background-color: #0dff72;
+}
+
+.block-3 {
+  background-color: #f538ff;
+}
+
+.block-4 {
+  background-color: #ff8e0d;
+}
+
+.block-5 {
+  background-color: #ffe138;
+}
+
+.block-6 {
+  background-color: #3877ff;
+}
+
+.block-ground {
+  background-color: #888;
+}
+
+.block-send {
+  background-color: #ff4444;
+}
+
+/* 舊的樣式保留以兼容 */
 
 .state-board {
   width: 200px;
