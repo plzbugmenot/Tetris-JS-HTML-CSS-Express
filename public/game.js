@@ -61,51 +61,58 @@ const stateText = ["", "Wait Another Player...", "Please Press Enter..."];
 
 /********* Transfer *************/
 
-socket.on("connect", () => {
-  console.log("connected with server.");
-});
+function initializeSocketListeners() {
+  if (!socket) {
+    console.error("Socket not available");
+    return;
+  }
 
-socket.on("newUserResponseError", (response) => {
-  if (response.socketID === socket.id) alert(response.msg);
-});
+  socket.on("connect", () => {
+    console.log("connected with server.");
+  });
 
-socket.on("sendBlockEvent", (data) => {
-  users = data.users;
-  for (item of users) init(item);
-});
+  socket.on("newUserResponseError", (response) => {
+    if (response.socketID === socket.id) alert(response.msg);
+  });
 
-socket.on("readyStateEmit", () => {
-  console.log("GAME_STATE => ", GAME_STATE);
-  GAME_STATE = READY;
-});
+  socket.on("sendBlockEvent", (data) => {
+    users = data.users;
+    for (item of users) init(item);
+  });
 
-socket.on("stateOfUsers", (data) => {
-  users = data.users;
-  sendStateBlocks = data.sendStateBlocks;
+  socket.on("readyStateEmit", () => {
+    console.log("GAME_STATE => ", GAME_STATE);
+    GAME_STATE = READY;
+  });
 
-  GAME_STATE = data.gameState;
-  if (GAME_STATE === GAME) setStateBoardText(0);
-  convertSendStateBlocks(sendStateBlocks);
+  socket.on("stateOfUsers", (data) => {
+    users = data.users;
+    sendStateBlocks = data.sendStateBlocks;
 
-  for (item of users) init(item);
+    GAME_STATE = data.gameState;
+    if (GAME_STATE === GAME) setStateBoardText(0);
+    convertSendStateBlocks(sendStateBlocks);
 
-  updatePreBlock(preBody);
-  updatePreBlock(preBody2);
+    for (item of users) init(item);
 
-  drawDataFromServer();
-  drawStateDataFromServer();
-});
+    updatePreBlock(preBody);
+    updatePreBlock(preBody2);
 
-socket.on("newUserResponse", (data) => {
-  initData(data.newUser);
+    drawDataFromServer();
+    drawStateDataFromServer();
+  });
 
-  setStateBoardText(data.size);
-  // if (data.size === 1) {
-  //   console.log("await another player...");
-  // } else if (data.size === 2) {
-  //   console.log("presss Enter");
-  // }
-});
+  socket.on("newUserResponse", (data) => {
+    initData(data.newUser);
+
+    setStateBoardText(data.size);
+    // if (data.size === 1) {
+    //   console.log("await another player...");
+    // } else if (data.size === 2) {
+    //   console.log("presss Enter");
+    // }
+  });
+}
 
 const setStateBoardText = (size) => {
   stateBoard.innerHTML = "";
@@ -116,6 +123,11 @@ const setStateBoardText = (size) => {
 };
 
 const sendMessage = () => {
+  if (!socket || !socket.connected) {
+    alert("正在連接到伺服器，請稍後再試...");
+    return;
+  }
+  
   const input = document.getElementById("name");
   const data = {
     userName: input.value,
@@ -298,3 +310,14 @@ const drawStateDataFromServer = () => {
     LevelBoard2.appendChild(leveltxt2);
   }
 };
+
+// 等待 socket 準備好後初始化
+window.addEventListener('socketReady', () => {
+  console.log('Socket is ready, initializing game listeners');
+  initializeSocketListeners();
+});
+
+// 如果 socket 已經準備好了（例如頁面重新載入時）
+if (window.isSocketReady) {
+  initializeSocketListeners();
+}

@@ -45,7 +45,48 @@
 </body>
 <script>
     console.log("connecting...");
-    const socket = io.connect("http://192.168.144.110:8800");
+
+    // 全域 socket 變數，供 game.js 使用
+    let socket;
+    let isSocketReady = false;
+
+    async function connectToServer() {
+        try {
+            // 使用相對路徑獲取配置（會使用當前頁面的 host 和 port）
+            const response = await fetch('/config');
+            const config = await response.json();
+
+            // 使用配置中的 host 和 port 連接 Socket.IO
+            const socketUrl = `http://${config.host}:${config.port}`;
+            console.log(`Connecting to: ${socketUrl}`);
+
+            socket = io.connect(socketUrl);
+            
+            // 監聽連接成功事件
+            socket.on('connect', () => {
+                console.log('Socket connected successfully');
+                isSocketReady = true;
+                // 觸發自定義事件，通知 game.js socket 已準備好
+                window.dispatchEvent(new CustomEvent('socketReady'));
+            });
+            
+        } catch (error) {
+            console.error('Failed to get server config, using fallback:', error);
+            // 如果無法獲取配置，使用環境變數或預設值
+            const fallbackHost = window.location.hostname || 'localhost';
+            const fallbackPort = '8800'; // 使用預設的 socket 伺服器端口
+            socket = io.connect(`http://${fallbackHost}:${fallbackPort}`);
+            
+            socket.on('connect', () => {
+                console.log('Socket connected successfully (fallback)');
+                isSocketReady = true;
+                window.dispatchEvent(new CustomEvent('socketReady'));
+            });
+        }
+    }
+
+    // 連接到伺服器
+    connectToServer();
 </script>
 
 </html>

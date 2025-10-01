@@ -1,5 +1,6 @@
 const PORT = process.env.REACT_APP_SERVER_PORT || 8800;
 const F_PORT = process.env.REACT_APP_CLIENT_PORT || 3500;
+const HOST = process.env.REACT_APP_SERVER_HOST || "localhost";
 
 const express = require("express");
 const server = express();
@@ -15,8 +16,17 @@ server.use(cors());
 server.get("/", (req, res) => {
   res.send("server is running");
 });
+
+// 提供環境配置給前端
+server.get("/config", (req, res) => {
+  res.json({
+    host: HOST,
+    port: PORT
+  });
+});
+
 server_http.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
+  console.log(`Server listening on ${HOST}:${PORT}`);
 });
 
 /********* C L I E N T *************/
@@ -26,6 +36,14 @@ const client_http = require("http").Server(client);
 
 client.get("/", (req, res) => {
   res.send("client is running");
+});
+
+// 在客戶端伺服器也提供配置
+client.get("/config", (req, res) => {
+  res.json({
+    host: HOST,
+    port: PORT
+  });
 });
 
 /********* TETRIS Board*************/
