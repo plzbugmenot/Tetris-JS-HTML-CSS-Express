@@ -1,6 +1,8 @@
 const PORT = process.env.REACT_APP_SERVER_PORT || 8800;
 const F_PORT = process.env.REACT_APP_CLIENT_PORT || 3500;
 const HOST = process.env.REACT_APP_SERVER_HOST || "localhost";
+// 客戶端連接地址（如果服務器監聽 0.0.0.0，客戶端應該連接到實際的主機名）
+const CLIENT_HOST = process.env.REACT_APP_CLIENT_CONNECT_HOST || (HOST === "0.0.0.0" ? "localhost" : HOST);
 
 const express = require("express");
 const server = express();
@@ -20,12 +22,12 @@ server.get("/", (req, res) => {
 // 提供環境配置給前端
 server.get("/config", (req, res) => {
   res.json({
-    host: HOST,
+    host: CLIENT_HOST,  // 使用客戶端可連接的地址
     port: PORT
   });
 });
 
-server_http.listen(PORT, () => {
+server_http.listen(PORT, HOST, () => {
   console.log(`Server listening on ${HOST}:${PORT}`);
 }).on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
@@ -53,7 +55,7 @@ client.get("/", (req, res) => {
 // 在客戶端伺服器也提供配置
 client.get("/config", (req, res) => {
   res.json({
-    host: HOST,
+    host: CLIENT_HOST,  // 使用客戶端可連接的地址
     port: PORT
   });
 });

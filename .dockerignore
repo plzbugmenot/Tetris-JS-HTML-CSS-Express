@@ -1,0 +1,65 @@
+# 依賴目錄
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 測試和覆蓋率
+coverage/
+.nyc_output/
+
+# 環境變量
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE 設置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系統文件
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# 文檔（可選，如果不想包含在容器中）
+*.md
+!README.md
+
+# 臨時文件
+tmp/
+temp/
+*.tmp
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# 日誌
+logs/
+*.log
+
+# 構建產物（如果有）
+dist/
+build/
+
+# 測試文件
+test/
+tests/
+__tests__/
+*.test.js
+*.spec.js
