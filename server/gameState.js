@@ -11,50 +11,71 @@ let users = [];
 // 遊戲狀態
 let GAME_STATE = config.READY;
 
-// 方塊形狀定義
+// 方塊形狀定義（帶類型編號）
 const DOMINO_SHAPES = {
-    I: [  // 直線形 -.--
-        { x: 4, y: 1 },
-        { x: 6, y: 1 },
-        { x: 5, y: 1 },
-        { x: 7, y: 1 },
-    ],
-    O: [  // 正方形
-        { x: 5, y: 1 },
-        { x: 6, y: 1 },
-        { x: 5, y: 2 },
-        { x: 6, y: 2 },
-    ],
-    T: [  // T 字形
-        { x: 5, y: 1 },
-        { x: 7, y: 1 },
-        { x: 6, y: 1 },
-        { x: 5, y: 2 },
-    ],
-    L: [  // L 字形
-        { x: 5, y: 1 },
-        { x: 7, y: 1 },
-        { x: 6, y: 1 },
-        { x: 7, y: 2 },
-    ],
-    J: [  // 反 L 字形
-        { x: 5, y: 2 },
-        { x: 7, y: 2 },
-        { x: 6, y: 2 },
-        { x: 6, y: 1 },
-    ],
-    S: [  // S 字形
-        { x: 6, y: 1 },
-        { x: 7, y: 1 },
-        { x: 6, y: 2 },
-        { x: 5, y: 2 },
-    ],
-    Z: [  // Z 字形
-        { x: 5, y: 1 },
-        { x: 6, y: 1 },
-        { x: 6, y: 2 },
-        { x: 7, y: 2 },
-    ],
+    I: {  // 直線形 -.--
+        type: 0,
+        blocks: [
+            { x: 4, y: 1 },
+            { x: 6, y: 1 },
+            { x: 5, y: 1 },
+            { x: 7, y: 1 },
+        ]
+    },
+    O: {  // 正方形
+        type: 1,
+        blocks: [
+            { x: 5, y: 1 },
+            { x: 6, y: 1 },
+            { x: 5, y: 2 },
+            { x: 6, y: 2 },
+        ]
+    },
+    T: {  // T 字形
+        type: 2,
+        blocks: [
+            { x: 5, y: 1 },
+            { x: 7, y: 1 },
+            { x: 6, y: 1 },
+            { x: 5, y: 2 },
+        ]
+    },
+    L: {  // L 字形
+        type: 3,
+        blocks: [
+            { x: 5, y: 1 },
+            { x: 7, y: 1 },
+            { x: 6, y: 1 },
+            { x: 7, y: 2 },
+        ]
+    },
+    J: {  // 反 L 字形
+        type: 4,
+        blocks: [
+            { x: 5, y: 2 },
+            { x: 7, y: 2 },
+            { x: 6, y: 2 },
+            { x: 6, y: 1 },
+        ]
+    },
+    S: {  // S 字形
+        type: 5,
+        blocks: [
+            { x: 6, y: 1 },
+            { x: 7, y: 1 },
+            { x: 6, y: 2 },
+            { x: 5, y: 2 },
+        ]
+    },
+    Z: {  // Z 字形
+        type: 6,
+        blocks: [
+            { x: 5, y: 1 },
+            { x: 6, y: 1 },
+            { x: 6, y: 2 },
+            { x: 7, y: 2 },
+        ]
+    },
 };
 
 // 將形狀轉換為陣列以供隨機選擇
@@ -62,10 +83,15 @@ const DOMINOS = Object.values(DOMINO_SHAPES);
 
 /**
  * 獲取隨機方塊形狀
+ * @returns {Object} 包含 blocks 和 type 的對象
  */
 function getRandomDomino() {
     const randomIndex = Math.floor(Math.random() * DOMINOS.length);
-    return JSON.parse(JSON.stringify(DOMINOS[randomIndex]));
+    const selectedDomino = DOMINOS[randomIndex];
+    return {
+        blocks: JSON.parse(JSON.stringify(selectedDomino.blocks)),
+        type: selectedDomino.type
+    };
 }
 
 /**
@@ -84,14 +110,14 @@ function addUser(socketID, userName, who) {
         score: 0,
 
         // 使用原始屬性名稱以匹配前端
-        itemBlockBody: firstDomino,       // 當前方塊
-        itemBlockType: 0,                 // 當前方塊類型 (需要根據形狀設置)
-        itemPreBody: secondDomino,        // 下一個方塊
-        itemPreType: 0,                   // 下一個方塊類型
-        itemGroundBlock: [],              // 已放置的方塊
-        itemLastBlock: [],                // 最後消除的方塊
+        itemBlockBody: firstDomino.blocks,       // 當前方塊
+        itemBlockType: firstDomino.type,         // 當前方塊類型
+        itemPreBody: secondDomino.blocks,        // 下一個方塊
+        itemPreType: secondDomino.type,          // 下一個方塊類型
+        itemGroundBlock: [],                     // 已放置的方塊
+        itemLastBlock: [],                       // 最後消除的方塊
 
-        itemIsNeccessaryBlock: false,     // 是否需要生成新方塊
+        itemIsNeccessaryBlock: false,            // 是否需要生成新方塊
 
         actionTime: config.ACTION_INIT_TIME,
         sendTime: 1,
@@ -168,10 +194,10 @@ function resetAllPlayers() {
         user.state = config.READY;
         user.level = 0;
         user.score = 0;
-        user.itemBlockBody = firstDomino;
-        user.itemBlockType = 0;
-        user.itemPreBody = secondDomino;
-        user.itemPreType = 0;
+        user.itemBlockBody = firstDomino.blocks;
+        user.itemBlockType = firstDomino.type;
+        user.itemPreBody = secondDomino.blocks;
+        user.itemPreType = secondDomino.type;
         user.itemGroundBlock = [];
         user.itemLastBlock = [];
         user.itemIsNeccessaryBlock = false;

@@ -85,11 +85,14 @@ function moveBlockDown(player) {
     // 檢查是否碰撞
     if (checkCollision(tmpBlockBody, player.itemGroundBlock)) {
         // 碰撞了,需要固定方塊並生成新方塊
+        const newDomino = gameState.getRandomDomino();
         return {
             ...player,
             itemGroundBlock: [...player.itemGroundBlock, ...player.itemBlockBody],
             itemBlockBody: player.itemPreBody,
-            itemPreBody: gameState.getRandomDomino(),
+            itemBlockType: player.itemPreType,
+            itemPreBody: newDomino.blocks,
+            itemPreType: newDomino.type,
             actionTime: config.ACTION_INIT_TIME,
         };
     }
@@ -202,6 +205,8 @@ function clearLines(player) {
         return { itemGroundBlock: player.itemGroundBlock, linesCleared: 0 };
     }
 
+    console.log(`🎯 檢測到消行！玩家: ${player.userName}, 消除行數: ${clearedLines.length}, 行號: ${clearedLines.join(', ')}`);
+
     // 移除完整的行
     let newBoard = player.itemGroundBlock.filter(block => !clearedLines.includes(block.y));
 
@@ -235,11 +240,14 @@ function dropBlock(player) {
 
         if (checkCollision(tmpBlockBody, currentPlayer.itemGroundBlock)) {
             // 固定方塊並生成新方塊
+            const newDomino = gameState.getRandomDomino();
             return {
                 ...currentPlayer,
                 itemGroundBlock: [...currentPlayer.itemGroundBlock, ...currentPlayer.itemBlockBody],
                 itemBlockBody: currentPlayer.itemPreBody,
-                itemPreBody: gameState.getRandomDomino(),
+                itemBlockType: currentPlayer.itemPreType,
+                itemPreBody: newDomino.blocks,
+                itemPreType: newDomino.type,
                 actionTime: config.ACTION_INIT_TIME,
             };
         }
@@ -280,12 +288,29 @@ function processPlayerTick(player) {
         };
     }
 
-    // 時間到了 (actionTime === 0),嘗試方塊自動下移
-    const result = moveBlockDown(player);
+    // 時間到了 (actionTime === 0),方塊自動下移
+    const movedPlayer = moveBlockDown(player);
 
-    // moveBlockDown 已經處理了碰撞和新方塊生成
-    // 所以直接返回結果即可
-    return result;
+    // 檢查是否需要消行
+    const { itemGroundBlock, linesCleared } = clearLines(movedPlayer);
+
+    // 如果沒有消行,直接返回
+    if (linesCleared === 0) {
+        return movedPlayer;
+    }
+
+    // 更新等級和分數
+    const newLevel = movedPlayer.level + Math.floor(linesCleared / 4);
+    const newScore = (movedPlayer.score || 0) + linesCleared * 100;
+
+    console.log(`🎯 玩家 ${player.userName} 消除了 ${linesCleared} 行！分數: ${newScore}, 等級: ${newLevel}`);
+
+    return {
+        ...movedPlayer,
+        itemGroundBlock,
+        level: newLevel,
+        score: newScore
+    };
 }
 
 module.exports = {
