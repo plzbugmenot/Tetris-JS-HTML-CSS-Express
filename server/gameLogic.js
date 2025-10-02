@@ -220,7 +220,8 @@ function clearLines(player) {
 
     return {
         itemGroundBlock: newBoard,
-        linesCleared: clearedLines.length
+        linesCleared: clearedLines.length,
+        clearedLineNumbers: clearedLines  // 返回被消除的行號
     };
 }
 
@@ -293,7 +294,7 @@ function processPlayerTick(player) {
     const movedPlayer = moveBlockDown(player);
 
     // 檢查是否需要消行
-    const { itemGroundBlock, linesCleared } = clearLines(movedPlayer);
+    const { itemGroundBlock, linesCleared, clearedLineNumbers } = clearLines(movedPlayer);
 
     // 如果沒有消行,直接返回
     if (linesCleared === 0) {
@@ -310,7 +311,8 @@ function processPlayerTick(player) {
         ...movedPlayer,
         itemGroundBlock,
         level: newLevel,
-        score: newScore
+        score: newScore,
+        clearedLineNumbers  // 保存消除的行號，用於動畫
     };
 }
 

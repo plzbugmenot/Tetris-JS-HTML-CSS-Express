@@ -156,6 +156,16 @@ function setupSocketListeners() {
             UI.showStartButton();
         }
     });
+
+    // 消行動畫事件
+    socket.on('lineCleared', (data) => {
+        console.log(`✨ 消行動畫: ${data.userName} 消除了 ${data.linesCleared} 行`);
+
+        // 觸發自定義事件，通知渲染模組播放動畫
+        window.dispatchEvent(new CustomEvent('playLineClearAnimation', {
+            detail: data
+        }));
+    });
 }
 
 /**

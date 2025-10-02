@@ -5,6 +5,9 @@
 
 import { GAME_CONFIG } from './config.js';
 
+// 保存正在播放消行動畫的信息
+const clearingAnimations = new Map(); // key: socketID, value: { lineNumbers: [], startTime: timestamp }
+
 /**
  * 渲染所有玩家的棋盤
  * @param {Array} players - 玩家列表
@@ -95,6 +98,23 @@ function updatePlayerBoard(player) {
     const board = document.getElementById(`board-${player.socketID}`);
     if (!board) return;
 
+    // 檢查是否有正在播放的消行動畫
+    const animationInfo = clearingAnimations.get(player.socketID);
+    const now = Date.now();
+    let clearingLines = [];
+    let animationProgress = 0;
+
+    if (animationInfo) {
+        const elapsed = now - animationInfo.startTime;
+        if (elapsed < 1000) {
+            clearingLines = animationInfo.lineNumbers;
+            animationProgress = elapsed / 1000; // 0-1
+        } else {
+            // 動畫已結束，清除記錄
+            clearingAnimations.delete(player.socketID);
+        }
+    }
+
     board.innerHTML = ''; // 清空棋盤
 
     // 創建 21x10 的網格
@@ -113,6 +133,15 @@ function updatePlayerBoard(player) {
             const groundBlock = player.itemGroundBlock?.find(b => b.x === x && b.y === y);
             if (groundBlock) {
                 cell.classList.add('block-ground');
+            }
+
+            // 如果這個方塊在正在消除的行中，添加動畫效果
+            if (clearingLines.includes(y) && (groundBlock || currentBlock)) {
+                // 使用 inline style 直接設置動畫進度，避免重啟動畫
+                const animationDelay = -(animationProgress * 1000); // 負延遲 = 從中間開始播放
+                cell.style.animation = `clearLineFlash 1s ease-in-out ${animationDelay}ms forwards`;
+                cell.style.position = 'relative';
+                cell.style.zIndex = '10';
             }
 
             board.appendChild(cell);
@@ -186,9 +215,38 @@ export function clearGameContainer() {
     }
 }
 
+/**
+ * 播放消行動畫
+ * @param {string} socketID - 玩家 Socket ID
+ * @param {Array} lineNumbers - 被消除的行號
+ */
+export function playLineClearAnimation(socketID, lineNumbers) {
+    const startTime = Date.now();
+    console.log(`🎨 開始播放消行動畫: 玩家 ${socketID}, 行號: ${lineNumbers.join(', ')}`);
+
+    // 記錄動畫開始時間
+    clearingAnimations.set(socketID, {
+        lineNumbers: lineNumbers,
+        startTime: startTime
+    });
+
+    // 動畫結束後自動清除
+    setTimeout(() => {
+        clearingAnimations.delete(socketID);
+        console.log(`✅ 消行動畫結束: 玩家 ${socketID}`);
+    }, 1050);
+}
+
+// 監聽消行動畫事件
+window.addEventListener('playLineClearAnimation', (event) => {
+    const { socketID, lineNumbers } = event.detail;
+    playLineClearAnimation(socketID, lineNumbers);
+});
+
 export default {
     renderAllPlayers,
     updateAllBoards,
     addEliminationEffect,
     clearGameContainer,
+    playLineClearAnimation,
 };

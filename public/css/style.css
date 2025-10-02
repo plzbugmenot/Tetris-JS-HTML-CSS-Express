@@ -245,6 +245,57 @@ body {
   background-color: #ff4444;
 }
 
+/* 消行動畫效果 */
+.line-clearing {
+  animation: clearLineFlash 1s ease-in-out !important;
+  position: relative;
+  z-index: 10;
+}
+
+@keyframes clearLineFlash {
+  0% {
+    opacity: 1;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 10px #ffffff;
+    transform: scale(1.05);
+  }
+
+  20% {
+    opacity: 1;
+    background-color: #ffd700 !important;
+    box-shadow: 0 0 15px #ffd700;
+    transform: scale(1.1);
+  }
+
+  40% {
+    opacity: 1;
+    background-color: #ff4444 !important;
+    box-shadow: 0 0 15px #ff4444;
+    transform: scale(1.1);
+  }
+
+  60% {
+    opacity: 0.9;
+    background-color: #00ffff !important;
+    box-shadow: 0 0 15px #00ffff;
+    transform: scale(1.05);
+  }
+
+  80% {
+    opacity: 0.5;
+    background-color: #ff00ff !important;
+    box-shadow: 0 0 10px #ff00ff;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    background-color: transparent !important;
+    box-shadow: none;
+    transform: scale(0.5);
+  }
+}
+
 /* 舊的樣式保留以兼容 */
 
 .state-board {

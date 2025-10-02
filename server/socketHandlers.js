@@ -236,6 +236,20 @@ function handleStartGame(io, socket) {
             return gameLogic.processPlayerTick(player);
         });
 
+        // 檢查是否有玩家消行，發送動畫事件
+        updatedUsers.forEach(player => {
+            if (player.clearedLineNumbers && player.clearedLineNumbers.length > 0) {
+                io.emit('lineCleared', {
+                    socketID: player.socketID,
+                    userName: player.userName,
+                    lineNumbers: player.clearedLineNumbers,
+                    linesCleared: player.clearedLineNumbers.length
+                });
+                // 清除標記，避免重複發送
+                delete player.clearedLineNumbers;
+            }
+        });
+
         // 更新 gameState 中的玩家資料
         gameState.updateAllUsers(updatedUsers);
 
