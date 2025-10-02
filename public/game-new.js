@@ -91,13 +91,48 @@ function setupSocketListeners() {
         if (gameState === GAME) {
             // 遊戲進行中
             updateAllBoards();
+            updateScoreboard(); // 更新計分板
         }
+    });
+
+    // 玩家被淘汰
+    socket.on('playerEliminated', (data) => {
+        console.log(`玩家 ${data.userName} (${data.who}) 被淘汰`);
+        showMessage(`${data.userName} 被淘汰！`, 'error');
+
+        // 找到被淘汰的玩家容器並添加淘汰效果
+        const playerContainer = document.getElementById(`player-${data.socketID}`);
+        if (playerContainer) {
+            playerContainer.classList.add('crashed');
+            setTimeout(() => {
+                playerContainer.classList.remove('crashed');
+                playerContainer.classList.add('eliminated');
+            }, 500);
+        }
+
+        // 更新計分板
+        updateScoreboard();
+    });
+
+    // 所有玩家都遊戲結束
+    socket.on('allPlayersGameOver', (data) => {
+        console.log('所有玩家都失敗了！', data);
+        showGameOverScreen(data);
     });
 
     // 準備狀態
     socket.on('readyStateEmit', () => {
         gameState = READY;
+        hideGameOverScreen();
         showMessage('遊戲結束，準備開始新遊戲', 'info');
+
+        // 隱藏計分板
+        document.getElementById('scoreboard').style.display = 'none';
+
+        // 顯示開始按鈕
+        if (allPlayers.length >= 2) {
+            showStartButton();
+        }
     });
 }
 
@@ -126,6 +161,78 @@ function showMessage(message, type = 'info') {
     setTimeout(() => {
         messageDisplay.style.display = 'none';
     }, 3000);
+}
+
+// 更新計分板
+function updateScoreboard() {
+    const scoreboard = document.getElementById('scoreboard');
+    const scoreList = document.getElementById('score-list');
+
+    if (gameState === GAME && allPlayers.length > 0) {
+        scoreboard.style.display = 'block';
+
+        // 清空計分板
+        scoreList.innerHTML = '';
+
+        // 按等級排序玩家
+        const sortedPlayers = [...allPlayers].sort((a, b) => b.level - a.level);
+
+        sortedPlayers.forEach(player => {
+            const scoreItem = document.createElement('div');
+            scoreItem.className = 'score-item';
+
+            // 如果玩家被淘汰，添加 eliminated 類
+            if (player.state === 'LOSE' || player.state === 'ELIMINATED') {
+                scoreItem.classList.add('eliminated');
+            }
+
+            scoreItem.innerHTML = `
+                <div class="player-info">
+                    <div class="player-name-score">${player.userName}</div>
+                    <div class="player-status-score">${player.who}</div>
+                </div>
+                <div class="player-level-score">Lv ${player.level}</div>
+            `;
+
+            scoreList.appendChild(scoreItem);
+        });
+    } else {
+        scoreboard.style.display = 'none';
+    }
+}
+
+// 顯示遊戲結束畫面
+function showGameOverScreen(data) {
+    const overlay = document.getElementById('game-over-overlay');
+    const message = document.getElementById('game-over-message');
+    const finalScoreList = document.getElementById('final-score-list');
+
+    message.textContent = data.message || '遊戲結束！';
+
+    // 清空最終分數列表
+    finalScoreList.innerHTML = '';
+
+    // 按等級排序顯示最終分數
+    const sortedPlayers = [...data.players].sort((a, b) => b.level - a.level);
+
+    sortedPlayers.forEach((player, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+        const scoreItem = document.createElement('div');
+        scoreItem.className = 'score-item';
+        scoreItem.innerHTML = `
+            <span>${medal} ${player.userName} (${player.who})</span>
+            <span style="color: #ffd700;">Level ${player.level}</span>
+        `;
+        finalScoreList.appendChild(scoreItem);
+    });
+
+    overlay.style.display = 'flex';
+}
+
+// 隱藏遊戲結束畫面
+function hideGameOverScreen() {
+    const overlay = document.getElementById('game-over-overlay');
+    overlay.style.display = 'none';
 }
 
 // ==================== 玩家管理 ====================
@@ -188,6 +295,11 @@ function createPlayerBoard(player) {
     const container = document.createElement('div');
     container.className = `player-container ${isMyPlayer ? 'my-player' : 'other-player'}`;
     container.id = `player-${player.socketID}`;
+
+    // 如果玩家被淘汰,添加 eliminated 類
+    if (player.state === 'LOSE' || player.state === 'ELIMINATED') {
+        container.classList.add('eliminated');
+    }
 
     // 玩家信息頭部
     const header = document.createElement('div');
