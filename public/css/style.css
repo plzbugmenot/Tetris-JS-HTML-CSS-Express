@@ -441,10 +441,13 @@ body {
   color: #eeeeee;
   border-radius: 0.5rem;
   border: 1px solid #eeeeee;
-  width: 120px;
+  width: 140px;
+  /* 原本120px，增加寬度 */
   height: 50px;
   font-size: 22px;
   margin-top: 10px;
+  white-space: nowrap;
+  /* 防止文字換行 */
 }
 
 .registerBtn:hover {
