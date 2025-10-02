@@ -116,7 +116,7 @@ body {
 
 /* 4人模式：2x2 */
 .game-container.players-4 {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(4, 1fr);
 }
 
 /* 5-6人模式：3x2 */
@@ -482,10 +482,12 @@ body {
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     transform: translate(-50%, -50%) scale(1);
   }
+
   50% {
     transform: translate(-50%, -50%) scale(1.1);
   }
@@ -501,10 +503,12 @@ body {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.1) rotate(5deg);
     opacity: 0.8;
   }
+
   100% {
     transform: scale(0.9) rotate(-2deg);
     opacity: 0.6;
@@ -516,7 +520,7 @@ body {
 #scoreboard {
   position: fixed;
   left: 20px;
-  top: 100px;
+  top: 20px;
   width: 250px;
   background: #2a2a2a;
   border-radius: 10px;
@@ -594,6 +598,7 @@ body {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
