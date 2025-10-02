@@ -103,6 +103,7 @@ const TEAM2 = "TEAM2";
 const WIN = "WIN";
 const LOSE = "LOSE";
 const GAME = "GAME";
+const ELIMINATED = "ELIMINATED"; // 新增：被淘汰狀態
 
 const READY = "READY";
 let GAME_STATE;
@@ -202,24 +203,41 @@ const init = () => {
 let level1, level2;
 
 const mainLoop = () => {
+  // 只處理還在遊戲中的玩家（不是 LOSE 或 ELIMINATED 狀態）
   users = users.map((item) =>
-    item.actionTime === 0
+    item.state !== LOSE && item.state !== ELIMINATED && item.actionTime === 0
       ? movedBlockVertical(item)
-      : {
-        ...item,
-        actionTime: item.actionTime - 1,
-      }
+      : item.state !== LOSE && item.state !== ELIMINATED
+        ? {
+          ...item,
+          actionTime: item.actionTime - 1,
+        }
+        : item
   );
 
   users = users.map((item) =>
-    item.itemIsNeccessaryBlock ? newBlockGenerateItem(item) : item
+    item.state !== LOSE && item.state !== ELIMINATED && item.itemIsNeccessaryBlock
+      ? newBlockGenerateItem(item)
+      : item
   );
-
-  users = users.map((item) => sendBlockToOther(item));
 
   users = users.map((item) =>
-    isGameOver(item.itemGroundBlock) === LOSE ? { ...item, state: LOSE } : item
+    item.state !== LOSE && item.state !== ELIMINATED
+      ? sendBlockToOther(item)
+      : item
   );
+
+  // 檢查遊戲結束狀態
+  users = users.map((item) => {
+    if (item.state === LOSE || item.state === ELIMINATED) {
+      return item; // 已經結束的玩家不再檢查
+    }
+    const gameOverState = isGameOver(item.itemGroundBlock);
+    return gameOverState === LOSE ? { ...item, state: LOSE } : item;
+  });
+
+  // 檢查是否所有玩家都失敗了
+  checkAllPlayersGameOver();
 
   if (sendStateBlocks.length) {
     sendStateBlocks = sendStateBlocks.map((item) =>
@@ -335,8 +353,64 @@ const isGameOver = (GroundBlock) => {
   return state;
 };
 
-const getinitialGroundBlocks = () => {
-  // 只產生初始地板，不根據分數
+// 檢查所有玩家是否都遊戲結束
+const checkAllPlayersGameOver = () => {
+  const activePlayers = users.filter(u => u.state !== ELIMINATED);
+  const losePlayers = activePlayers.filter(u => u.state === LOSE);
+
+  if (activePlayers.length === 0) {
+    return; // 沒有活躍玩家
+  }
+
+  // 如果所有活躍玩家都失敗了，遊戲結束
+  if (losePlayers.length === activePlayers.length && losePlayers.length > 0) {
+    console.log('🎮 所有玩家都失敗了，遊戲結束！');
+    GAME_STATE = READY;
+
+    // 標記所有玩家為 ELIMINATED
+    users = users.map(u => ({ ...u, state: ELIMINATED }));
+
+    // 通知所有客戶端遊戲結束
+    socketIO.emit('allPlayersGameOver', {
+      message: '遊戲結束！所有玩家都失敗了',
+      players: users.map(u => ({
+        userName: u.userName,
+        who: u.who,
+        level: u.level
+      }))
+    });
+
+    // 3秒後重置遊戲狀態
+    setTimeout(() => {
+      socketIO.emit('readyStateEmit');
+    }, 3000);
+  }
+  // 如果只有部分玩家失敗，標記為淘汰
+  else if (losePlayers.length > 0 && losePlayers.length < activePlayers.length) {
+    losePlayers.forEach(loser => {
+      if (loser.state === LOSE) {
+        console.log(`🚫 玩家 ${loser.userName} (${loser.who}) 被淘汰`);
+
+        // 更新該玩家狀態為 ELIMINATED
+        users = users.map(u =>
+          u.socketID === loser.socketID
+            ? { ...u, state: ELIMINATED }
+            : u
+        );
+
+        // 通知客戶端該玩家被淘汰
+        socketIO.emit('playerEliminated', {
+          socketID: loser.socketID,
+          userName: loser.userName,
+          who: loser.who,
+          remainingPlayers: activePlayers.length - 1
+        });
+      }
+    });
+  }
+};
+
+const getinitialGroundBlocks = (level) => {
   let tmp = [];
   for (let line = 0; line < 2; line++) {
     let rand_1 = Math.floor(Date.now() * Math.random()) % BOARD_SIZE_WIDTH;

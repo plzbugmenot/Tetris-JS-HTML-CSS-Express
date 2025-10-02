@@ -458,3 +458,184 @@ body {
   background-color: #1c2a6b;
   border: 1px solid #2a40a5;
 }
+
+/* 淘汰玩家樣式 */
+.player-container.eliminated {
+  opacity: 0.5;
+  filter: grayscale(100%);
+  position: relative;
+  transition: all 0.5s ease;
+}
+
+.player-container.eliminated::before {
+  content: "❌ 淘汰";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: #ff4444;
+  font-weight: bold;
+  z-index: 10;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+/* 崩潰效果 */
+.player-container.crashed {
+  animation: crash 0.5s ease-out forwards;
+}
+
+@keyframes crash {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.9) rotate(-2deg);
+    opacity: 0.6;
+    filter: brightness(0.5);
+  }
+}
+
+/* 左側計分板 */
+#scoreboard {
+  position: fixed;
+  left: 20px;
+  top: 100px;
+  width: 250px;
+  background: #2a2a2a;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  z-index: 200;
+}
+
+#scoreboard h3 {
+  margin: 0 0 1rem 0;
+  color: #4caf50;
+  text-align: center;
+}
+
+.score-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background: #1a1a1a;
+  border-radius: 5px;
+  border-left: 3px solid #4caf50;
+}
+
+.score-item.eliminated {
+  opacity: 0.5;
+  filter: grayscale(100%);
+  border-left-color: #ff4444;
+}
+
+.score-item .player-info {
+  flex: 1;
+}
+
+.score-item .player-name-score {
+  font-weight: bold;
+  color: #eeeeee;
+}
+
+.score-item .player-status-score {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.score-item .player-level-score {
+  font-size: 1.2rem;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.score-item.eliminated::after {
+  content: "🚫 凍結";
+  color: #ff4444;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+}
+
+/* 遊戲結束畫面 */
+#game-over-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#game-over-content {
+  background: #2a2a2a;
+  padding: 3rem;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  max-width: 600px;
+}
+
+#game-over-content h1 {
+  color: #ff4444;
+  font-size: 3rem;
+  margin: 0 0 1rem 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#game-over-content p {
+  color: #eeeeee;
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+#game-over-content .final-scores {
+  text-align: left;
+  margin: 2rem 0;
+}
+
+#game-over-content .final-scores h3 {
+  color: #4caf50;
+  margin-bottom: 1rem;
+}
+
+#game-over-content .score-item {
+  background: #1a1a1a;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+}
