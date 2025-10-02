@@ -57,8 +57,9 @@ function isGameOver(groundBlock) {
  */
 function checkCollision(blockBody, groundBlock) {
     for (let block of blockBody) {
-        // 檢查邊界
-        if (block.x < 1 || block.x > config.BOARD_SIZE_WIDTH || block.y > config.BOARD_SIZE_HEIGHT) {
+        // 檢查邊界（完整的四邊檢查）
+        if (block.x < 1 || block.x > config.BOARD_SIZE_WIDTH ||
+            block.y < 1 || block.y > config.BOARD_SIZE_HEIGHT) {
             return true;
         }
         // 檢查與地面方塊的碰撞
