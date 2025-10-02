@@ -102,8 +102,24 @@ function handlePlayerEliminated(data) {
  * @param {Object} data - 遊戲結束數據
  */
 function handleGameOver(data) {
+    // 1. 停用鍵盤
     Keyboard.setGameActive(false);
-    console.log('🏁 遊戲結束', data);
+    console.log('🏁 遊戲結束，排行榜顯示中...', data);
+
+    // 2. 呼叫 ui.js 裡的函式來顯示排行榜
+    //    (這一步確認您的程式碼已經在做了)
+    UI.showGameOverScreen(data);
+
+    // 3. 設定一個計時器，在排行榜顯示一段時間後執行動作
+    setTimeout(() => {
+        // 4. (可選) 讓排行榜優雅地消失
+        UI.hideGameOverScreen();
+
+        // 5. 執行網頁重新整理
+        console.log('🔄 正在重新整理頁面...');
+        location.reload();
+
+    }, 5000); // 5000 毫秒 = 5 秒。您可以根據需要調整這個時間
 }
 
 // ==================== 全局函數 (供 HTML 調用) ====================

@@ -479,7 +479,7 @@ function checkGameOver(io, users) {
                 // 多人模式回到準備狀態
                 io.emit('readyStateEmit');
             }
-        }, 3000);
+        }, 10000);
     }
     // 如果只有部分玩家失敗（多人模式）
     else if (losePlayers.length > 0 && losePlayers.length < activePlayers.length) {
