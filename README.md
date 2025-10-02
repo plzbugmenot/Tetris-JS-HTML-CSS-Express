@@ -99,25 +99,17 @@ REACT_APP_SERVER_HOST=localhost   # 伺服器主機名
 
 ## 📚 文檔
 
-詳細文檔請查看 `docs/` 目錄:
-
-- [Docker 部署指南](docs/DOCKER_GUIDE.md)
-- [多人遊戲更新](docs/MULTIPLAYER_UPDATES.md)
-- [快速開始指南](docs/QUICK_START.md)
-- [UI 測試指南](docs/UI_TEST_GUIDE.md)
+- 📖 [完整文檔索引](docs/INDEX.md) - 所有文檔的導航
+- 🚀 [快速開始](QUICK_START.md) - 快速上手指南
+- 💻 [代碼規範](docs/CODE_STYLE_GUIDE.md) - 開發規範和最佳實踐
+- 🐳 [Docker 部署](docs/DOCKER_GUIDE.md) - 容器化部署指南
 
 ## 🛠️ 技術棧
 
 - **後端**: Node.js, Express, Socket.IO
-- **前端**: Vanilla JavaScript, HTML5, CSS3
+- **前端**: Vanilla JavaScript (ES6 模組), HTML5, CSS3
 - **部署**: Docker, Docker Compose
-
-## 🐛 問題回報
-
-如果遇到問題,請查看:
-
-1. [Bug 修復摘要](docs/BUGFIX_SUMMARY.md)
-2. [Docker 網路修復](docs/DOCKER_NETWORK_FIX.md)
+- **架構**: 模組化設計,前後端分離
 
 ## 📝 版本歷史
 
