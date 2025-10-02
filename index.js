@@ -685,14 +685,20 @@ socketIO.on("connect", (socket) => {
   socket.on("moveBlock", (data) => {
     users = users.map((item) =>
       item.socketID === data.socketID
-        ? {
-          ...item,
-          itemBlockBody: moveBlockHorizental(
-            item.itemBlockBody,
-            item.itemGroundBlock,
-            data.direction
-          ),
-        }
+        ? (
+          data.direction === DOWN
+            // 如果是下鍵，直接 actionTime 歸零，加速下落
+            ? { ...item, actionTime: 0 }
+            // 否則左右移動
+            : {
+              ...item,
+              itemBlockBody: moveBlockHorizental(
+                item.itemBlockBody,
+                item.itemGroundBlock,
+                data.direction
+              ),
+            }
+        )
         : item
     );
   });
