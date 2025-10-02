@@ -60,12 +60,17 @@ function createPlayerBoard(player, mySocketId) {
 
     const myTag = isMyPlayer ? '<span style="color: #4CAF50;">(你)</span>' : '';
 
+    const comboDisplay = (player.combo && player.combo > 1)
+        ? `<div class="player-combo" style="color: #FFD700; font-weight: bold;">🔥 Combo x${player.combo}</div>`
+        : '';
+
     header.innerHTML = `
     <div class="player-name">🎮 ${player.userName} ${myTag}</div>
     <div class="player-status">${player.who}</div>
     <div class="player-stats">
       <div class="player-level">Level: ${player.level || 0}</div>
       <div class="player-score">分數: ${player.score || 0}</div>
+      ${comboDisplay}
     </div>
   `;
     container.appendChild(header);
@@ -159,7 +164,7 @@ function updatePlayerBoard(player) {
         }
     }
 
-    // 更新等級和分數顯示
+    // 更新等級、分數和 Combo 顯示
     const levelDiv = document.querySelector(`#player-${player.socketID} .player-level`);
     if (levelDiv) {
         levelDiv.textContent = `Level: ${player.level || 0}`;
@@ -168,6 +173,28 @@ function updatePlayerBoard(player) {
     const scoreDiv = document.querySelector(`#player-${player.socketID} .player-score`);
     if (scoreDiv) {
         scoreDiv.textContent = `分數: ${player.score || 0}`;
+    }
+
+    // 更新 Combo 顯示
+    const statsDiv = document.querySelector(`#player-${player.socketID} .player-stats`);
+    if (statsDiv) {
+        let comboDiv = document.querySelector(`#player-${player.socketID} .player-combo`);
+
+        if (player.combo && player.combo > 1) {
+            // 有 Combo，顯示或更新
+            if (!comboDiv) {
+                comboDiv = document.createElement('div');
+                comboDiv.className = 'player-combo';
+                comboDiv.style.cssText = 'color: #FFD700; font-weight: bold;';
+                statsDiv.appendChild(comboDiv);
+            }
+            comboDiv.textContent = `🔥 Combo x${player.combo}`;
+        } else {
+            // 沒有 Combo，移除顯示
+            if (comboDiv) {
+                comboDiv.remove();
+            }
+        }
     }
 }
 
@@ -253,6 +280,37 @@ window.addEventListener('playLineClearAnimation', (event) => {
     const { socketID, lineNumbers } = event.detail;
     playLineClearAnimation(socketID, lineNumbers);
 });
+
+// 監聽攻擊動畫事件
+window.addEventListener('playAttackAnimation', (event) => {
+    const { attackerID, targetID } = event.detail;
+    playAttackAnimation(attackerID, targetID);
+});
+
+/**
+ * 播放攻擊動畫
+ * @param {string} attackerID - 攻擊者 Socket ID
+ * @param {string} targetID - 被攻擊者 Socket ID
+ */
+function playAttackAnimation(attackerID, targetID) {
+    // 攻擊者閃紅光
+    const attackerContainer = document.getElementById(`player-${attackerID}`);
+    if (attackerContainer) {
+        attackerContainer.classList.add('attack-flash');
+        setTimeout(() => {
+            attackerContainer.classList.remove('attack-flash');
+        }, 500);
+    }
+
+    // 被攻擊者震動
+    const targetContainer = document.getElementById(`player-${targetID}`);
+    if (targetContainer) {
+        targetContainer.classList.add('defend-flash');
+        setTimeout(() => {
+            targetContainer.classList.remove('defend-flash');
+        }, 500);
+    }
+}
 
 export default {
     renderAllPlayers,

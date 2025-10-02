@@ -179,10 +179,36 @@ function setupSocketListeners() {
 
     // 消行動畫事件
     socket.on('lineCleared', (data) => {
-        console.log(`✨ 消行動畫: ${data.userName} 消除了 ${data.linesCleared} 行`);
+        const comboText = data.combo > 1 ? ` (Combo x${data.combo})` : '';
+        console.log(`✨ 消行動畫: ${data.userName} 消除了 ${data.linesCleared} 行${comboText}`);
 
         // 觸發自定義事件，通知渲染模組播放動畫
         window.dispatchEvent(new CustomEvent('playLineClearAnimation', {
+            detail: data
+        }));
+
+        // 顯示 Combo 提示
+        if (data.combo > 1) {
+            UI.showComboNotification(data.socketID, data.combo);
+        }
+    });
+
+    // 玩家攻擊事件
+    socket.on('playerAttacked', (data) => {
+        console.log(`⚔️ 攻擊！${data.attackerName} → ${data.targetName}，垃圾行: ${data.attackPower}`);
+
+        // 顯示攻擊提示
+        const isMyAttack = data.attackerID === mySocketId;
+        const isMyDefense = data.targetID === mySocketId;
+
+        if (isMyAttack) {
+            UI.showMessage(`⚔️ 攻擊成功！給 ${data.targetName} 添加了 ${data.attackPower} 行垃圾！`, 'success');
+        } else if (isMyDefense) {
+            UI.showMessage(`🛡️ 受到攻擊！${data.attackerName} 給你添加了 ${data.attackPower} 行垃圾！`, 'error');
+        }
+
+        // 觸發攻擊動畫
+        window.dispatchEvent(new CustomEvent('playAttackAnimation', {
             detail: data
         }));
     });

@@ -15,10 +15,12 @@
 
 ### docs/ 目錄
 
-| 文檔                                       | 說明                   | 適用對象      |
-| ------------------------------------------ | ---------------------- | ------------- |
-| [CODE_STYLE_GUIDE.md](CODE_STYLE_GUIDE.md) | 代碼風格規範、最佳實踐 | 開發者        |
-| [DOCKER_GUIDE.md](DOCKER_GUIDE.md)         | Docker 部署完整指南    | 運維/部署人員 |
+| 文檔                                       | 說明                     | 適用對象      |
+| ------------------------------------------ | ------------------------ | ------------- |
+| [CODE_STYLE_GUIDE.md](CODE_STYLE_GUIDE.md) | 代碼風格規範、最佳實踐   | 開發者        |
+| [DOCKER_GUIDE.md](DOCKER_GUIDE.md)         | Docker 部署完整指南      | 運維/部署人員 |
+| [ATTACK_SYSTEM.md](ATTACK_SYSTEM.md)       | 攻擊系統機制詳解         | 玩家/開發者   |
+| [GAME_SPEED_CONFIG.md](GAME_SPEED_CONFIG.md) | 遊戲速度配置說明      | 開發者        |
 
 ---
 
@@ -67,6 +69,10 @@ New-Tetris-JS-HTML-CSS-Express/
 
 → 查看 [QUICK_START.md](../QUICK_START.md)
 
+#### ⚔️ 了解攻擊系統
+
+→ 查看 [ATTACK_SYSTEM.md](ATTACK_SYSTEM.md)
+
 #### 🐳 使用 Docker 部署
 
 → 查看 [DOCKER_GUIDE.md](DOCKER_GUIDE.md)
@@ -74,6 +80,10 @@ New-Tetris-JS-HTML-CSS-Express/
 #### 💻 參與開發
 
 → 查看 [CODE_STYLE_GUIDE.md](CODE_STYLE_GUIDE.md)
+
+#### 📅 查看今日進度
+
+→ 查看 [TODAY_SUMMARY.md](TODAY_SUMMARY.md)
 
 #### 📖 了解專案
 

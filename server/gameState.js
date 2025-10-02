@@ -126,6 +126,11 @@ function addUser(socketID, userName, who, playerType = config.PLAYER_TYPE_CHALLE
 
         actionTime: config.ACTION_INIT_TIME,
         sendTime: 1,
+
+        // Combo 和攻擊系統
+        combo: 0,                                // 當前 Combo 數
+        lastClearTime: null,                     // 上次消行時間
+        pendingGarbageLines: 0,                  // 待接收的垃圾行數
     };
     users.push(newUser);
     return newUser;
@@ -247,6 +252,9 @@ function resetAllPlayers() {
         user.itemIsNeccessaryBlock = false;
         user.actionTime = config.ACTION_INIT_TIME;
         user.sendTime = 1;
+        user.combo = 0;
+        user.lastClearTime = null;
+        user.pendingGarbageLines = 0;
     });
 }
 

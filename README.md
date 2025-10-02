@@ -112,6 +112,9 @@ REACT_APP_SERVER_HOST=localhost   # 伺服器主機名
 - 🚀 [快速開始](QUICK_START.md) - 快速上手指南
 - 💻 [代碼規範](docs/CODE_STYLE_GUIDE.md) - 開發規範和最佳實踐
 - 🐳 [Docker 部署](docs/DOCKER_GUIDE.md) - 容器化部署指南
+- ⚔️ [攻擊系統](docs/ATTACK_SYSTEM.md) - Combo 連擊和垃圾行攻擊機制
+- 🎮 [遊戲速度配置](docs/GAME_SPEED_CONFIG.md) - 遊戲速度調整指南
+- 📅 [今日工作總結](docs/TODAY_SUMMARY.md) - 每日進度和成果記錄
 - 📋 [待辦事項清單](#📋-待辦事項清單) - 專案改進計劃和已知問題
 
 ## 🛠️ 技術棧
@@ -191,14 +194,16 @@ function processPlayerTick(player) {
 - [ ] 優化大量玩家時的渲染性能（>4 人）
 
 #### 6. 遊戲功能增強
+- ✅ ~~添加 Combo 連擊系統~~ - 已實現（3秒超時、分數獎勵、攻擊加成）
+- ✅ ~~實現垃圾行攻擊系統~~ - 已實現（等級加成、Combo 加成、隨機目標）
 - [ ] 實現方塊鎖定延遲（Lock Delay）
 - [ ] 添加硬降落（Hard Drop）與軟降落的分數差異
 - [ ] 實現 T-Spin 檢測和獎勵機制
-- [ ] 添加 Combo 連擊系統
 - [ ] 實現背靠背（Back-to-Back）獎勵
 - [ ] 添加等級速度曲線調整
 - [ ] 實現暫停/繼續功能
 - [ ] 添加遊戲房間系統（多房間支持）
+- [ ] 攻擊目標選擇（手動選擇、攻擊最強/最弱者）
 
 #### 7. UI/UX 改進
 - [ ] 添加遊戲加載畫面

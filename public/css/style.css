@@ -252,6 +252,62 @@ body {
   z-index: 10;
 }
 
+/* Combo 彈出動畫 */
+@keyframes comboPopup {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -80%) scale(1);
+    opacity: 0;
+  }
+}
+
+/* 攻擊特效 */
+.attack-flash {
+  animation: attackFlash 0.5s ease-out;
+}
+
+@keyframes attackFlash {
+
+  0%,
+  100% {
+    box-shadow: none;
+  }
+
+  50% {
+    box-shadow: 0 0 30px #FF4444, inset 0 0 20px #FF4444;
+  }
+}
+
+/* 被攻擊特效 */
+.defend-flash {
+  animation: defendFlash 0.5s ease-out;
+}
+
+@keyframes defendFlash {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
+}
+
 @keyframes clearLineFlash {
   0% {
     opacity: 1;
