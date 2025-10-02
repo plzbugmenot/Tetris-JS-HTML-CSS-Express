@@ -34,13 +34,22 @@ export function showMessage(message, type = 'info') {
  * 更新房間狀態
  * @param {number} currentPlayers - 當前玩家數
  * @param {number} maxPlayers - 最大玩家數
+ * @param {boolean} isSinglePlayer - 是否為單機模式
  */
-export function updateRoomStatus(currentPlayers, maxPlayers) {
+export function updateRoomStatus(currentPlayers, maxPlayers, isSinglePlayer = false) {
     const roomStatus = document.getElementById(DOM_IDS.ROOM_STATUS);
     const playersInfo = document.getElementById(DOM_IDS.PLAYERS_INFO);
 
     if (roomStatus) {
-        roomStatus.textContent = `房間人數: ${currentPlayers}/${maxPlayers}`;
+        if (isSinglePlayer) {
+            roomStatus.textContent = `🎮 單機模式`;
+            roomStatus.style.fontSize = '1.5rem';
+            roomStatus.style.color = '#4CAF50';
+        } else {
+            roomStatus.textContent = `房間人數: ${currentPlayers}/${maxPlayers}`;
+            roomStatus.style.fontSize = '1.2rem';
+            roomStatus.style.color = '#eeeeee';
+        }
     }
 
     if (playersInfo) {
@@ -130,7 +139,15 @@ export function showGameOverScreen(data) {
 
     if (!overlay || !message || !finalScoreList) return;
 
-    message.textContent = data.message || '遊戲結束！';
+    // 單機模式顯示不同的訊息
+    if (data.isSinglePlayer) {
+        message.innerHTML = `
+            <h2>🎮 遊戲結束</h2>
+            <p style="color: #4CAF50; font-size: 1.2rem;">單機模式</p>
+        `;
+    } else {
+        message.textContent = data.message || '遊戲結束！';
+    }
 
     // 清空最終分數列表
     finalScoreList.innerHTML = '';
@@ -143,19 +160,48 @@ export function showGameOverScreen(data) {
     });
 
     sortedPlayers.forEach((player, index) => {
-        const medals = ['🥇', '🥈', '🥉'];
-        const medal = medals[index] || '';
-
         const scoreItem = document.createElement('div');
         scoreItem.className = 'score-item';
-        scoreItem.innerHTML = `
-      <span>${medal} ${player.userName} (${player.who})</span>
-      <span style="color: #ffd700;">Level ${player.level || 0} | 分數: ${player.score || 0}</span>
-    `;
+
+        // 單機模式只顯示成績，不需要獎牌
+        if (data.isSinglePlayer) {
+            scoreItem.innerHTML = `
+                <div style="text-align: center; padding: 1rem;">
+                    <div style="font-size: 1.5rem; color: #4CAF50; margin-bottom: 0.5rem;">
+                        ${player.userName}
+                    </div>
+                    <div style="font-size: 2rem; color: #ffd700; font-weight: bold;">
+                        ${player.score || 0} 分
+                    </div>
+                    <div style="font-size: 1.2rem; color: #aaa; margin-top: 0.3rem;">
+                        Level ${player.level || 0}
+                    </div>
+                </div>
+            `;
+        } else {
+            // 多人模式顯示排名
+            const medals = ['🥇', '🥈', '🥉'];
+            const medal = medals[index] || '';
+            scoreItem.innerHTML = `
+                <span>${medal} ${player.userName} (${player.who})</span>
+                <span style="color: #ffd700;">Level ${player.level || 0} | 分數: ${player.score || 0}</span>
+            `;
+        }
+
         finalScoreList.appendChild(scoreItem);
     });
 
     overlay.style.display = 'flex';
+
+    // 單機模式：提示自動重新開始
+    if (data.isSinglePlayer) {
+        const autoRestartHint = document.createElement('p');
+        autoRestartHint.style.color = '#aaa';
+        autoRestartHint.style.fontSize = '1rem';
+        autoRestartHint.style.marginTop = '1rem';
+        autoRestartHint.textContent = '3秒後自動重新開始...';
+        finalScoreList.appendChild(autoRestartHint);
+    }
 }
 
 /**

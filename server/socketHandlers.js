@@ -93,6 +93,16 @@ function handleNewUser(io, socket, data) {
     };
 
     io.emit('newUserResponse', sendData);
+
+    // 🎮 如果是第一位玩家，自動開始單機遊戲
+    if (users.length === 1) {
+        console.log(`🎮 第一位玩家加入，自動開始單機遊戲！`);
+
+        // 延遲 500ms 後自動開始（讓前端準備好）
+        setTimeout(() => {
+            handleStartGame(io, socket);
+        }, 500);
+    }
 }
 
 /**
@@ -200,10 +210,10 @@ function handleGameOver(io, socket) {
 function handleStartGame(io, socket) {
     const users = gameState.getAllUsers();
 
-    if (users.length < 2) {
-        console.log(`⚠️ 玩家不足 (${users.length}/2)，無法開始遊戲`);
+    if (users.length < 1) {
+        console.log(`⚠️ 沒有玩家，無法開始遊戲`);
         socket.emit('gameStartFailed', {
-            reason: `需要至少 2 個玩家才能開始遊戲，目前有 ${users.length} 個玩家`
+            reason: `沒有玩家`
         });
         return;
     }
@@ -216,7 +226,8 @@ function handleStartGame(io, socket) {
         return;
     }
 
-    console.log(`🎮 遊戲開始！玩家數：${users.length}/${config.MAX_PLAYERS}`);
+    const gameMode = users.length === 1 ? '單機模式' : `多人對戰 (${users.length}人)`;
+    console.log(`🎮 遊戲開始！模式: ${gameMode}`);
 
     gameState.setGameState(config.GAME);
 
@@ -290,7 +301,10 @@ function checkGameOver(io, users) {
 
     // 如果所有活躍玩家都失敗了
     if (activePlayers.length > 0 && losePlayers.length === activePlayers.length) {
-        console.log('🎮 所有玩家都失敗了，遊戲結束！');
+        const isSinglePlayer = users.length === 1;
+        const message = isSinglePlayer ? '遊戲結束！' : '遊戲結束！所有玩家都失敗了';
+
+        console.log(`🎮 ${message}`);
 
         gameState.setGameState(config.READY);
 
@@ -301,7 +315,8 @@ function checkGameOver(io, users) {
 
         // 通知所有客戶端遊戲結束
         io.emit('allPlayersGameOver', {
-            message: '遊戲結束！所有玩家都失敗了',
+            message: message,
+            isSinglePlayer: isSinglePlayer,
             players: users.map(u => ({
                 userName: u.userName,
                 who: u.who,
@@ -310,16 +325,37 @@ function checkGameOver(io, users) {
             }))
         });
 
-        // 3秒後重置
+        // 單機模式：3秒後自動重新開始
+        // 多人模式：3秒後回到準備狀態
         setTimeout(() => {
-            io.emit('readyStateEmit');
             if (gameBroadcast) {
                 clearInterval(gameBroadcast);
                 gameBroadcast = null;
             }
+
+            if (isSinglePlayer) {
+                // 單機模式自動重新開始
+                gameState.resetAllPlayers();
+                io.emit('readyStateEmit');
+
+                console.log(`🔄 單機模式自動重新開始...`);
+                setTimeout(() => {
+                    const currentUsers = gameState.getAllUsers();
+                    if (currentUsers.length === 1) {
+                        const firstUser = currentUsers[0];
+                        const firstUserSocket = io.sockets.sockets.get(firstUser.socketID);
+                        if (firstUserSocket) {
+                            handleStartGame(io, firstUserSocket);
+                        }
+                    }
+                }, 1000);
+            } else {
+                // 多人模式回到準備狀態
+                io.emit('readyStateEmit');
+            }
         }, 3000);
     }
-    // 如果只有部分玩家失敗
+    // 如果只有部分玩家失敗（多人模式）
     else if (losePlayers.length > 0 && losePlayers.length < activePlayers.length) {
         losePlayers.forEach(loser => {
             console.log(`🚫 玩家 ${loser.userName} (${loser.who}) 被淘汰`);

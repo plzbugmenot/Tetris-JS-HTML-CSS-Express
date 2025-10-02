@@ -62,9 +62,15 @@ function setupSocketListeners() {
     socket.on('newUserResponse', (data) => {
         console.log('👤 新玩家加入:', data);
         maxPlayers = data.maxPlayers || 4;
-        UI.updateRoomStatus(data.size, maxPlayers);
 
-        if (data.size >= 2) {
+        // 單人模式：不顯示房間狀態，自動開始
+        if (data.size === 1) {
+            UI.updateRoomStatus(data.size, maxPlayers, true); // true = 單機模式
+            UI.showMessage('🎮 單機模式，遊戲即將開始...', 'success');
+        }
+        // 多人模式：顯示房間狀態和開始按鈕
+        else {
+            UI.updateRoomStatus(data.size, maxPlayers, false);
             UI.showStartButton();
         }
     });
