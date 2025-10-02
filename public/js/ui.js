@@ -267,6 +267,42 @@ export function hideGameOverScreen() {
 }
 
 /**
+ * 顯示 Combo 提示
+ * @param {string} socketID - 玩家 Socket ID
+ * @param {number} combo - Combo 數
+ */
+export function showComboNotification(socketID, combo) {
+    const playerContainer = document.getElementById(`player-${socketID}`);
+    if (!playerContainer) return;
+
+    // 創建 Combo 提示元素
+    const comboNotif = document.createElement('div');
+    comboNotif.className = 'combo-notification';
+    comboNotif.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3rem;
+        font-weight: bold;
+        color: #FFD700;
+        text-shadow: 0 0 10px #FFD700, 0 0 20px #FFD700;
+        z-index: 100;
+        animation: comboPopup 1s ease-out;
+        pointer-events: none;
+    `;
+    comboNotif.textContent = `COMBO x${combo}!`;
+
+    playerContainer.style.position = 'relative';
+    playerContainer.appendChild(comboNotif);
+
+    // 1秒後移除
+    setTimeout(() => {
+        comboNotif.remove();
+    }, 1000);
+}
+
+/**
  * 隱藏註冊表單
  */
 export function hideRegisterForm() {

@@ -23,6 +23,10 @@ module.exports = {
     MAX_PLAYERS: 4, // 最大玩家數 (建議 2-8 人)
     TIME_PER_SECOND: 50,
 
+    // 攻擊系統配置
+    COMBO_TIMEOUT: 3000, // Combo 超時時間（3秒內沒消行則重置）
+    GARBAGE_HOLE_COUNT: 1, // 垃圾行的缺口數量
+
     // 方向常數
     DOWN: "DOWN",
     LEFT: "LEFT",

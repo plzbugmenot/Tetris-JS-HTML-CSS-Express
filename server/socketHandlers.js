@@ -333,17 +333,57 @@ function handleStartGame(io, socket) {
             return gameLogic.processPlayerTick(player);
         });
 
-        // 檢查是否有玩家消行，發送動畫事件
-        updatedUsers.forEach(player => {
-            if (player.clearedLineNumbers && player.clearedLineNumbers.length > 0) {
+        // 處理攻擊和 Combo
+        updatedUsers.forEach(attacker => {
+            // 檢查是否有玩家消行
+            if (attacker.clearedLineNumbers && attacker.clearedLineNumbers.length > 0) {
+                // 發送消行動畫事件
                 io.emit('lineCleared', {
-                    socketID: player.socketID,
-                    userName: player.userName,
-                    lineNumbers: player.clearedLineNumbers,
-                    linesCleared: player.clearedLineNumbers.length
+                    socketID: attacker.socketID,
+                    userName: attacker.userName,
+                    lineNumbers: attacker.clearedLineNumbers,
+                    linesCleared: attacker.linesCleared,
+                    combo: attacker.combo || 0
                 });
-                // 清除標記，避免重複發送
-                delete player.clearedLineNumbers;
+
+                // 如果有攻擊力且在多人模式，執行攻擊
+                const challengers = gameState.getChallengers();
+                if (attacker.attackPower > 0 && challengers.length > 1) {
+                    // 選擇攻擊目標（隨機選擇一個其他挑戰者）
+                    const targets = challengers.filter(p =>
+                        p.socketID !== attacker.socketID &&
+                        p.state !== config.LOSE &&
+                        p.state !== config.ELIMINATED
+                    );
+
+                    if (targets.length > 0) {
+                        // 隨機選擇一個目標
+                        const target = targets[Math.floor(Math.random() * targets.length)];
+
+                        // 添加垃圾行到目標
+                        target.itemGroundBlock = gameLogic.addGarbageLines(
+                            target.itemGroundBlock,
+                            attacker.attackPower
+                        );
+
+                        console.log(`⚔️ ${attacker.userName} 攻擊 ${target.userName}，造成 ${attacker.attackPower} 行垃圾！`);
+
+                        // 發送攻擊事件
+                        io.emit('playerAttacked', {
+                            attackerID: attacker.socketID,
+                            attackerName: attacker.userName,
+                            targetID: target.socketID,
+                            targetName: target.userName,
+                            attackPower: attacker.attackPower,
+                            combo: attacker.combo
+                        });
+                    }
+                }
+
+                // 清除標記，避免重複處理
+                delete attacker.clearedLineNumbers;
+                delete attacker.attackPower;
+                delete attacker.linesCleared;
             }
         });
 
