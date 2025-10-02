@@ -109,12 +109,14 @@ function handleRotateBlock(io, data) {
     const rotatedPlayer = gameLogic.rotateBlock(player);
 
     // 更新玩家狀態
-    const updatedUsers = users.map(u =>
-        u.socketID === data.socketID ? rotatedPlayer : u
-    );
+    gameState.updateUser(data.socketID, rotatedPlayer);
 
-    // 這裡不直接更新 gameState,因為主循環會處理
-    // 只是臨時處理,實際應該通過更好的狀態管理
+    // 立即廣播更新
+    const allUsers = gameState.getAllUsers();
+    io.emit('stateOfUsers', {
+        users: allUsers,
+        gameState: gameState.getGameState(),
+    });
 }
 
 /**
@@ -139,7 +141,15 @@ function handleMoveBlock(io, data) {
         updatedPlayer = gameLogic.moveBlockRight(player);
     }
 
-    // 臨時處理,實際應該通過更好的狀態管理
+    // 更新玩家狀態
+    gameState.updateUser(data.socketID, updatedPlayer);
+
+    // 立即廣播更新
+    const allUsers = gameState.getAllUsers();
+    io.emit('stateOfUsers', {
+        users: allUsers,
+        gameState: gameState.getGameState(),
+    });
 }
 
 /**
@@ -154,7 +164,16 @@ function handleDropBlock(io, data) {
     }
 
     const droppedPlayer = gameLogic.dropBlock(player);
-    // 臨時處理,實際應該通過更好的狀態管理
+
+    // 更新玩家狀態
+    gameState.updateUser(data.socketID, droppedPlayer);
+
+    // 立即廣播更新
+    const allUsers = gameState.getAllUsers();
+    io.emit('stateOfUsers', {
+        users: allUsers,
+        gameState: gameState.getGameState(),
+    });
 }
 
 /**
@@ -217,6 +236,9 @@ function handleStartGame(io, socket) {
             return gameLogic.processPlayerTick(player);
         });
 
+        // 更新 gameState 中的玩家資料
+        gameState.updateAllUsers(updatedUsers);
+
         // 檢查遊戲結束條件
         checkGameOver(io, updatedUsers);
 
@@ -238,7 +260,7 @@ function checkGameOver(io, users) {
     );
 
     const losePlayers = users.filter(u => {
-        const gameOverState = gameLogic.isGameOver(u.board);
+        const gameOverState = gameLogic.isGameOver(u.itemGroundBlock);
         if (gameOverState === config.LOSE && u.state !== config.ELIMINATED) {
             return true;
         }

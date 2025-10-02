@@ -77,28 +77,28 @@ function checkCollision(blockBody, groundBlock) {
  * @returns {Object} 更新後的玩家對象
  */
 function moveBlockDown(player) {
-    const tmpBlockBody = player.currentBlock.map(block => ({
+    const tmpBlockBody = player.itemBlockBody.map(block => ({
         x: block.x,
         y: block.y + 1
     }));
 
     // 檢查是否碰撞
-    if (checkCollision(tmpBlockBody, player.board)) {
+    if (checkCollision(tmpBlockBody, player.itemGroundBlock)) {
         // 碰撞了,需要固定方塊並生成新方塊
         return {
             ...player,
-            board: [...player.board, ...player.currentBlock],
-            currentBlock: player.nextBlock,
-            nextBlock: gameState.getRandomDomino(),
-            actionTime: 15,
+            itemGroundBlock: [...player.itemGroundBlock, ...player.itemBlockBody],
+            itemBlockBody: player.itemPreBody,
+            itemPreBody: gameState.getRandomDomino(),
+            actionTime: config.ACTION_INIT_TIME,
         };
     }
 
     // 沒碰撞,繼續下移
     return {
         ...player,
-        currentBlock: tmpBlockBody,
-        actionTime: 15,
+        itemBlockBody: tmpBlockBody,
+        actionTime: config.ACTION_INIT_TIME,
     };
 }
 
@@ -108,15 +108,15 @@ function moveBlockDown(player) {
  * @returns {Object} 更新後的玩家對象
  */
 function moveBlockLeft(player) {
-    const tmpBlockBody = player.currentBlock.map(block => ({
+    const tmpBlockBody = player.itemBlockBody.map(block => ({
         x: block.x - 1,
         y: block.y
     }));
 
-    if (!checkCollision(tmpBlockBody, player.board)) {
+    if (!checkCollision(tmpBlockBody, player.itemGroundBlock)) {
         return {
             ...player,
-            currentBlock: tmpBlockBody
+            itemBlockBody: tmpBlockBody
         };
     }
     return player;
@@ -128,15 +128,15 @@ function moveBlockLeft(player) {
  * @returns {Object} 更新後的玩家對象
  */
 function moveBlockRight(player) {
-    const tmpBlockBody = player.currentBlock.map(block => ({
+    const tmpBlockBody = player.itemBlockBody.map(block => ({
         x: block.x + 1,
         y: block.y
     }));
 
-    if (!checkCollision(tmpBlockBody, player.board)) {
+    if (!checkCollision(tmpBlockBody, player.itemGroundBlock)) {
         return {
             ...player,
-            currentBlock: tmpBlockBody
+            itemBlockBody: tmpBlockBody
         };
     }
     return player;
@@ -148,15 +148,15 @@ function moveBlockRight(player) {
  * @returns {Object} 更新後的玩家對象
  */
 function rotateBlock(player) {
-    if (!player.currentBlock || player.currentBlock.length === 0) {
+    if (!player.itemBlockBody || player.itemBlockBody.length === 0) {
         return player;
     }
 
     // 計算旋轉中心點（第一個方塊）
-    const center = player.currentBlock[0];
+    const center = player.itemBlockBody[0];
 
     // 旋轉其他方塊
-    const rotatedBlock = player.currentBlock.map(block => {
+    const rotatedBlock = player.itemBlockBody.map(block => {
         const relativeX = block.x - center.x;
         const relativeY = block.y - center.y;
         return {
@@ -166,10 +166,10 @@ function rotateBlock(player) {
     });
 
     // 檢查旋轉後是否碰撞
-    if (!checkCollision(rotatedBlock, player.board)) {
+    if (!checkCollision(rotatedBlock, player.itemGroundBlock)) {
         return {
             ...player,
-            currentBlock: rotatedBlock
+            itemBlockBody: rotatedBlock
         };
     }
     return player;
@@ -178,15 +178,15 @@ function rotateBlock(player) {
 /**
  * 消除完整的行並返回消除的行數
  * @param {Object} player - 玩家對象
- * @returns {Object} 包含更新後的 board 和消除的行數
+ * @returns {Object} 包含更新後的 itemGroundBlock 和消除的行數
  */
 function clearLines(player) {
     const tmpNumber = new Array(config.BOARD_SIZE_HEIGHT + 1).fill(0);
     const clearedLines = [];
 
     // 計算每一行有多少個方塊
-    if (player.board) {
-        for (let block of player.board) {
+    if (player.itemGroundBlock) {
+        for (let block of player.itemGroundBlock) {
             tmpNumber[block.y]++;
         }
     }
@@ -199,11 +199,11 @@ function clearLines(player) {
     }
 
     if (clearedLines.length === 0) {
-        return { board: player.board, linesCleared: 0 };
+        return { itemGroundBlock: player.itemGroundBlock, linesCleared: 0 };
     }
 
     // 移除完整的行
-    let newBoard = player.board.filter(block => !clearedLines.includes(block.y));
+    let newBoard = player.itemGroundBlock.filter(block => !clearedLines.includes(block.y));
 
     // 下移上方的方塊
     for (let line of clearedLines) {
@@ -213,7 +213,7 @@ function clearLines(player) {
     }
 
     return {
-        board: newBoard,
+        itemGroundBlock: newBoard,
         linesCleared: clearedLines.length
     };
 }
@@ -228,25 +228,25 @@ function dropBlock(player) {
 
     // 持續下移直到碰撞
     while (true) {
-        const tmpBlockBody = currentPlayer.currentBlock.map(block => ({
+        const tmpBlockBody = currentPlayer.itemBlockBody.map(block => ({
             x: block.x,
             y: block.y + 1
         }));
 
-        if (checkCollision(tmpBlockBody, currentPlayer.board)) {
+        if (checkCollision(tmpBlockBody, currentPlayer.itemGroundBlock)) {
             // 固定方塊並生成新方塊
             return {
                 ...currentPlayer,
-                board: [...currentPlayer.board, ...currentPlayer.currentBlock],
-                currentBlock: currentPlayer.nextBlock,
-                nextBlock: gameState.getRandomDomino(),
-                actionTime: 15,
+                itemGroundBlock: [...currentPlayer.itemGroundBlock, ...currentPlayer.itemBlockBody],
+                itemBlockBody: currentPlayer.itemPreBody,
+                itemPreBody: gameState.getRandomDomino(),
+                actionTime: config.ACTION_INIT_TIME,
             };
         }
 
         currentPlayer = {
             ...currentPlayer,
-            currentBlock: tmpBlockBody
+            itemBlockBody: tmpBlockBody
         };
     }
 }
@@ -280,22 +280,12 @@ function processPlayerTick(player) {
         };
     }
 
-    // 時間到了,方塊自動下移
-    const movedPlayer = moveBlockDown(player);
+    // 時間到了 (actionTime === 0),嘗試方塊自動下移
+    const result = moveBlockDown(player);
 
-    // 檢查是否需要消行
-    const { board, linesCleared } = clearLines(movedPlayer);
-
-    // 更新等級和分數
-    const newLevel = movedPlayer.level + Math.floor(linesCleared / 4);
-    const newScore = (movedPlayer.score || 0) + linesCleared * 100;
-
-    return {
-        ...movedPlayer,
-        board,
-        level: newLevel,
-        score: newScore
-    };
+    // moveBlockDown 已經處理了碰撞和新方塊生成
+    // 所以直接返回結果即可
+    return result;
 }
 
 module.exports = {

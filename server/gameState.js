@@ -72,18 +72,28 @@ function getRandomDomino() {
  * 添加新玩家
  */
 function addUser(socketID, userName, who) {
+    const firstDomino = getRandomDomino();
+    const secondDomino = getRandomDomino();
+
     const newUser = {
         socketID,
         userName,
         who,
         state: config.READY,
         level: 0,
-        board: Array(config.BOARD_SIZE_HEIGHT + 1)
-            .fill(null)
-            .map(() => Array(config.BOARD_SIZE_WIDTH + 1).fill(0)),
-        currentBlock: getRandomDomino(),
-        nextBlock: getRandomDomino(),
-        actionTime: 15,
+        score: 0,
+
+        // 使用原始屬性名稱以匹配前端
+        itemBlockBody: firstDomino,       // 當前方塊
+        itemBlockType: 0,                 // 當前方塊類型 (需要根據形狀設置)
+        itemPreBody: secondDomino,        // 下一個方塊
+        itemPreType: 0,                   // 下一個方塊類型
+        itemGroundBlock: [],              // 已放置的方塊
+        itemLastBlock: [],                // 最後消除的方塊
+
+        itemIsNeccessaryBlock: false,     // 是否需要生成新方塊
+
+        actionTime: config.ACTION_INIT_TIME,
         sendTime: 1,
     };
     users.push(newUser);
@@ -95,6 +105,28 @@ function addUser(socketID, userName, who) {
  */
 function removeUser(socketID) {
     users = users.filter(user => user.socketID !== socketID);
+}
+
+/**
+ * 更新單個玩家
+ */
+function updateUser(socketID, updatedData) {
+    const index = users.findIndex(user => user.socketID === socketID);
+    if (index !== -1) {
+        users[index] = { ...users[index], ...updatedData };
+    }
+}
+
+/**
+ * 批量更新所有玩家
+ */
+function updateAllUsers(updatedUsers) {
+    updatedUsers.forEach(updatedUser => {
+        const index = users.findIndex(u => u.socketID === updatedUser.socketID);
+        if (index !== -1) {
+            users[index] = updatedUser;
+        }
+    });
 }
 
 /**
@@ -130,14 +162,20 @@ function setGameState(state) {
  */
 function resetAllPlayers() {
     users.forEach(user => {
+        const firstDomino = getRandomDomino();
+        const secondDomino = getRandomDomino();
+
         user.state = config.READY;
         user.level = 0;
-        user.board = Array(config.BOARD_SIZE_HEIGHT + 1)
-            .fill(null)
-            .map(() => Array(config.BOARD_SIZE_WIDTH + 1).fill(0));
-        user.currentBlock = getRandomDomino();
-        user.nextBlock = getRandomDomino();
-        user.actionTime = 15;
+        user.score = 0;
+        user.itemBlockBody = firstDomino;
+        user.itemBlockType = 0;
+        user.itemPreBody = secondDomino;
+        user.itemPreType = 0;
+        user.itemGroundBlock = [];
+        user.itemLastBlock = [];
+        user.itemIsNeccessaryBlock = false;
+        user.actionTime = config.ACTION_INIT_TIME;
         user.sendTime = 1;
     });
 }
@@ -145,6 +183,8 @@ function resetAllPlayers() {
 module.exports = {
     addUser,
     removeUser,
+    updateUser,
+    updateAllUsers,
     findUser,
     getAllUsers,
     getGameState,
