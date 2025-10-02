@@ -174,8 +174,8 @@ function updateScoreboard() {
         // 清空計分板
         scoreList.innerHTML = '';
 
-        // 按等級排序玩家
-        const sortedPlayers = [...allPlayers].sort((a, b) => b.level - a.level);
+        // 按分數排序玩家
+        const sortedPlayers = [...allPlayers].sort((a, b) => (b.score || 0) - (a.score || 0));
 
         sortedPlayers.forEach(player => {
             const scoreItem = document.createElement('div');
@@ -191,7 +191,7 @@ function updateScoreboard() {
                     <div class="player-name-score">${player.userName}</div>
                     <div class="player-status-score">${player.who}</div>
                 </div>
-                <div class="player-level-score">Lv ${player.level}</div>
+                <div class="player-score-score">分數: ${player.score || 0}</div>
             `;
 
             scoreList.appendChild(scoreItem);
@@ -199,6 +199,24 @@ function updateScoreboard() {
     } else {
         scoreboard.style.display = 'none';
     }
+}
+
+function renderScoreboard() {
+    const scoreboard = document.getElementById('scoreboard');
+    const scoreList = document.getElementById('score-list');
+    if (!scoreboard || !scoreList) return;
+
+    scoreboard.style.display = 'block';
+    scoreList.innerHTML = '';
+
+    // 排序分數高到低
+    const sortedPlayers = [...allPlayers].sort((a, b) => (b.score || 0) - (a.score || 0));
+    sortedPlayers.forEach(player => {
+        const item = document.createElement('div');
+        item.className = 'score-item';
+        item.textContent = `${player.userName}: ${player.score || 0}`;
+        scoreList.appendChild(item);
+    });
 }
 
 // 顯示遊戲結束畫面
@@ -212,8 +230,16 @@ function showGameOverScreen(data) {
     // 清空最終分數列表
     finalScoreList.innerHTML = '';
 
-    // 按等級排序顯示最終分數
-    const sortedPlayers = [...data.players].sort((a, b) => b.level - a.level);
+    // 補齊分數資料
+    const playersWithScore = data.players.map(p => {
+        // 如果有 score 直接用，否則根據 socketID 從 allPlayers 補齊
+        if (typeof p.score !== 'undefined') return p;
+        const found = allPlayers.find(ap => ap.socketID === p.socketID || ap.userName === p.userName);
+        return { ...p, score: found ? found.score : 0 };
+    });
+
+    // 按分數排序顯示最終分數
+    const sortedPlayers = [...playersWithScore].sort((a, b) => (b.score || 0) - (a.score || 0));
 
     sortedPlayers.forEach((player, index) => {
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
@@ -221,7 +247,7 @@ function showGameOverScreen(data) {
         scoreItem.className = 'score-item';
         scoreItem.innerHTML = `
             <span>${medal} ${player.userName} (${player.who})</span>
-            <span style="color: #ffd700;">Level ${player.level}</span>
+            <span style="color: #ffd700;">分數: ${player.score || 0}</span>
         `;
         finalScoreList.appendChild(scoreItem);
     });
@@ -286,6 +312,8 @@ function renderAllPlayers() {
         const playerContainer = createPlayerBoard(player);
         container.appendChild(playerContainer);
     });
+
+    renderScoreboard();
 }
 
 function createPlayerBoard(player) {
