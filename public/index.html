@@ -53,7 +53,7 @@
 <script>
     console.log("connecting...");
 
-    // 全域 socket 變數，供 game-new.js 使用
+    // 全域 socket 變數，供模組化的前端代碼使用
     let socket;
     let isSocketReady = false;
 
@@ -68,13 +68,13 @@
             console.log(`Connecting to: ${socketUrl}`);
 
             socket = io.connect(socketUrl);
-            window.socket = socket; // 賦值給window以便game-new.js訪問
+            window.socket = socket; // 賦值給 window 以便前端模組訪問
 
             // 監聽連接成功事件
             socket.on('connect', () => {
                 console.log('Socket connected successfully');
                 isSocketReady = true;
-                // 觸發自定義事件，通知 game-new.js socket 已準備好
+                // 觸發自定義事件，通知前端模組 socket 已準備好
                 window.dispatchEvent(new CustomEvent('socketReady'));
             });
 

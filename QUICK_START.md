@@ -187,16 +187,6 @@ New-Tetris-JS-HTML-CSS-Express/
 
 ---
 
-## 💡 重要提示
-
-⚠️ **舊文件已備份到 `backup/` 目錄**:
-
-- `backup/index-old.js` (861 行)
-- `backup/index.js.backup`
-- `backup/game-new.js` (480 行)
-
-確認新版本運行正常後,可以刪除 backup 目錄。
-
 ---
 
 **祝你玩得開心!** 🎮🎉
