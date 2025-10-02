@@ -103,6 +103,7 @@ REACT_APP_SERVER_HOST=localhost   # 伺服器主機名
 - 🚀 [快速開始](QUICK_START.md) - 快速上手指南
 - 💻 [代碼規範](docs/CODE_STYLE_GUIDE.md) - 開發規範和最佳實踐
 - 🐳 [Docker 部署](docs/DOCKER_GUIDE.md) - 容器化部署指南
+- 📋 [待辦事項清單](#📋-待辦事項清單) - 專案改進計劃和已知問題
 
 ## 🛠️ 技術棧
 
@@ -110,6 +111,205 @@ REACT_APP_SERVER_HOST=localhost   # 伺服器主機名
 - **前端**: Vanilla JavaScript (ES6 模組), HTML5, CSS3
 - **部署**: Docker, Docker Compose
 - **架構**: 模組化設計,前後端分離
+
+## 📋 待辦事項清單
+
+### 🔴 高優先級 - 關鍵問題
+
+#### ~~1. 後端狀態管理問題~~ ✅ **已修復** (Commit: 5aa4a15)
+- ~~問題描述~~: ~~狀態管理邏輯不完整~~
+- **修復內容**:
+  - ✅ 已實現 `updateUser()` 和 `updateAllUsers()` 函數
+  - ✅ 玩家操作（旋轉、移動、下落）現在會立即更新並廣播
+  - ✅ 主遊戲循環正確保存狀態更新
+
+#### ~~2. 前後端數據結構不一致~~ ✅ **已修復** (Commit: 5aa4a15)
+- ~~問題描述~~: ~~屬性名不匹配~~
+- **修復內容**:
+  - ✅ 統一所有屬性名為前端期望格式
+  - ✅ `itemBlockBody`, `itemGroundBlock`, `itemPreBody`
+  - ✅ `gameState.js` 和 `gameLogic.js` 已同步更新
+
+#### 3. **消行邏輯缺失** ⚠️ **新問題** (Commit: 5aa4a15 引入)
+- **問題描述**: `server/gameLogic.js` 的 `processPlayerTick()` 函數移除了消行邏輯
+  - 行 283-289: 只返回 `moveBlockDown()` 結果，沒有調用 `clearLines()`
+  - 缺少分數和等級更新邏輯
+- **影響**: 
+  - ❌ 完整的行無法消除（方塊會堆到頂部）
+  - ❌ 分數永遠為 0
+  - ❌ 等級永遠為 0
+- **解決方案**:
+```javascript
+function processPlayerTick(player) {
+    if (player.state === config.LOSE || player.state === config.ELIMINATED) {
+        return player;
+    }
+
+    if (player.actionTime > 0) {
+        return { ...player, actionTime: player.actionTime - 1 };
+    }
+
+    // 方塊自動下移
+    const movedPlayer = moveBlockDown(player);
+
+    // ⚠️ 需要添加：檢查並消除完整的行
+    const { itemGroundBlock, linesCleared } = clearLines(movedPlayer);
+
+    // ⚠️ 需要添加：更新分數和等級
+    const newLevel = movedPlayer.level + Math.floor(linesCleared / 4);
+    const newScore = (movedPlayer.score || 0) + linesCleared * 100;
+
+    return {
+        ...movedPlayer,
+        itemGroundBlock,
+        level: newLevel,
+        score: newScore
+    };
+}
+```
+
+#### 4. 其他遊戲邏輯缺陷
+- **碰撞檢測邊界問題**: `gameLogic.js` 行 61 的邊界檢測需要驗證
+- **方塊固定時機**: 需要添加方塊鎖定延遲（Lock Delay）機制
+- **方塊類型未設置**: `itemBlockType` 和 `itemPreType` 始終為 0，應根據方塊形狀設置
+
+### 🟡 中優先級 - 功能完善
+
+#### 5. 前端渲染優化
+- [ ] 實現 Canvas 渲染替代 DOM 渲染（性能提升 60%+）
+- [ ] 添加方塊移動動畫效果
+- [ ] 實現幽靈方塊（Ghost Piece）預覽
+- [ ] 優化大量玩家時的渲染性能（>4 人）
+
+#### 6. 遊戲功能增強
+- [ ] 實現方塊鎖定延遲（Lock Delay）
+- [ ] 添加硬降落（Hard Drop）與軟降落的分數差異
+- [ ] 實現 T-Spin 檢測和獎勵機制
+- [ ] 添加 Combo 連擊系統
+- [ ] 實現背靠背（Back-to-Back）獎勵
+- [ ] 添加等級速度曲線調整
+- [ ] 實現暫停/繼續功能
+- [ ] 添加遊戲房間系統（多房間支持）
+
+#### 7. UI/UX 改進
+- [ ] 添加遊戲加載畫面
+- [ ] 實現響應式布局優化（移動端適配）
+- [ ] 添加音效和背景音樂
+- [ ] 實現主題切換（暗色/亮色模式）
+- [ ] 添加粒子效果（消行、淘汰等）
+- [ ] 優化計分板顯示（實時排名動畫）
+- [ ] 添加玩家頭像和個性化設定
+- [ ] 實現遊戲回放功能
+
+#### 8. 網絡優化
+- [ ] 實現斷線重連機制
+- [ ] 添加心跳包檢測
+- [ ] 優化 Socket 數據傳輸（減少帶寬）
+- [ ] 實現客戶端預測和服務器校正
+- [ ] 添加延遲顯示和網絡狀態指示
+
+### 🟢 低優先級 - 代碼質量
+
+#### 9. 測試覆蓋
+- [ ] **後端單元測試**
+  - [ ] `gameLogic.js` 所有函數測試
+  - [ ] `gameState.js` 狀態管理測試
+  - [ ] `socketHandlers.js` 事件處理測試
+  - [ ] 碰撞檢測邊界測試
+  - [ ] 消行邏輯測試
+- [ ] **前端單元測試**
+  - [ ] 渲染模組測試
+  - [ ] Socket 通信測試
+  - [ ] 鍵盤輸入測試
+- [ ] **集成測試**
+  - [ ] 完整遊戲流程測試
+  - [ ] 多人對戰場景測試
+  - [ ] 斷線重連測試
+- [ ] **壓力測試**
+  - [ ] 8 人同時遊戲測試
+  - [ ] 長時間運行穩定性測試
+  - [ ] 並發連接測試
+
+#### 10. 代碼重構
+- [ ] 移除 `public/game.js`（已被模組化代碼替代）
+- [ ] 清理 `backup/` 目錄（確認新版本穩定後）
+- [ ] 移除 `docs/CLEANUP_SUMMARY.md`（臨時文檔）
+- [ ] 審查 `public/secure/` 目錄內容（可能包含敏感信息）
+- [ ] 統一代碼註釋風格（JSDoc）
+- [ ] 提取魔法數字為常數
+- [ ] 實現統一的錯誤處理機制
+
+#### 11. 開發工具配置
+- [ ] 添加 ESLint 配置
+- [ ] 添加 Prettier 配置
+- [ ] 配置 Git Hooks（pre-commit、pre-push）
+- [ ] 添加 TypeScript 支持（可選）
+- [ ] 配置 CI/CD 流程（GitHub Actions）
+- [ ] 添加性能監控（如 PM2）
+
+#### 12. 文檔完善
+- ✅ ~~添加 API 文檔~~ - 已新增 `docs/GAME_SPEED_CONFIG.md` (Commit: 4f5229b)
+- [ ] Socket 事件文檔
+- [ ] 創建貢獻指南（CONTRIBUTING.md）
+- [ ] 添加架構設計文檔
+- [ ] 完善安裝和部署文檔
+- [ ] 創建常見問題解答（FAQ）
+- [ ] 添加開發日誌（CHANGELOG.md）
+
+#### 13. 部署和運維
+- [ ] 測試 Docker 部署腳本
+  - [ ] `docker-deploy.ps1` (Windows)
+  - [ ] `docker-deploy.sh` (Linux/Mac)
+- [ ] 添加環境變數驗證
+- [ ] 實現健康檢查端點優化
+- [ ] 配置 Nginx 反向代理
+- [ ] 添加 SSL/TLS 支持
+- [ ] 實現日誌系統（Winston）
+- [ ] 配置監控告警（可選）
+
+### 🔵 未來規劃
+
+#### 14. 進階功能
+- [ ] 實現觀戰模式
+- [ ] 添加排行榜系統（持久化）
+- [ ] 實現玩家等級和經驗系統
+- [ ] 添加成就系統
+- [ ] 實現好友系統
+- [ ] 添加聊天功能
+- [ ] 實現自定義遊戲規則
+- [ ] 支持競技模式和排位賽
+
+#### 15. 性能優化
+- [ ] 實現 Redis 緩存
+- [ ] 數據庫集成（玩家數據持久化）
+- [ ] 負載均衡支持
+- [ ] CDN 配置
+- [ ] 資源壓縮和優化
+
+#### 16. 安全性
+- [ ] 實現用戶認證系統
+- [ ] 添加 CSRF 保護
+- [ ] 實現速率限制（Rate Limiting）
+- [ ] 輸入驗證和清理
+- [ ] 添加安全響應頭
+- [ ] 敏感信息加密
+
+---
+
+## 🐛 已知問題
+
+### 嚴重問題
+1. ~~**遊戲狀態同步失敗**~~ ✅ **已修復** (Commit: 5aa4a15) - 玩家操作現在會正確同步
+2. ~~**方塊渲染錯誤**~~ ✅ **已修復** (Commit: 5aa4a15) - 數據結構已統一
+3. **消行功能失效** ⚠️ **新問題** (Commit: 5aa4a15 引入) - 完整的行無法消除，分數和等級無法增長
+
+### 一般問題
+1. 消行動畫缺失
+2. 多人遊戲時偶爾卡頓
+3. 斷線後無法重連
+4. 方塊類型顯示始終為 0（前端渲染可能缺少顏色）
+
+---
 
 ## 📝 版本歷史
 
