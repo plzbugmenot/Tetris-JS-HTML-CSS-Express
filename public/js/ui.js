@@ -85,8 +85,12 @@ export function updateScoreboard(players, gameState) {
         // 清空計分板
         scoreList.innerHTML = '';
 
-        // 按等級排序玩家
-        const sortedPlayers = [...players].sort((a, b) => (b.level || 0) - (a.level || 0));
+        // 按分數排序玩家（分數相同則按等級）
+        const sortedPlayers = [...players].sort((a, b) => {
+            const scoreDiff = (b.score || 0) - (a.score || 0);
+            if (scoreDiff !== 0) return scoreDiff;
+            return (b.level || 0) - (a.level || 0);
+        });
 
         sortedPlayers.forEach(player => {
             const scoreItem = document.createElement('div');
@@ -102,7 +106,10 @@ export function updateScoreboard(players, gameState) {
           <div class="player-name-score">${player.userName}</div>
           <div class="player-status-score">${player.who}</div>
         </div>
-        <div class="player-level-score">Lv ${player.level || 0}</div>
+        <div class="player-stats">
+          <div class="player-level-score">Lv ${player.level || 0}</div>
+          <div class="player-score">分數: ${player.score || 0}</div>
+        </div>
       `;
 
             scoreList.appendChild(scoreItem);
@@ -128,8 +135,12 @@ export function showGameOverScreen(data) {
     // 清空最終分數列表
     finalScoreList.innerHTML = '';
 
-    // 按等級排序顯示最終分數
-    const sortedPlayers = [...data.players].sort((a, b) => (b.level || 0) - (a.level || 0));
+    // 按分數排序顯示最終分數（分數相同則按等級）
+    const sortedPlayers = [...data.players].sort((a, b) => {
+        const scoreDiff = (b.score || 0) - (a.score || 0);
+        if (scoreDiff !== 0) return scoreDiff;
+        return (b.level || 0) - (a.level || 0);
+    });
 
     sortedPlayers.forEach((player, index) => {
         const medals = ['🥇', '🥈', '🥉'];
@@ -139,7 +150,7 @@ export function showGameOverScreen(data) {
         scoreItem.className = 'score-item';
         scoreItem.innerHTML = `
       <span>${medal} ${player.userName} (${player.who})</span>
-      <span style="color: #ffd700;">Level ${player.level || 0}</span>
+      <span style="color: #ffd700;">Level ${player.level || 0} | 分數: ${player.score || 0}</span>
     `;
         finalScoreList.appendChild(scoreItem);
     });
