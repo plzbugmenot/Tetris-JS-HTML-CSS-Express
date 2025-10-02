@@ -573,14 +573,18 @@ body {
 /* 左側計分板 */
 #scoreboard {
   position: fixed;
-  left: 20px;
+  left: 5px;
+  /* 原本 20px，向左靠 */
   top: 20px;
-  width: 250px;
+  width: 180px;
+  /* 原本 250px，縮小寬度 */
   background: #2a2a2a;
   border-radius: 10px;
   padding: 1rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
   z-index: 200;
+  cursor: move;
+  /* 新增：顯示可拖曳 */
 }
 
 #scoreboard h3 {

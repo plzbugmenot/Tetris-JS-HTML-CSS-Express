@@ -96,6 +96,29 @@
 
     // 連接到伺服器
     connectToServer();
+
+    // 記分板拖曳功能
+    const scoreboard = document.getElementById('scoreboard');
+    let isDragging = false, offsetX = 0, offsetY = 0;
+
+    scoreboard && scoreboard.addEventListener('mousedown', function (e) {
+        isDragging = true;
+        offsetX = e.clientX - scoreboard.offsetLeft;
+        offsetY = e.clientY - scoreboard.offsetTop;
+        scoreboard.style.transition = 'none';
+    });
+
+    document.addEventListener('mousemove', function (e) {
+        if (isDragging) {
+            scoreboard.style.left = (e.clientX - offsetX) + 'px';
+            scoreboard.style.top = (e.clientY - offsetY) + 'px';
+        }
+    });
+
+    document.addEventListener('mouseup', function () {
+        isDragging = false;
+        scoreboard && (scoreboard.style.transition = '');
+    });
 </script>
 
 </html>
