@@ -67,18 +67,24 @@ function initializeGame() {
 function handleGameStateUpdate(data) {
     const { allPlayers, myPlayerData, gameState, mySocketId } = data;
 
-    // 渲染所有玩家
+    // 渲染所有玩家（只顯示靜態資訊，不渲染方塊）
     Render.renderAllPlayers(allPlayers, mySocketId);
 
-    // 如果遊戲進行中
+    // Debug: 觀察遊戲狀態
+    console.log('GameState:', gameState);
+
     if (gameState === GAME_STATES.GAME) {
+        // 只有遊戲進行中才渲染方塊
         Render.updateAllBoards(allPlayers);
 
         // 只有挑戰者可以操作，觀戰者不能操作
         const isChallenger = myPlayerData && myPlayerData.playerType !== 'SPECTATOR';
         Keyboard.setGameActive(isChallenger);
     } else {
+        // 非遊戲狀態，禁止操作
         Keyboard.setGameActive(false);
+        // 可選：清空棋盤或顯示等待畫面
+        // Render.clearAllBoards();
     }
 }
 
@@ -120,10 +126,11 @@ window.requestStartGame = function () {
 };
 
 /**
- * 加入挑戰 (由 HTML 按鈕調用)
+ * 加入挑戰並直接開始遊戲 (由 HTML 按鈕調用)
  */
 window.requestJoinChallenge = function () {
     Socket.joinChallenge();
+    Socket.startGame(); // 加入挑戰後直接開始遊戲
 };
 
 // ==================== 啟動遊戲 ====================
