@@ -107,7 +107,7 @@ const GAME = "GAME";
 const READY = "READY";
 let GAME_STATE;
 
-const INIT_LEVEL = 0;
+const INIT_SCORE = 0;
 const ACTION_INIT_TIME = 15;
 const ACTION_INIT_TIME_SEND = 1;
 const SEND_WIDTH = 2 * BOARD_SIZE_WIDTH;
@@ -305,28 +305,27 @@ const createUser = (data) => {
     itemIsNeccessaryBlock: false,
 
     state: GAME,
-    level: INIT_LEVEL,
+    score: INIT_SCORE, // 分數初始值
   };
 };
 
 const updateUser = (data, iswin) => {
   let tmp = generateRandomDomino();
   let preDomino = generateRandomDomino();
-  let newLevel = iswin === GAME ? data.level + 1 : data.level;
-
+  // 分數不重設，僅重設其他狀態
   return {
     ...data,
     itemBlockBody: tmp.body,
     itemBlockType: tmp.num,
     itemPreBody: preDomino.body,
     itemPreType: preDomino.num,
-    itemGroundBlock: getinitialGroundBlocks(newLevel),
+    itemGroundBlock: getinitialGroundBlocks(), // 不根據分數
     itemLastBlock: [],
 
     itemIsNeccessaryBlock: false,
 
     state: GAME,
-    level: newLevel,
+    // score 保持不變
   };
 };
 
@@ -336,9 +335,10 @@ const isGameOver = (GroundBlock) => {
   return state;
 };
 
-const getinitialGroundBlocks = (level) => {
+const getinitialGroundBlocks = () => {
+  // 只產生初始地板，不根據分數
   let tmp = [];
-  for (let line = 0; line < level + 2; line++) {
+  for (let line = 0; line < 2; line++) {
     let rand_1 = Math.floor(Date.now() * Math.random()) % BOARD_SIZE_WIDTH;
     let rand_2 = Math.floor(Date.now() * Math.random()) % BOARD_SIZE_WIDTH;
     if (rand_1 === rand_2)
@@ -375,6 +375,9 @@ const sendBlockToOther = (item) => {
     sendBlockLines
   );
 
+  // 新增：消一行得一分
+  let newScore = item.score + sendBlockLines.length;
+
   if (sendBlockLines.length >= 2 && sendBlocks.length) {
     let tmptmp = getSendBlocksForSendState(sendBlocks, sendBlockLines.length);
     pushSendBlockToSendState(item.socketID, tmptmp, sendBlockLines.length);
@@ -385,6 +388,7 @@ const sendBlockToOther = (item) => {
   return {
     ...item,
     itemGroundBlock: tmpGround,
+    score: newScore, // 更新分數
   };
 };
 

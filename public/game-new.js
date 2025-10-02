@@ -195,7 +195,7 @@ function createPlayerBoard(player) {
     header.innerHTML = `
     <div class="player-name">${player.userName} ${isMyPlayer ? '(你)' : ''}</div>
     <div class="player-status">${player.who}</div>
-    <div class="player-level">Level: ${player.level || 0}</div>
+    <div class="player-score">分數: ${player.score || 0}</div>
   `;
     container.appendChild(header);
 
@@ -249,10 +249,10 @@ function updatePlayerBoard(player) {
         }
     }
 
-    // 更新等級顯示
-    const levelDiv = document.querySelector(`#player-${player.socketID} .player-level`);
-    if (levelDiv) {
-        levelDiv.textContent = `Level: ${player.level || 0}`;
+    // 更新分數顯示
+    const scoreDiv = document.querySelector(`#player-${player.socketID} .player-score`);
+    if (scoreDiv) {
+        scoreDiv.textContent = `分數: ${player.score || 0}`;
     }
 }
 
