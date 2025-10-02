@@ -9,7 +9,8 @@ export const GAME_STATES = {
     GAME: 'GAME',
     WIN: 'WIN',
     LOSE: 'LOSE',
-    ELIMINATED: 'ELIMINATED'
+    ELIMINATED: 'ELIMINATED',
+    SPECTATOR: 'SPECTATOR'
 };
 
 // 遊戲參數

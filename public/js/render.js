@@ -19,14 +19,17 @@ export function renderAllPlayers(players, mySocketId) {
 
     container.innerHTML = ''; // 清空容器
 
+    // 只渲染挑戰者的棋盤（觀戰者不佔用版面）
+    const challengers = players.filter(p => p.playerType !== 'SPECTATOR');
+
     // 設置網格佈局 class
     container.className = 'game-container';
-    if (players.length > 0) {
-        container.classList.add(`players-${players.length}`);
+    if (challengers.length > 0) {
+        container.classList.add(`players-${challengers.length}`);
     }
 
-    // 為每個玩家創建棋盤
-    players.forEach(player => {
+    // 為每個挑戰者創建棋盤
+    challengers.forEach(player => {
         const playerContainer = createPlayerBoard(player, mySocketId);
         container.appendChild(playerContainer);
     });
@@ -41,7 +44,7 @@ export function renderAllPlayers(players, mySocketId) {
 function createPlayerBoard(player, mySocketId) {
     const isMyPlayer = player.socketID === mySocketId;
 
-    // 創建玩家容器
+    // 創建玩家容器（只為挑戰者創建，觀戰者不佔版面）
     const container = document.createElement('div');
     container.className = `player-container ${isMyPlayer ? 'my-player' : 'other-player'}`;
     container.id = `player-${player.socketID}`;
@@ -54,8 +57,11 @@ function createPlayerBoard(player, mySocketId) {
     // 玩家信息頭部
     const header = document.createElement('div');
     header.className = 'player-header';
+
+    const myTag = isMyPlayer ? '<span style="color: #4CAF50;">(你)</span>' : '';
+
     header.innerHTML = `
-    <div class="player-name">${player.userName} ${isMyPlayer ? '(你)' : ''}</div>
+    <div class="player-name">🎮 ${player.userName} ${myTag}</div>
     <div class="player-status">${player.who}</div>
     <div class="player-stats">
       <div class="player-level">Level: ${player.level || 0}</div>
@@ -85,6 +91,11 @@ function createPlayerBoard(player, mySocketId) {
  */
 export function updateAllBoards(players) {
     players.forEach(player => {
+        // 跳過觀戰者（他們沒有棋盤元素）
+        if (player.playerType === 'SPECTATOR') {
+            return;
+        }
+
         updatePlayerBoard(player);
         updatePreviewBoard(player);
     });

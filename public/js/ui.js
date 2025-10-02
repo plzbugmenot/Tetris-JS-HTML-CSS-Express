@@ -32,24 +32,33 @@ export function showMessage(message, type = 'info') {
 
 /**
  * 更新房間狀態
- * @param {number} currentPlayers - 當前玩家數
- * @param {number} maxPlayers - 最大玩家數
- * @param {boolean} isSinglePlayer - 是否為單機模式
+ * @param {number} challengers - 挑戰者人數
+ * @param {number} spectators - 觀戰者人數
+ * @param {number} maxPlayers - 最大挑戰者數
+ * @param {string} mode - 模式 ('single', 'spectator', 'multi')
  */
-export function updateRoomStatus(currentPlayers, maxPlayers, isSinglePlayer = false) {
+export function updateRoomStatus(challengers, spectators, maxPlayers, mode = 'multi') {
     const roomStatus = document.getElementById(DOM_IDS.ROOM_STATUS);
     const playersInfo = document.getElementById(DOM_IDS.PLAYERS_INFO);
 
     if (roomStatus) {
-        if (isSinglePlayer) {
-            roomStatus.textContent = `🎮 單機模式`;
+        if (mode === 'single') {
+            roomStatus.innerHTML = `🎮 <span style="color: #4CAF50;">單機模式</span>`;
             roomStatus.style.fontSize = '1.5rem';
-            roomStatus.style.color = '#4CAF50';
-        } else {
-            roomStatus.textContent = `房間人數: ${currentPlayers}/${maxPlayers}`;
+        } else if (mode === 'spectator') {
+            roomStatus.innerHTML = `
+                👁️ <span style="color: #FF9800;">觀戰模式</span><br>
+                <span style="font-size: 0.9rem;">挑戰者: ${challengers}/${maxPlayers} | 觀戰者: ${spectators}</span>
+            `;
             roomStatus.style.fontSize = '1.2rem';
-            roomStatus.style.color = '#eeeeee';
+        } else {
+            roomStatus.innerHTML = `
+                🎮 <span style="color: #4CAF50;">多人挑戰</span><br>
+                <span style="font-size: 0.9rem;">挑戰者: ${challengers}/${maxPlayers} | 觀戰者: ${spectators}</span>
+            `;
+            roomStatus.style.fontSize = '1.2rem';
         }
+        roomStatus.style.color = '#eeeeee';
     }
 
     if (playersInfo) {
@@ -74,6 +83,38 @@ export function hideStartButton() {
     const startButton = document.getElementById(DOM_IDS.START_BUTTON);
     if (startButton) {
         startButton.style.display = 'none';
+    }
+}
+
+/**
+ * 顯示加入挑戰按鈕
+ */
+export function showJoinChallengeButton() {
+    const playersInfo = document.getElementById(DOM_IDS.PLAYERS_INFO);
+    if (!playersInfo) return;
+
+    // 檢查是否已經有按鈕
+    let joinButton = document.getElementById('join-challenge-btn');
+    if (!joinButton) {
+        joinButton = document.createElement('button');
+        joinButton.id = 'join-challenge-btn';
+        joinButton.className = 'registerBtn';
+        joinButton.textContent = '🎮 加入挑戰';
+        joinButton.onclick = () => window.requestJoinChallenge();
+        joinButton.style.marginTop = '1rem';
+        joinButton.style.background = '#FF9800';
+        playersInfo.appendChild(joinButton);
+    }
+    joinButton.style.display = 'block';
+}
+
+/**
+ * 隱藏加入挑戰按鈕
+ */
+export function hideJoinChallengeButton() {
+    const joinButton = document.getElementById('join-challenge-btn');
+    if (joinButton) {
+        joinButton.style.display = 'none';
     }
 }
 
@@ -105,15 +146,26 @@ export function updateScoreboard(players, gameState) {
             const scoreItem = document.createElement('div');
             scoreItem.className = 'score-item';
 
+            // 觀戰者添加特殊樣式
+            const isSpectator = player.playerType === 'SPECTATOR';
+            if (isSpectator) {
+                scoreItem.classList.add('spectator');
+                scoreItem.style.opacity = '0.7';
+                scoreItem.style.borderLeft = '3px solid #FF9800';
+            }
+
             // 如果玩家被淘汰，添加 eliminated 類
             if (player.state === GAME_STATES.LOSE || player.state === GAME_STATES.ELIMINATED) {
                 scoreItem.classList.add('eliminated');
             }
 
+            const playerIcon = isSpectator ? '👁️' : '🎮';
+            const playerStatus = isSpectator ? '觀戰中' : player.who;
+
             scoreItem.innerHTML = `
         <div class="player-info">
-          <div class="player-name-score">${player.userName}</div>
-          <div class="player-status-score">${player.who}</div>
+          <div class="player-name-score">${playerIcon} ${player.userName}</div>
+          <div class="player-status-score" style="color: ${isSpectator ? '#FF9800' : '#aaa'}">${playerStatus}</div>
         </div>
         <div class="player-stats">
           <div class="player-level-score">Lv ${player.level || 0}</div>

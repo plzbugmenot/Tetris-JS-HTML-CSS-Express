@@ -53,6 +53,11 @@ function setupSocketHandlers(io) {
             handleStartGame(io, socket);
         });
 
+        // 觀戰者加入挑戰
+        socket.on('joinChallenge', () => {
+            handleJoinChallenge(io, socket);
+        });
+
         // 玩家斷線
         socket.on('disconnect', () => {
             handlePlayerDisconnect(io, socket);
@@ -64,44 +69,118 @@ function setupSocketHandlers(io) {
  * 處理新玩家加入
  */
 function handleNewUser(io, socket, data) {
-    const users = gameState.getAllUsers();
+    const allUsers = gameState.getAllUsers();
+    const challengers = gameState.getChallengers();
+    const spectators = gameState.getSpectators();
 
-    if (users.find(u => u.socketID === data.socketID)) {
+    if (allUsers.find(u => u.socketID === data.socketID)) {
         console.log('⚠️ 玩家已存在:', data.socketID);
         return;
     }
 
-    if (users.length >= config.MAX_PLAYERS) {
-        console.log(`⚠️ 房間已滿 (${config.MAX_PLAYERS}/${config.MAX_PLAYERS})`);
-        socket.emit('connectionRejected', {
-            reason: `遊戲房間已滿 (${config.MAX_PLAYERS}/${config.MAX_PLAYERS})，請稍後再試`
-        });
-        return;
+    // 判斷新玩家的身份：第一位是挑戰者，其他默認為觀戰者
+    let playerType = config.PLAYER_TYPE_SPECTATOR;
+    let playerId = '';
+
+    if (allUsers.length === 0) {
+        // 第一位玩家 - 挑戰者
+        playerType = config.PLAYER_TYPE_CHALLENGER;
+        playerId = 'USER1';
+    } else {
+        // 第二位及以上 - 默認觀戰者
+        playerType = config.PLAYER_TYPE_SPECTATOR;
+        playerId = `SPECTATOR${spectators.length + 1}`;
     }
 
     // 添加新玩家
-    const playerNumber = users.length + 1;
-    const playerId = `USER${playerNumber}`;
-    const newUser = gameState.addUser(data.socketID, data.userName || `Player${playerNumber}`, playerId);
+    const newUser = gameState.addUser(
+        data.socketID,
+        data.userName || (playerType === config.PLAYER_TYPE_CHALLENGER ? `Player${challengers.length + 1}` : `觀戰者${spectators.length + 1}`),
+        playerId,
+        playerType
+    );
 
-    console.log(`👤 ${newUser.userName} 已加入 (${playerId}) - ${users.length + 1}/${config.MAX_PLAYERS} 玩家`);
+    const userTypeText = playerType === config.PLAYER_TYPE_CHALLENGER ? '挑戰者' : '觀戰者';
+    console.log(`👤 ${newUser.userName} 以${userTypeText}身份加入 (${playerId})`);
+    console.log(`   目前: ${challengers.length + (playerType === config.PLAYER_TYPE_CHALLENGER ? 1 : 0)} 挑戰者, ${spectators.length + (playerType === config.PLAYER_TYPE_SPECTATOR ? 1 : 0)} 觀戰者`);
 
     const sendData = {
         newUser: newUser,
-        size: users.length,
+        size: allUsers.length + 1,
+        challengers: challengers.length + (playerType === config.PLAYER_TYPE_CHALLENGER ? 1 : 0),
+        spectators: spectators.length + (playerType === config.PLAYER_TYPE_SPECTATOR ? 1 : 0),
         maxPlayers: config.MAX_PLAYERS,
+        playerType: playerType,
     };
 
     io.emit('newUserResponse', sendData);
 
-    // 🎮 如果是第一位玩家，自動開始單機遊戲
-    if (users.length === 1) {
+    // 🎮 如果是第一位玩家（挑戰者），自動開始單機遊戲
+    if (playerType === config.PLAYER_TYPE_CHALLENGER && gameState.getChallengers().length === 1) {
         console.log(`🎮 第一位玩家加入，自動開始單機遊戲！`);
 
         // 延遲 500ms 後自動開始（讓前端準備好）
         setTimeout(() => {
             handleStartGame(io, socket);
         }, 500);
+    }
+}
+
+/**
+ * 處理觀戰者加入挑戰
+ */
+function handleJoinChallenge(io, socket) {
+    const allUsers = gameState.getAllUsers();
+    const challengers = gameState.getChallengers();
+    const user = allUsers.find(u => u.socketID === socket.id);
+
+    if (!user) {
+        console.log('⚠️ 找不到該玩家');
+        return;
+    }
+
+    if (user.playerType === config.PLAYER_TYPE_CHALLENGER) {
+        console.log('⚠️ 玩家已經是挑戰者:', user.userName);
+        socket.emit('joinChallengeFailed', {
+            reason: '你已經是挑戰者了'
+        });
+        return;
+    }
+
+    // 檢查挑戰者人數是否已滿
+    if (challengers.length >= config.MAX_PLAYERS) {
+        console.log(`⚠️ 挑戰者已滿 (${challengers.length}/${config.MAX_PLAYERS})`);
+        socket.emit('joinChallengeFailed', {
+            reason: `挑戰者已滿 (${challengers.length}/${config.MAX_PLAYERS})，請等待有人離開`
+        });
+        return;
+    }
+
+    // 轉換為挑戰者
+    const success = gameState.convertToChallenger(socket.id);
+
+    if (success) {
+        // 重新分配玩家 ID
+        const newChallengers = gameState.getChallengers();
+        user.who = `USER${newChallengers.length}`;
+
+        console.log(`✅ ${user.userName} 從觀戰者轉為挑戰者 (${user.who})`);
+        console.log(`   目前: ${newChallengers.length} 挑戰者, ${gameState.getSpectators().length} 觀戰者`);
+
+        // 通知所有客戶端
+        io.emit('playerJoinedChallenge', {
+            socketID: socket.id,
+            userName: user.userName,
+            who: user.who,
+            challengers: newChallengers.length,
+            spectators: gameState.getSpectators().length,
+        });
+
+        // 通知該玩家成功加入挑戰
+        socket.emit('joinChallengeSuccess', {
+            message: '成功加入挑戰！',
+            user: user
+        });
     }
 }
 
@@ -239,11 +318,18 @@ function handleStartGame(io, socket) {
     gameBroadcast = setInterval(() => {
         const users = gameState.getAllUsers();
 
-        // 處理每個玩家的遊戲邏輯
+        // 處理每個玩家的遊戲邏輯（只處理挑戰者）
         const updatedUsers = users.map(player => {
+            // 觀戰者不參與遊戲邏輯
+            if (player.playerType === config.PLAYER_TYPE_SPECTATOR) {
+                return player;
+            }
+
+            // 已失敗或被淘汰的挑戰者也不處理
             if (player.state === config.LOSE || player.state === config.ELIMINATED) {
                 return player;
             }
+
             return gameLogic.processPlayerTick(player);
         });
 
@@ -381,16 +467,20 @@ function handlePlayerDisconnect(io, socket) {
     const disconnectedUser = users.find(u => u.socketID === socket.id);
 
     if (disconnectedUser) {
-        console.log(`👋 玩家離開：${disconnectedUser.userName} (${disconnectedUser.who})`);
+        const userType = disconnectedUser.playerType === config.PLAYER_TYPE_CHALLENGER ? '挑戰者' : '觀戰者';
+        console.log(`👋 ${userType}離開：${disconnectedUser.userName} (${disconnectedUser.who})`);
 
         gameState.removeUser(socket.id);
 
         const remainingUsers = gameState.getAllUsers();
-        console.log(`目前玩家數：${remainingUsers.length}/${config.MAX_PLAYERS}`);
+        const remainingChallengers = gameState.getChallengers();
+        const remainingSpectators = gameState.getSpectators();
 
-        // 如果遊戲進行中且玩家不足,結束遊戲
-        if (gameState.getGameState() === config.GAME && remainingUsers.length < 2) {
-            console.log('⚠️ 玩家不足，遊戲結束');
+        console.log(`目前: ${remainingChallengers.length} 挑戰者, ${remainingSpectators.length} 觀戰者`);
+
+        // 如果遊戲進行中且挑戰者不足，結束遊戲
+        if (gameState.getGameState() === config.GAME && remainingChallengers.length === 0) {
+            console.log('⚠️ 沒有挑戰者了，遊戲結束');
             gameState.setGameState(config.READY);
             if (gameBroadcast) {
                 clearInterval(gameBroadcast);
@@ -403,7 +493,9 @@ function handlePlayerDisconnect(io, socket) {
         io.emit('playerDisconnected', {
             socketID: socket.id,
             userName: disconnectedUser.userName,
-            remainingPlayers: remainingUsers.length
+            playerType: disconnectedUser.playerType,
+            remainingChallengers: remainingChallengers.length,
+            remainingSpectators: remainingSpectators.length
         });
     }
 }

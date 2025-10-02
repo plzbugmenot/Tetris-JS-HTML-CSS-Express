@@ -96,8 +96,12 @@ function getRandomDomino() {
 
 /**
  * 添加新玩家
+ * @param {string} socketID - Socket ID
+ * @param {string} userName - 玩家名稱
+ * @param {string} who - 玩家標識
+ * @param {string} playerType - 玩家類型 (CHALLENGER/SPECTATOR)
  */
-function addUser(socketID, userName, who) {
+function addUser(socketID, userName, who, playerType = config.PLAYER_TYPE_CHALLENGER) {
     const firstDomino = getRandomDomino();
     const secondDomino = getRandomDomino();
 
@@ -105,7 +109,8 @@ function addUser(socketID, userName, who) {
         socketID,
         userName,
         who,
-        state: config.READY,
+        playerType,                              // 玩家類型（挑戰者/觀戰者）
+        state: playerType === config.PLAYER_TYPE_SPECTATOR ? config.SPECTATOR : config.READY,
         level: 0,
         score: 0,
 
@@ -170,6 +175,45 @@ function getAllUsers() {
 }
 
 /**
+ * 獲取所有挑戰者（非觀戰者）
+ */
+function getChallengers() {
+    return users.filter(u => u.playerType === config.PLAYER_TYPE_CHALLENGER);
+}
+
+/**
+ * 獲取所有觀戰者
+ */
+function getSpectators() {
+    return users.filter(u => u.playerType === config.PLAYER_TYPE_SPECTATOR);
+}
+
+/**
+ * 將觀戰者轉換為挑戰者
+ */
+function convertToChallenger(socketID) {
+    const user = users.find(u => u.socketID === socketID);
+    if (user && user.playerType === config.PLAYER_TYPE_SPECTATOR) {
+        user.playerType = config.PLAYER_TYPE_CHALLENGER;
+        user.state = config.READY;
+
+        // 重新初始化遊戲數據
+        const firstDomino = getRandomDomino();
+        const secondDomino = getRandomDomino();
+        user.itemBlockBody = firstDomino.blocks;
+        user.itemBlockType = firstDomino.type;
+        user.itemPreBody = secondDomino.blocks;
+        user.itemPreType = secondDomino.type;
+        user.itemGroundBlock = [];
+        user.level = 0;
+        user.score = 0;
+
+        return true;
+    }
+    return false;
+}
+
+/**
  * 獲取當前遊戲狀態
  */
 function getGameState() {
@@ -213,6 +257,9 @@ module.exports = {
     updateAllUsers,
     findUser,
     getAllUsers,
+    getChallengers,
+    getSpectators,
+    convertToChallenger,
     getGameState,
     setGameState,
     getRandomDomino,

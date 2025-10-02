@@ -38,4 +38,9 @@ module.exports = {
     WIN: "WIN",
     LOSE: "LOSE",
     ELIMINATED: "ELIMINATED",
+    SPECTATOR: "SPECTATOR",  // 觀戰者狀態
+
+    // 玩家類型
+    PLAYER_TYPE_CHALLENGER: "CHALLENGER",  // 挑戰者
+    PLAYER_TYPE_SPECTATOR: "SPECTATOR",    // 觀戰者
 };

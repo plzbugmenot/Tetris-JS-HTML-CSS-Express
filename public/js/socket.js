@@ -13,6 +13,7 @@ let allPlayers = [];
 let myPlayerData = null;
 let maxPlayers = 4;
 let gameState = GAME_STATES.READY;
+let myPlayerType = 'CHALLENGER'; // 我的玩家類型
 
 // 回調函數
 let onGameStateUpdate = null;
@@ -62,15 +63,24 @@ function setupSocketListeners() {
     socket.on('newUserResponse', (data) => {
         console.log('👤 新玩家加入:', data);
         maxPlayers = data.maxPlayers || 4;
+        myPlayerType = data.playerType || 'CHALLENGER';
 
-        // 單人模式：不顯示房間狀態，自動開始
-        if (data.size === 1) {
-            UI.updateRoomStatus(data.size, maxPlayers, true); // true = 單機模式
+        // 單人模式：第一位玩家，自動開始
+        if (data.size === 1 && data.challengers === 1) {
+            UI.updateRoomStatus(data.challengers, data.spectators, maxPlayers, 'single');
             UI.showMessage('🎮 單機模式，遊戲即將開始...', 'success');
+            // 隱藏開始按鈕（單機模式自動開始）
+            UI.hideStartButton();
         }
-        // 多人模式：顯示房間狀態和開始按鈕
+        // 觀戰者模式：顯示觀戰提示和加入挑戰按鈕
+        else if (myPlayerType === 'SPECTATOR') {
+            UI.updateRoomStatus(data.challengers, data.spectators, maxPlayers, 'spectator');
+            UI.showMessage('👁️ 你正在觀戰，可以點擊「加入挑戰」參與遊戲', 'info');
+            UI.showJoinChallengeButton();
+        }
+        // 多人挑戰模式：顯示房間狀態和開始按鈕
         else {
-            UI.updateRoomStatus(data.size, maxPlayers, false);
+            UI.updateRoomStatus(data.challengers, data.spectators, maxPlayers, 'multi');
             UI.showStartButton();
         }
     });
@@ -88,10 +98,14 @@ function setupSocketListeners() {
 
     // 玩家離線
     socket.on('playerDisconnected', (data) => {
-        UI.showMessage(`${data.userName} 已離開遊戲`, 'info');
-        UI.updateRoomStatus(data.remainingPlayers, maxPlayers);
+        const userType = data.playerType === 'SPECTATOR' ? '觀戰者' : '挑戰者';
+        UI.showMessage(`${userType} ${data.userName} 已離開遊戲`, 'info');
 
-        if (data.remainingPlayers < 2) {
+        // 根據剩餘人數更新UI
+        const mode = data.remainingChallengers === 1 ? 'single' : 'multi';
+        UI.updateRoomStatus(data.remainingChallengers, data.remainingSpectators, maxPlayers, mode);
+
+        if (data.remainingChallengers < 2) {
             UI.hideStartButton();
         }
     });
@@ -171,6 +185,28 @@ function setupSocketListeners() {
         window.dispatchEvent(new CustomEvent('playLineClearAnimation', {
             detail: data
         }));
+    });
+
+    // 玩家加入挑戰成功
+    socket.on('joinChallengeSuccess', (data) => {
+        console.log('✅ 成功加入挑戰！', data);
+        myPlayerType = 'CHALLENGER';
+        UI.hideJoinChallengeButton();
+        UI.showMessage(data.message, 'success');
+        UI.showStartButton();
+    });
+
+    // 玩家加入挑戰失敗
+    socket.on('joinChallengeFailed', (data) => {
+        console.log('❌ 加入挑戰失敗:', data.reason);
+        UI.showMessage(data.reason, 'error');
+    });
+
+    // 有觀戰者加入挑戰（通知所有人）
+    socket.on('playerJoinedChallenge', (data) => {
+        console.log(`👤 ${data.userName} 加入挑戰！`);
+        UI.showMessage(`${data.userName} 加入挑戰！`, 'success');
+        UI.updateRoomStatus(data.challengers, data.spectators, maxPlayers, 'multi');
     });
 }
 
@@ -276,10 +312,28 @@ export function getGameState() {
     return gameState;
 }
 
+/**
+ * 加入挑戰（觀戰者轉為挑戰者）
+ */
+export function joinChallenge() {
+    if (!socket || !mySocketId) return;
+
+    console.log('📤 發送加入挑戰請求...');
+    socket.emit('joinChallenge');
+}
+
+/**
+ * 獲取我的玩家類型
+ */
+export function getMyPlayerType() {
+    return myPlayerType;
+}
+
 export default {
     initSocket,
     registerPlayer,
     startGame,
+    joinChallenge,
     moveBlock,
     rotateBlock,
     dropBlock,
@@ -287,4 +341,5 @@ export default {
     getAllPlayers,
     getMySocketId,
     getGameState,
+    getMyPlayerType,
 };

@@ -73,7 +73,10 @@ function handleGameStateUpdate(data) {
     // 如果遊戲進行中
     if (gameState === GAME_STATES.GAME) {
         Render.updateAllBoards(allPlayers);
-        Keyboard.setGameActive(true);
+
+        // 只有挑戰者可以操作，觀戰者不能操作
+        const isChallenger = myPlayerData && myPlayerData.playerType !== 'SPECTATOR';
+        Keyboard.setGameActive(isChallenger);
     } else {
         Keyboard.setGameActive(false);
     }
@@ -114,6 +117,13 @@ window.registerPlayer = function () {
  */
 window.requestStartGame = function () {
     Socket.startGame();
+};
+
+/**
+ * 加入挑戰 (由 HTML 按鈕調用)
+ */
+window.requestJoinChallenge = function () {
+    Socket.joinChallenge();
 };
 
 // ==================== 啟動遊戲 ====================
