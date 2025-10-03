@@ -438,6 +438,156 @@ export function showRegisterForm() {
     }
 }
 
+/**
+ * 顯示繼續遊玩確認對話框
+ * @param {Object} data - 包含詢問訊息和超時時間的資料
+ */
+export function showContinueGameDialog(data) {
+    // 動態導入 Socket 模組以發送回應
+    import('./socket.js').then(Socket => {
+        // 創建對話框
+        const dialog = document.createElement('div');
+        dialog.className = 'continue-game-dialog';
+        dialog.innerHTML = `
+            <div class="dialog-overlay">
+                <div class="dialog-content">
+                    <h3>🎮 遊戲結束</h3>
+                    <p>${data.message}</p>
+                    <div class="dialog-buttons">
+                        <button id="continue-yes" class="btn btn-success">✅ 繼續遊玩</button>
+                        <button id="continue-no" class="btn btn-secondary">❌ 觀戰模式</button>
+                    </div>
+                    <div class="countdown">
+                        <span id="countdown-timer">10</span> 秒後自動選擇觀戰模式
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 添加 CSS 樣式
+        const style = document.createElement('style');
+        style.textContent = `
+            .continue-game-dialog {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10000;
+            }
+            .dialog-overlay {
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                height: 100%;
+            }
+            .dialog-content {
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                text-align: center;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                max-width: 400px;
+                width: 90%;
+            }
+            .dialog-content h3 {
+                margin-top: 0;
+                color: #333;
+            }
+            .dialog-buttons {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                margin: 20px 0;
+            }
+            .btn {
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+                transition: background-color 0.3s;
+            }
+            .btn-success {
+                background: #4CAF50;
+                color: white;
+            }
+            .btn-success:hover {
+                background: #45a049;
+            }
+            .btn-secondary {
+                background: #6c757d;
+                color: white;
+            }
+            .btn-secondary:hover {
+                background: #5a6268;
+            }
+            .countdown {
+                color: #666;
+                font-size: 14px;
+                margin-top: 10px;
+            }
+            #countdown-timer {
+                font-weight: bold;
+                color: #ff6b6b;
+            }
+        `;
+
+        document.head.appendChild(style);
+        document.body.appendChild(dialog);
+
+        // 設置按鈕事件
+        const yesBtn = dialog.querySelector('#continue-yes');
+        const noBtn = dialog.querySelector('#continue-no');
+        const timerElement = dialog.querySelector('#countdown-timer');
+
+        let timeLeft = 10;
+        const countdownInterval = setInterval(() => {
+            timeLeft--;
+            timerElement.textContent = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                Socket.sendContinueGameResponse(false);
+                document.body.removeChild(dialog);
+                document.head.removeChild(style);
+            }
+        }, 1000);
+
+        yesBtn.addEventListener('click', () => {
+            clearInterval(countdownInterval);
+            Socket.sendContinueGameResponse(true);
+            document.body.removeChild(dialog);
+            document.head.removeChild(style);
+        });
+
+        noBtn.addEventListener('click', () => {
+            clearInterval(countdownInterval);
+            Socket.sendContinueGameResponse(false);
+            document.body.removeChild(dialog);
+            document.head.removeChild(style);
+        });
+    }).catch(err => {
+        console.error('❌ 無法載入 Socket 模組:', err);
+    });
+}
+
+/**
+ * 切換到觀戲者模式
+ */
+export function switchToSpectatorMode() {
+    console.log('👀 切換到觀戲者模式');
+    // 隱藏遊戲控制相關的元素
+    const gameControls = document.querySelector('.game-controls');
+    if (gameControls) {
+        gameControls.style.display = 'none';
+    }
+
+    // 顯示觀戲者提示
+    showMessage('您現在是觀戲者，可以觀看其他玩家的遊戲', 'info');
+}
+
 export default {
     showMessage,
     updateRoomStatus,
@@ -448,4 +598,6 @@ export default {
     hideGameOverScreen,
     hideRegisterForm,
     showRegisterForm,
+    showContinueGameDialog,
+    switchToSpectatorMode,
 };

@@ -148,10 +148,18 @@ function setupSocketListeners() {
     socket.on('playerEliminated', (data) => {
         const userName = data.userName || '未知玩家';
         const who = data.who || data.socketID || 'undefined';
-        console.log(`🚫 玩家淘汰: ${userName} (${who})`);
-        UI.showMessage(`${userName} 被淘汰！`, 'error');
 
-        // 觸發回調
+        if (data.showEliminationOnly) {
+            console.log(`� 棋盤淘汰效果: ${userName} (${who})`);
+        } else {
+            console.log(`🚫 玩家淘汰: ${userName} (${who})`);
+            // 只有在明確標記要顯示遊戲結束時才顯示訊息
+            if (data.showGameOver !== false) {
+                UI.showMessage(`${userName} 被淘汰！`, 'error');
+            }
+        }
+
+        // 總是觸發淘汰效果動畫
         if (onPlayerEliminated) {
             onPlayerEliminated(data);
         }
@@ -163,12 +171,43 @@ function setupSocketListeners() {
     // 所有玩家都失敗
     socket.on('allPlayersGameOver', (data) => {
         console.log('🎮 遊戲結束！', data);
-        UI.showGameOverScreen(data);
+
+        // 檢查當前玩家是否為觀戰者
+        const myPlayer = getMyPlayerData();
+        const isSpectator = myPlayer && myPlayer.playerType === 'SPECTATOR';
+
+        if (!isSpectator) {
+            // 只有非觀戰者才顯示遊戲結束畫面
+            UI.showGameOverScreen(data);
+        } else {
+            console.log('👀 觀戰者不顯示遊戲結束畫面');
+            // 觀戰者只顯示簡單訊息
+            UI.showMessage('遊戲結束，等待新的挑戰者加入...', 'info');
+        }
 
         // 觸發回調
         if (onGameOver) {
             onGameOver(data);
         }
+    });
+
+    // 詢問是否繼續遊玩
+    socket.on('askContinueGame', (data) => {
+        console.log('❓ 收到繼續遊玩詢問:', data);
+        UI.showContinueGameDialog(data);
+    });
+
+    // 確認繼續遊玩
+    socket.on('continueGameConfirmed', (data) => {
+        console.log('✅ 繼續遊玩確認:', data);
+        UI.showMessage(data.message, 'success');
+    });
+
+    // 成為觀戲者
+    socket.on('becomeSpectator', (data) => {
+        console.log('👀 成為觀戲者:', data);
+        UI.showMessage(data.message, 'info');
+        UI.switchToSpectatorMode();
     });
 
     // 準備狀態 - 重置遊戲
@@ -431,6 +470,19 @@ export function joinChallenge() {
  */
 export function getMyPlayerType() {
     return myPlayerType;
+}
+
+/**
+ * 發送繼續遊玩回應
+ * @param {boolean} continueGame - 是否繼續遊玩
+ */
+export function sendContinueGameResponse(continueGame) {
+    if (!socket) {
+        console.error('❌ Socket 未初始化');
+        return;
+    }
+    console.log(`📤 發送繼續遊玩回應: ${continueGame}`);
+    socket.emit('continueGameResponse', { continue: continueGame });
 }
 
 export default {

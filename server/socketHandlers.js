@@ -9,6 +9,7 @@ const gameLogic = require('./gameLogic');
 
 // 遊戲廣播計時器
 let gameBroadcast = null;
+let continueGameTimeouts = new Map(); // 用於追蹤玩家繼續遊玩的確認超時
 
 /**
  * 設置 Socket.IO 事件監聽器
@@ -59,9 +60,14 @@ function setupSocketHandlers(io) {
             handleStartGame(io, socket);
         });
 
-        // 觀戰者加入挑戰
+        // 加入挑戰
         socket.on('joinChallenge', () => {
             handleJoinChallenge(io, socket);
+        });
+
+        // 處理繼續遊玩回應
+        socket.on('continueGameResponse', (data) => {
+            handleContinueGameResponse(io, socket, data);
         });
 
         // 玩家斷線
@@ -307,7 +313,8 @@ function handleStartGame(io, socket) {
         gameState.updateAllUsers(updatedUsers);
 
         // 給玩家 2 秒的緩衝期，避免立即檢查遊戲結束
-        if (Date.now() - gameStartTime > 2000) {
+        // 只有在沒有玩家等待確認時才檢查遊戲結束
+        if (Date.now() - gameStartTime > 2000 && continueGameTimeouts.size === 0) {
             checkGameOver(io);
         }
 
@@ -394,13 +401,13 @@ function checkGameOver(io) {
         if (gameLogic.isGameOver(player.itemGroundBlock) === config.LOSE) {
             player.state = config.ELIMINATED;
             losers.push(player);
+            // 發送繼續遊玩確認詢問，但不立即發送 playerEliminated
+            askContinueGame(io, player);
         }
     });
 
+    // 更新其他玩家的 KO 統計
     losers.forEach(loser => {
-        io.emit('playerEliminated', { socketID: loser.socketID });
-
-        // Update KO statistics for other players
         challengers.forEach(player => {
             if (player.socketID !== loser.socketID && player.state !== config.ELIMINATED && player.state !== config.LOSE) {
                 if (player.stats) {
@@ -412,11 +419,94 @@ function checkGameOver(io) {
 
     const remainingPlayers = challengers.filter(p => p.state !== config.ELIMINATED && p.state !== config.LOSE);
 
-    if (challengers.length > 1 && remainingPlayers.length <= 1) {
-        endGame(io, remainingPlayers.length === 1 ? `${remainingPlayers[0].userName} 獲勝！` : '平手！');
-    } else if (challengers.length === 1 && remainingPlayers.length === 0) {
-        endGame(io, '遊戲結束！');
+    // 檢查是否有玩家正在等待繼續遊玩確認
+    const playersAwaitingConfirmation = continueGameTimeouts.size;
+
+    // 只有在沒有玩家等待確認時才結束遊戲
+    if (playersAwaitingConfirmation === 0) {
+        if (challengers.length > 1 && remainingPlayers.length <= 1) {
+            endGame(io, remainingPlayers.length === 1 ? `${remainingPlayers[0].userName} 獲勝！` : '平手！');
+        } else if (challengers.length === 1 && remainingPlayers.length === 0) {
+            endGame(io, '遊戲結束！');
+        }
     }
+    // 不輸出等待日誌，避免重複訊息
+}
+
+/**
+ * 詢問被淘汰的玩家是否繼續遊玩
+ */
+function askContinueGame(io, player) {
+    console.log(`⏰ 詢問玩家 ${player.userName} 是否繼續遊玩`);
+
+    // 暫停自動重啟定時器，避免衝突
+    if (autoRestartTimer) {
+        clearTimeout(autoRestartTimer);
+        autoRestartTimer = null;
+        console.log('⏸️ 暫停自動重啟定時器，等待玩家回應');
+    }
+
+    // 先觸發棋盤淘汰效果
+    io.emit('playerEliminated', {
+        socketID: player.socketID,
+        userName: player.userName,
+        showGameOver: false, // 不顯示遊戲結束畫面
+        showEliminationOnly: true // 只顯示淘汰效果
+    });
+
+    // 延遲1.5秒後再顯示確認對話框，讓淘汰效果有時間播放
+    setTimeout(() => {
+        // 向該玩家發送確認詢問
+        io.to(player.socketID).emit('askContinueGame', {
+            message: '遊戲結束！是否要繼續遊玩？',
+            timeout: 10000 // 10秒超時
+        });
+    }, 1500);
+
+    // 設置超時定時器（1.5秒淘汰效果 + 10秒倒數）
+    const timeoutId = setTimeout(() => {
+        console.log(`⏱️ 玩家 ${player.userName} 未在時限內回應，轉為觀戰者`);
+        // 將玩家設為觀戰者
+        player.playerType = config.PLAYER_TYPE_SPECTATOR;
+        player.state = config.SPECTATOR;
+
+        // 清理超時記錄
+        continueGameTimeouts.delete(player.socketID);
+
+        // 發送玩家被淘汰事件（不顯示遊戲結束畫面）
+        io.emit('playerEliminated', {
+            socketID: player.socketID,
+            userName: player.userName,
+            showGameOver: false // 不顯示遊戲結束畫面
+        });
+
+        // 通知客戶端更新狀態
+        io.to(player.socketID).emit('becomeSpectator', {
+            message: '未在時限內回應，已轉為觀戲模式'
+        });
+
+        // 更新所有玩家的遊戲狀態
+        io.emit('gameStateUpdate', gameState.getAllUsers());
+
+        // 檢查是否需要重新開始遊戲（如果沒有其他挑戰者）
+        const remainingChallengers = gameState.getChallengers();
+        if (remainingChallengers.length === 0) {
+            console.log('📴 沒有挑戰者，3秒後結束遊戲');
+            // 延遲 3 秒結束遊戲，給新玩家時間加入
+            setTimeout(() => {
+                const currentChallengers = gameState.getChallengers();
+                if (currentChallengers.length === 0) {
+                    console.log('📴 確認沒有挑戰者，遊戲結束');
+                    endGame(io, '所有玩家都已退出');
+                } else {
+                    console.log('🎉 有新挑戰者加入，繼續遊戲');
+                }
+            }, 3000);
+        }
+    }, 11500); // 11.5秒超時（1.5秒淘汰效果 + 10秒倒數）
+
+    // 記錄超時定時器
+    continueGameTimeouts.set(player.socketID, timeoutId);
 }
 
 /**
@@ -432,6 +522,12 @@ function endGame(io, message) {
         clearTimeout(autoRestartTimer);
         autoRestartTimer = null;
     }
+
+    // 清理所有繼續遊玩確認的定時器
+    continueGameTimeouts.forEach((timeoutId) => {
+        clearTimeout(timeoutId);
+    });
+    continueGameTimeouts.clear();
 
     if (gameBroadcast) {
         clearInterval(gameBroadcast);
@@ -466,6 +562,76 @@ function endGame(io, message) {
 
 
 /**
+ * 處理繼續遊玩回應
+ */
+function handleContinueGameResponse(io, socket, data) {
+    const player = gameState.findUser(socket.id);
+    if (!player) return;
+
+    console.log(`🎮 玩家 ${player.userName} 回應繼續遊玩: ${data.continue}`);
+
+    // 清理該玩家的超時定時器
+    const timeoutId = continueGameTimeouts.get(socket.id);
+    if (timeoutId) {
+        clearTimeout(timeoutId);
+        continueGameTimeouts.delete(socket.id);
+    }
+
+    if (data.continue) {
+        // 玩家選擇繼續遊玩，重置遊戲狀態
+        gameState.resetAllPlayers([player]);
+        player.state = config.READY;
+        player.playerType = config.PLAYER_TYPE_CHALLENGER;
+
+        io.to(socket.id).emit('continueGameConfirmed', {
+            message: '歡迎回來！準備開始新遊戲'
+        });
+
+        // 立即開始新遊戲
+        setTimeout(() => {
+            if (gameState.getChallengers().length === 1) {
+                console.log('🎮 玩家選擇繼續，立即開始新遊戲');
+                handleStartGame(io, socket);
+            }
+        }, 1000);
+    } else {
+        // 玩家選擇不繼續，設為觀戰者
+        player.playerType = config.PLAYER_TYPE_SPECTATOR;
+        player.state = config.SPECTATOR;
+
+        // 發送玩家被淘汰事件（不顯示遊戲結束畫面）
+        io.emit('playerEliminated', {
+            socketID: socket.id,
+            userName: player.userName,
+            showGameOver: false
+        });
+
+        io.to(socket.id).emit('becomeSpectator', {
+            message: '已轉為觀戰模式'
+        });
+
+        // 檢查是否需要結束遊戲（如果沒有其他挑戰者）
+        const remainingChallengers = gameState.getChallengers();
+        if (remainingChallengers.length === 0) {
+            console.log('📴 沒有挑戰者，3秒後結束遊戲');
+            // 延遲 3 秒結束遊戲，給新玩家時間加入
+            setTimeout(() => {
+                const currentChallengers = gameState.getChallengers();
+                if (currentChallengers.length === 0) {
+                    console.log('📴 確認沒有挑戰者，遊戲結束');
+                    endGame(io, '所有玩家都已退出');
+                } else {
+                    console.log('🎉 有新挑戰者加入，繼續遊戲');
+                }
+            }, 3000);
+        }
+    }
+
+    // 更新所有玩家的遊戲狀態
+    io.emit('gameStateUpdate', gameState.getAllUsers());
+}
+
+/**
  * 處理玩家斷線
  */
 function handlePlayerDisconnect(io, socket) {
@@ -473,6 +639,14 @@ function handlePlayerDisconnect(io, socket) {
     if (!disconnectedUser) return;
 
     console.log(`👋 ${disconnectedUser.playerType}離開：${disconnectedUser.userName}`);
+
+    // 清理該玩家的繼續遊玩確認定時器
+    const timeoutId = continueGameTimeouts.get(socket.id);
+    if (timeoutId) {
+        clearTimeout(timeoutId);
+        continueGameTimeouts.delete(socket.id);
+    }
+
     gameState.removeUser(socket.id);
 
     // 清理可能存在的自動重啟定時器
