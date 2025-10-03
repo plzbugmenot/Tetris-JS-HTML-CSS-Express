@@ -343,8 +343,33 @@ function handleStartGame(io, socket) {
                     userName: attacker.userName,
                     lineNumbers: attacker.clearedLineNumbers,
                     linesCleared: attacker.linesCleared,
-                    combo: attacker.combo || 0
+                    combo: attacker.combo || 0,
+                    gainedExp: attacker.gainedExp || 0
                 });
+
+                // 如果有幸運事件，發送特殊事件
+                if (attacker.luckyEvent) {
+                    io.emit('luckyEvent', {
+                        socketID: attacker.socketID,
+                        userName: attacker.userName,
+                        eventType: attacker.luckyEvent.type,
+                        eventName: attacker.luckyEvent.name,
+                        eventColor: attacker.luckyEvent.color,
+                        multiplier: attacker.luckyEvent.multiplier,
+                        gainedExp: attacker.gainedExp
+                    });
+                }
+
+                // 如果升級了，發送升級事件
+                if (attacker.leveledUp) {
+                    io.emit('playerLevelUp', {
+                        socketID: attacker.socketID,
+                        userName: attacker.userName,
+                        newLevel: attacker.level,
+                        exp: attacker.exp,
+                        expToNextLevel: attacker.expToNextLevel
+                    });
+                }
 
                 // 如果有攻擊力且在多人模式，執行攻擊
                 const challengers = gameState.getChallengers();
@@ -384,6 +409,9 @@ function handleStartGame(io, socket) {
                 delete attacker.clearedLineNumbers;
                 delete attacker.attackPower;
                 delete attacker.linesCleared;
+                delete attacker.gainedExp;
+                delete attacker.luckyEvent;
+                delete attacker.leveledUp;
             }
         });
 

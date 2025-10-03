@@ -180,7 +180,8 @@ function setupSocketListeners() {
     // 消行動畫事件
     socket.on('lineCleared', (data) => {
         const comboText = data.combo > 1 ? ` (Combo x${data.combo})` : '';
-        console.log(`✨ 消行動畫: ${data.userName} 消除了 ${data.linesCleared} 行${comboText}`);
+        const expText = data.gainedExp ? `, 經驗: +${data.gainedExp}` : '';
+        console.log(`✨ 消行動畫: ${data.userName} 消除了 ${data.linesCleared} 行${comboText}${expText}`);
 
         // 觸發自定義事件，通知渲染模組播放動畫
         window.dispatchEvent(new CustomEvent('playLineClearAnimation', {
@@ -190,6 +191,37 @@ function setupSocketListeners() {
         // 顯示 Combo 提示
         if (data.combo > 1) {
             UI.showComboNotification(data.socketID, data.combo);
+        }
+
+        // 顯示獲得經驗
+        if (data.gainedExp) {
+            UI.showExpGain(data.socketID, data.gainedExp);
+        }
+    });
+
+    // 幸運事件
+    socket.on('luckyEvent', (data) => {
+        console.log(`🎉 幸運事件！${data.userName} 獲得 ${data.eventName}！經驗 × ${data.multiplier}`);
+
+        // 顯示幸運事件特效
+        UI.showLuckyEventNotification(data.socketID, data.eventName, data.eventColor, data.gainedExp);
+
+        // 如果是自己，顯示特別提示
+        if (data.socketID === mySocketId) {
+            UI.showMessage(`🎉 ${data.eventName}！經驗 × ${data.multiplier}！`, 'success');
+        }
+    });
+
+    // 玩家升級事件
+    socket.on('playerLevelUp', (data) => {
+        console.log(`🎊 ${data.userName} 升級到 Level ${data.newLevel}！`);
+
+        // 顯示升級特效
+        UI.showLevelUpNotification(data.socketID, data.newLevel);
+
+        // 如果是自己，顯示特別提示
+        if (data.socketID === mySocketId) {
+            UI.showMessage(`🎊 升級！Level ${data.newLevel}`, 'success');
         }
     });
 

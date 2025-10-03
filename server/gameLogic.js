@@ -377,6 +377,97 @@ function updateCombo(player, linesCleared) {
 }
 
 /**
+ * 檢測幸運事件
+ * @returns {Object} { type: 事件類型, multiplier: 經驗倍數, name: 事件名稱 }
+ */
+function checkLuckyEvent() {
+    const rand = Math.random();
+
+    // 1% 機率：鑽石寶箱
+    if (rand < config.LUCKY_EVENT_DIAMOND) {
+        return { type: 'diamond', multiplier: 3.0, name: '💎 鑽石寶箱', color: '#00FFFF' };
+    }
+
+    // 5% 機率：幸運星
+    if (rand < config.LUCKY_EVENT_STAR) {
+        return { type: 'star', multiplier: 2.0, name: '⭐ 幸運星', color: '#FFD700' };
+    }
+
+    // 10% 機率：小驚喜
+    if (rand < config.LUCKY_EVENT_GIFT) {
+        return { type: 'gift', multiplier: 1.5, name: '🎁 小驚喜', color: '#FF69B4' };
+    }
+
+    // 無幸運事件
+    return null;
+}
+
+/**
+ * 計算獲得的經驗值（帶隨機性）
+ * @param {number} linesCleared - 消除的行數
+ * @param {number} combo - Combo 數
+ * @returns {Object} { exp: 經驗值, luckyEvent: 幸運事件 }
+ */
+function calculateExp(linesCleared, combo) {
+    // 基礎經驗（根據消行數）
+    const baseExpMap = {
+        1: 100,
+        2: 200,
+        3: 300,
+        4: 400
+    };
+    const baseExp = baseExpMap[linesCleared] || linesCleared * 100;
+
+    // 隨機係數（50-150% 浮動）
+    const randomFactor = 0.5 + Math.random(); // 0.5 ~ 1.5
+    let randomExp = Math.floor(baseExp * randomFactor);
+
+    // Combo 加成
+    let comboMultiplier = 1.0;
+    if (combo >= 2) comboMultiplier = 1.5;
+    if (combo >= 4) comboMultiplier = 2.0;
+
+    let finalExp = Math.floor(randomExp * comboMultiplier);
+
+    // 檢測幸運事件
+    const luckyEvent = checkLuckyEvent();
+
+    if (luckyEvent) {
+        finalExp = Math.floor(finalExp * luckyEvent.multiplier);
+        console.log(`🎉 幸運事件觸發！${luckyEvent.name} 經驗 × ${luckyEvent.multiplier}！`);
+    }
+
+    console.log(`📊 經驗計算: 基礎=${baseExp}, 隨機係數=${randomFactor.toFixed(2)}, Combo倍數=${comboMultiplier}, 最終=${finalExp}`);
+
+    return { exp: finalExp, luckyEvent };
+}
+
+/**
+ * 檢查並處理升級
+ * @param {number} currentLevel - 當前等級
+ * @param {number} currentExp - 當前經驗值
+ * @returns {Object} { newLevel: 新等級, expToNextLevel: 升級所需經驗, leveledUp: 是否升級 }
+ */
+function checkLevelUp(currentLevel, currentExp) {
+    let newLevel = currentLevel;
+    let leveledUp = false;
+
+    // 檢查是否可以升級
+    while (newLevel < config.EXP_LEVEL_THRESHOLDS.length &&
+        currentExp >= config.EXP_LEVEL_THRESHOLDS[newLevel]) {
+        newLevel++;
+        leveledUp = true;
+    }
+
+    // 計算升級所需經驗
+    const expToNextLevel = newLevel < config.EXP_LEVEL_THRESHOLDS.length
+        ? config.EXP_LEVEL_THRESHOLDS[newLevel]
+        : 999999; // 已達最高等級
+
+    return { newLevel, expToNextLevel, leveledUp };
+}
+
+/**
  * 主遊戲循環處理單個玩家
  * @param {Object} player - 玩家對象
  * @returns {Object} 更新後的玩家對象
@@ -410,8 +501,16 @@ function processPlayerTick(player) {
     const newCombo = updateCombo(player, linesCleared);
     const now = Date.now();
 
-    // 更新等級和分數
-    const newLevel = movedPlayer.level + Math.floor(linesCleared / 4);
+    // 計算獲得的經驗值（帶隨機性和幸運事件）
+    const { exp: gainedExp, luckyEvent } = calculateExp(linesCleared, newCombo);
+
+    // 更新總經驗
+    const newTotalExp = (movedPlayer.exp || 0) + gainedExp;
+
+    // 檢查升級
+    const { newLevel, expToNextLevel, leveledUp } = checkLevelUp(movedPlayer.level, newTotalExp);
+
+    // 更新分數
     const baseScore = linesCleared * 100;
     const comboBonus = newCombo > 1 ? (newCombo - 1) * 50 : 0; // Combo 獎勵分數
     const newScore = (movedPlayer.score || 0) + baseScore + comboBonus;
@@ -419,18 +518,27 @@ function processPlayerTick(player) {
     // 計算對其他玩家的攻擊力
     const attackPower = calculateAttackPower(linesCleared, newLevel, newCombo);
 
-    console.log(`🎯 玩家 ${player.userName} 消除了 ${linesCleared} 行！Combo: ${newCombo}, 分數: ${newScore}, 等級: ${newLevel}, 攻擊力: ${attackPower}`);
+    if (leveledUp) {
+        console.log(`🎊 玩家 ${player.userName} 升級了！Level ${movedPlayer.level} → ${newLevel}`);
+    }
+
+    console.log(`🎯 玩家 ${player.userName} 消除了 ${linesCleared} 行！Combo: ${newCombo}, 經驗: +${gainedExp} (總: ${newTotalExp}/${expToNextLevel}), 分數: ${newScore}, 等級: ${newLevel}, 攻擊力: ${attackPower}`);
 
     return {
         ...movedPlayer,
         itemGroundBlock,
         level: newLevel,
         score: newScore,
+        exp: newTotalExp,
+        expToNextLevel,
         combo: newCombo,
         lastClearTime: now,
         clearedLineNumbers,  // 保存消除的行號，用於動畫
         attackPower,         // 保存攻擊力，用於攻擊其他玩家
-        linesCleared         // 保存消行數，用於顯示
+        linesCleared,        // 保存消行數，用於顯示
+        gainedExp,           // 保存獲得的經驗，用於顯示
+        luckyEvent,          // 保存幸運事件，用於顯示
+        leveledUp            // 保存是否升級，用於特效
     };
 }
 
@@ -449,5 +557,8 @@ module.exports = {
     addGarbageLines,
     calculateAttackPower,
     updateCombo,
+    calculateExp,
+    checkLevelUp,
+    checkLuckyEvent,
     processPlayerTick,
 };

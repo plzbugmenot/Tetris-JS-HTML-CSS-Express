@@ -303,6 +303,107 @@ export function showComboNotification(socketID, combo) {
 }
 
 /**
+ * 顯示獲得經驗
+ * @param {string} socketID - 玩家 Socket ID
+ * @param {number} exp - 獲得的經驗值
+ */
+export function showExpGain(socketID, exp) {
+    const playerContainer = document.getElementById(`player-${socketID}`);
+    if (!playerContainer) return;
+
+    const expNotif = document.createElement('div');
+    expNotif.style.cssText = `
+        position: absolute;
+        top: 20%;
+        right: 10px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #4CAF50;
+        text-shadow: 0 0 5px #4CAF50;
+        z-index: 99;
+        animation: expFloat 1.5s ease-out;
+        pointer-events: none;
+    `;
+    expNotif.textContent = `+${exp} EXP`;
+
+    playerContainer.appendChild(expNotif);
+
+    setTimeout(() => {
+        expNotif.remove();
+    }, 1500);
+}
+
+/**
+ * 顯示幸運事件通知
+ * @param {string} socketID - 玩家 Socket ID
+ * @param {string} eventName - 事件名稱
+ * @param {string} eventColor - 事件顏色
+ * @param {number} gainedExp - 獲得的經驗
+ */
+export function showLuckyEventNotification(socketID, eventName, eventColor, gainedExp) {
+    const playerContainer = document.getElementById(`player-${socketID}`);
+    if (!playerContainer) return;
+
+    const luckyNotif = document.createElement('div');
+    luckyNotif.style.cssText = `
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: ${eventColor};
+        text-shadow: 0 0 15px ${eventColor}, 0 0 30px ${eventColor};
+        z-index: 101;
+        animation: luckyEventPopup 2s ease-out;
+        pointer-events: none;
+        text-align: center;
+    `;
+    luckyNotif.innerHTML = `
+        <div>${eventName}!</div>
+        <div style="font-size: 1.5rem; margin-top: 0.5rem;">+${gainedExp} EXP</div>
+    `;
+
+    playerContainer.appendChild(luckyNotif);
+
+    setTimeout(() => {
+        luckyNotif.remove();
+    }, 2000);
+}
+
+/**
+ * 顯示升級通知
+ * @param {string} socketID - 玩家 Socket ID
+ * @param {number} newLevel - 新等級
+ */
+export function showLevelUpNotification(socketID, newLevel) {
+    const playerContainer = document.getElementById(`player-${socketID}`);
+    if (!playerContainer) return;
+
+    const levelUpNotif = document.createElement('div');
+    levelUpNotif.style.cssText = `
+        position: absolute;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 4rem;
+        font-weight: bold;
+        color: #FFD700;
+        text-shadow: 0 0 20px #FFD700, 0 0 40px #FFD700, 0 0 60px #FFD700;
+        z-index: 102;
+        animation: levelUpBurst 1.5s ease-out;
+        pointer-events: none;
+    `;
+    levelUpNotif.textContent = `LEVEL UP!`;
+
+    playerContainer.appendChild(levelUpNotif);
+
+    setTimeout(() => {
+        levelUpNotif.remove();
+    }, 1500);
+}
+
+/**
  * 隱藏註冊表單
  */
 export function hideRegisterForm() {

@@ -64,6 +64,11 @@ function createPlayerBoard(player, mySocketId) {
         ? `<div class="player-combo" style="color: #FFD700; font-weight: bold;">🔥 Combo x${player.combo}</div>`
         : '';
 
+    // 經驗條
+    const currentExp = player.exp || 0;
+    const maxExp = player.expToNextLevel || 500;
+    const expPercent = Math.min((currentExp / maxExp) * 100, 100);
+
     header.innerHTML = `
     <div class="player-name">🎮 ${player.userName} ${myTag}</div>
     <div class="player-status">${player.who}</div>
@@ -72,6 +77,10 @@ function createPlayerBoard(player, mySocketId) {
       <div class="player-score">分數: ${player.score || 0}</div>
       ${comboDisplay}
     </div>
+    <div class="exp-bar-container" style="width: 100%; height: 8px; background: #333; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
+      <div class="exp-bar" style="width: ${expPercent}%; height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); transition: width 0.3s ease;"></div>
+    </div>
+    <div class="exp-text" style="font-size: 0.7rem; color: #aaa; margin-top: 0.2rem; text-align: center;">EXP: ${currentExp} / ${maxExp}</div>
   `;
     container.appendChild(header);
 
@@ -195,6 +204,18 @@ function updatePlayerBoard(player) {
                 comboDiv.remove();
             }
         }
+    }
+
+    // 更新經驗條
+    const expBar = document.querySelector(`#player-${player.socketID} .exp-bar`);
+    const expText = document.querySelector(`#player-${player.socketID} .exp-text`);
+    if (expBar && expText) {
+        const currentExp = player.exp || 0;
+        const maxExp = player.expToNextLevel || 500;
+        const expPercent = Math.min((currentExp / maxExp) * 100, 100);
+
+        expBar.style.width = `${expPercent}%`;
+        expText.textContent = `EXP: ${currentExp} / ${maxExp}`;
     }
 }
 

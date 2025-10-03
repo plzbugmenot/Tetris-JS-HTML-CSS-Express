@@ -113,6 +113,8 @@ function addUser(socketID, userName, who, playerType = config.PLAYER_TYPE_CHALLE
         state: playerType === config.PLAYER_TYPE_SPECTATOR ? config.SPECTATOR : config.READY,
         level: 0,
         score: 0,
+        exp: 0,                                  // 當前經驗值
+        expToNextLevel: config.EXP_LEVEL_THRESHOLDS[0] || 500, // 升級所需經驗
 
         // 使用原始屬性名稱以匹配前端
         itemBlockBody: firstDomino.blocks,       // 當前方塊
@@ -243,6 +245,8 @@ function resetAllPlayers() {
         user.state = config.READY;
         user.level = 0;
         user.score = 0;
+        user.exp = 0;
+        user.expToNextLevel = config.EXP_LEVEL_THRESHOLDS[0] || 500;
         user.itemBlockBody = firstDomino.blocks;
         user.itemBlockType = firstDomino.type;
         user.itemPreBody = secondDomino.blocks;

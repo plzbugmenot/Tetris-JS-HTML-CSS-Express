@@ -27,6 +27,14 @@ module.exports = {
     COMBO_TIMEOUT: 3000, // Combo 超時時間（3秒內沒消行則重置）
     GARBAGE_HOLE_COUNT: 1, // 垃圾行的缺口數量
 
+    // 經驗值和升級系統
+    EXP_LEVEL_THRESHOLDS: [500, 800, 1200, 1700, 2300, 3000, 3800, 4700, 5700, 7000], // 各等級所需經驗
+
+    // 幸運事件機率
+    LUCKY_EVENT_DIAMOND: 0.01,   // 💎 鑽石寶箱 (1%)
+    LUCKY_EVENT_STAR: 0.05,      // ⭐ 幸運星 (5%)
+    LUCKY_EVENT_GIFT: 0.10,      // 🎁 小驚喜 (10%)
+
     // 方向常數
     DOWN: "DOWN",
     LEFT: "LEFT",
