@@ -105,21 +105,10 @@ function handlePlayerEliminated(data) {
 function handleGameOver(data) {
     // 1. 停用鍵盤
     Keyboard.setGameActive(false);
-    console.log('🏁 遊戲結束，排行榜顯示中...', data);
+    console.log('🏁 遊戲結束處理中...', data);
 
-    // 2. 呼叫 ui.js 裡的函式來顯示排行榜
-    UI.showGameOverScreen(data);
-
-    // 3. 設定一個計時器，在排行榜顯示一段時間後執行動作
-    setTimeout(() => {
-        // 4. (可選) 讓排行榜優雅地消失
-        UI.hideGameOverScreen();
-
-        // 5. 執行網頁重新整理
-        console.log('🔄 正在重新整理頁面...');
-        location.reload();
-
-    }, 10000); // 10 秒後刷新
+    // 注意：不再重複顯示遊戲結束畫面，已由 socket.js 的 allPlayersGameOver 事件處理
+    // 注意：不再執行頁面刷新，讓伺服器端的 readyStateEmit 事件處理重置
 }
 
 // ==================== 全局函數 (供 HTML 調用) ====================

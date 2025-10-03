@@ -84,10 +84,17 @@ function handleNewUser(io, socket, data) {
         return;
     }
 
+    // 檢查遊戲狀態一致性：如果沒有挑戰者但遊戲狀態還是 GAME，重置為 READY
+    if (gameState.getGameState() === config.GAME && challengers.length === 0) {
+        console.log('🔧 檢測到遊戲狀態不一致，重置為 READY');
+        gameState.setGameState(config.READY);
+    }
+
     let playerType = config.PLAYER_TYPE_SPECTATOR;
     let playerId = '';
 
-    if (allUsers.length === 0) {
+    // 如果沒有挑戰者，新玩家成為挑戰者；否則成為觀戰者
+    if (challengers.length === 0) {
         playerType = config.PLAYER_TYPE_CHALLENGER;
         playerId = 'USER1';
     } else {
@@ -160,6 +167,14 @@ function handleJoinChallenge(io, socket) {
             message: '成功加入挑戰！',
             user: updatedUser
         });
+
+        // 如果這是第一位挑戰者且遊戲狀態為 READY，自動開始遊戲
+        if (gameState.getChallengers().length === 1 && gameState.getGameState() === config.READY) {
+            console.log(`🎮 觀戰者轉為挑戰者，自動開始單機遊戲！`);
+            setTimeout(() => {
+                handleStartGame(io, socket);
+            }, 500);
+        }
     }
 }
 
@@ -253,6 +268,9 @@ function handleGameOver(io, socket) {
 /**
  * 處理開始遊戲
  */
+let gameStartTime = null;
+let autoRestartTimer = null; // 追蹤自動重啟定時器
+
 function handleStartGame(io, socket) {
     const challengers = gameState.getChallengers();
     if (challengers.length < 1) {
@@ -263,7 +281,9 @@ function handleStartGame(io, socket) {
     console.log(`🎮 遊戲開始！模式: ${challengers.length === 1 ? '單機' : '多人'}`);
     gameState.setGameState(config.GAME);
     gameState.resetAllPlayers(challengers);
-
+    
+    // 記錄遊戲開始時間，給玩家緩衝期
+    gameStartTime = Date.now();
 
     if (gameBroadcast) clearInterval(gameBroadcast);
 
@@ -280,7 +300,11 @@ function handleStartGame(io, socket) {
         processAttacksAndBroadcasts(io, updatedUsers);
 
         gameState.updateAllUsers(updatedUsers);
-        checkGameOver(io);
+        
+        // 給玩家 2 秒的緩衝期，避免立即檢查遊戲結束
+        if (Date.now() - gameStartTime > 2000) {
+            checkGameOver(io);
+        }
 
         io.emit('stateOfUsers', {
             users: gameState.getAllUsers(),
@@ -366,7 +390,7 @@ function checkGameOver(io) {
         io.emit('playerEliminated', { socketID: loser.socketID });
     });
 
-    const remainingPlayers = challengers.filter(p => p.state !== config.ELIMINATED);
+    const remainingPlayers = challengers.filter(p => p.state !== config.ELIMINATED && p.state !== config.LOSE);
 
     if (challengers.length > 1 && remainingPlayers.length <= 1) {
         endGame(io, remainingPlayers.length === 1 ? `${remainingPlayers[0].userName} 獲勝！` : '平手！');
@@ -381,6 +405,14 @@ function checkGameOver(io) {
 function endGame(io, message) {
     console.log(`🏁 遊戲結束: ${message}`);
     gameState.setGameState(config.READY);
+    gameStartTime = null; // 重置遊戲開始時間
+    
+    // 清理之前的自動重啟定時器
+    if (autoRestartTimer) {
+        clearTimeout(autoRestartTimer);
+        autoRestartTimer = null;
+    }
+    
     if (gameBroadcast) {
         clearInterval(gameBroadcast);
         gameBroadcast = null;
@@ -391,14 +423,19 @@ function endGame(io, message) {
         players: gameState.getChallengers().map(u => ({ userName: u.userName, score: u.score || 0 }))
     });
 
-    setTimeout(() => {
-        io.emit('readyStateEmit');
-        // 單人模式自動重啟
-        if (gameState.getChallengers().length === 1) {
+    // 設置新的自動重啟定時器
+    autoRestartTimer = setTimeout(() => {
+        // 檢查是否還有玩家存在且遊戲狀態正確
+        if (gameState.getChallengers().length === 1 && gameState.getGameState() === config.READY) {
+            io.emit('readyStateEmit');
             const player = gameState.getChallengers()[0];
             const playerSocket = io.sockets.sockets.get(player.socketID);
-            if (playerSocket) handleStartGame(io, playerSocket);
+            if (playerSocket) {
+                console.log('🔄 自動重啟單人遊戲');
+                handleStartGame(io, playerSocket);
+            }
         }
+        autoRestartTimer = null;
     }, 5000);
 }
 
@@ -413,6 +450,13 @@ function handlePlayerDisconnect(io, socket) {
     console.log(`👋 ${disconnectedUser.playerType}離開：${disconnectedUser.userName}`);
     gameState.removeUser(socket.id);
 
+    // 清理可能存在的自動重啟定時器
+    if (autoRestartTimer) {
+        clearTimeout(autoRestartTimer);
+        autoRestartTimer = null;
+        console.log('🧹 清理自動重啟定時器');
+    }
+
     // 如果遊戲中挑戰者為空，結束遊戲
     if (gameState.getGameState() === config.GAME && gameState.getChallengers().length === 0) {
         endGame(io, '所有挑戰者都已離開，遊戲結束。');
@@ -425,6 +469,34 @@ function handlePlayerDisconnect(io, socket) {
     });
 }
 
+/**
+ * 清理所有定時器和資源
+ */
+function cleanup() {
+    console.log('🧹 清理服務器資源...');
+    
+    // 清理遊戲廣播定時器
+    if (gameBroadcast) {
+        clearInterval(gameBroadcast);
+        gameBroadcast = null;
+        console.log('✅ 遊戲廣播定時器已清理');
+    }
+    
+    // 清理自動重啟定時器
+    if (autoRestartTimer) {
+        clearTimeout(autoRestartTimer);
+        autoRestartTimer = null;
+        console.log('✅ 自動重啟定時器已清理');
+    }
+    
+    // 重置遊戲狀態
+    gameState.setGameState(config.READY);
+    gameStartTime = null;
+    
+    console.log('✅ 所有資源已清理完成');
+}
+
 module.exports = {
     setupSocketHandlers,
+    cleanup,
 };

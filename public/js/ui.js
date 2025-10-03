@@ -185,11 +185,15 @@ export function updateScoreboard(players, gameState) {
  * @param {Object} data - 遊戲結束數據
  */
 export function showGameOverScreen(data) {
+    console.log('🎮 正在顯示遊戲結束畫面...', data);
     const overlay = document.getElementById(DOM_IDS.GAME_OVER_OVERLAY);
     const message = document.getElementById(DOM_IDS.GAME_OVER_MESSAGE);
     const finalScoreList = document.getElementById(DOM_IDS.FINAL_SCORE_LIST);
 
-    if (!overlay || !message || !finalScoreList) return;
+    if (!overlay || !message || !finalScoreList) {
+        console.error('❌ 找不到遊戲結束畫面元素');
+        return;
+    }
 
     // 單機模式顯示不同的訊息
     if (data.isSinglePlayer) {
@@ -244,6 +248,9 @@ export function showGameOverScreen(data) {
     });
 
     overlay.style.display = 'flex';
+    overlay.style.visibility = 'visible';
+    overlay.style.opacity = '1';
+    console.log('✅ 遊戲結束畫面已顯示');
 
     // 單機模式：提示自動重新開始
     if (data.isSinglePlayer) {
@@ -260,9 +267,17 @@ export function showGameOverScreen(data) {
  * 隱藏遊戲結束畫面
  */
 export function hideGameOverScreen() {
+    console.log('🔄 正在隱藏遊戲結束畫面...');
     const overlay = document.getElementById(DOM_IDS.GAME_OVER_OVERLAY);
     if (overlay) {
         overlay.style.display = 'none';
+        overlay.style.visibility = 'hidden';
+        overlay.style.opacity = '0';
+        // 強制移除 flex 顯示
+        overlay.classList.remove('show');
+        console.log('✅ 遊戲結束畫面已強制隱藏');
+    } else {
+        console.error('❌ 找不到遊戲結束畫面元素:', DOM_IDS.GAME_OVER_OVERLAY);
     }
 }
 

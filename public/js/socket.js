@@ -5,6 +5,8 @@
 
 import { GAME_STATES } from './config.js';
 import * as UI from './ui.js';
+import * as Keyboard from './keyboard.js';
+import * as Render from './render.js';
 
 // 全局變數
 let socket = null;
@@ -44,7 +46,7 @@ export function initSocket(onStateUpdate, onEliminated, onGameEnd) {
     setupSocketListeners();
 
     mySocketId = socket.id;
-    console.log('Socket initialized:', mySocketId);
+    console.log('Socket initialized: ', mySocketId || 'not yet connected');
 }
 
 /**
@@ -55,13 +57,14 @@ function setupSocketListeners() {
 
     // 連線成功
     socket.on('connect', () => {
-        console.log('✅ Socket 已連接:', socket.id);
         mySocketId = socket.id;
+        console.log('✅ Socket 已連接: ', mySocketId);
     });
 
     // 新玩家加入響應
     socket.on('newUserResponse', (data) => {
-        console.log('👤 新玩家加入:', data);
+        const userName = data.newUser?.userName || '未知玩家';
+        console.log(`👤 新玩家加入: ${userName}`, data);
         maxPlayers = data.maxPlayers || 4;
         myPlayerType = data.playerType || 'CHALLENGER';
 
@@ -138,8 +141,10 @@ function setupSocketListeners() {
 
     // 玩家被淘汰
     socket.on('playerEliminated', (data) => {
-        console.log(`🚫 玩家淘汰: ${data.userName} (${data.who})`);
-        UI.showMessage(`${data.userName} 被淘汰！`, 'error');
+        const userName = data.userName || '未知玩家';
+        const who = data.who || data.socketID || 'undefined';
+        console.log(`🚫 玩家淘汰: ${userName} (${who})`);
+        UI.showMessage(`${userName} 被淘汰！`, 'error');
 
         // 觸發回調
         if (onPlayerEliminated) {
@@ -161,11 +166,22 @@ function setupSocketListeners() {
         }
     });
 
-    // 準備狀態
+    // 準備狀態 - 重置遊戲
     socket.on('readyStateEmit', () => {
+        console.log('🔄 接收到重置信號，正在重置遊戲狀態...');
+
+        // 重置遊戲狀態
         gameState = GAME_STATES.READY;
+        allPlayers = [];
+
+        // 停用鍵盤控制
+        Keyboard.setGameActive(false);
+
+        // 隱藏遊戲結束畫面
         UI.hideGameOverScreen();
-        UI.showMessage('遊戲結束，準備開始新遊戲', 'info');
+
+        // 清空遊戲棋盤
+        Render?.clearGameContainer?.();
 
         // 隱藏計分板
         const scoreboard = document.getElementById('scoreboard');
@@ -173,10 +189,18 @@ function setupSocketListeners() {
             scoreboard.style.display = 'none';
         }
 
-        // 顯示開始按鈕
-        if (allPlayers.length >= 2) {
-            UI.showStartButton();
+        // 重新顯示玩家資訊區域
+        const playersInfo = document.getElementById('players-info');
+        if (playersInfo) {
+            playersInfo.style.display = 'block';
         }
+    });
+
+    // 準備開始遊戲事件
+    socket.on('readyToStart', () => {
+        console.log('🎮 準備開始遊戲');
+        UI.showMessage('🎮 已準備就緒！按 SPACE 開始遊戲', 'success');
+        // 可以在這裡添加一個開始按鈕或鍵盤監聽
     });
 
     // 消行動畫事件

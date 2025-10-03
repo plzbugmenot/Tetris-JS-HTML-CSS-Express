@@ -18,7 +18,7 @@ const socketIO = require('socket.io');
 
 // 導入 server 模組
 const config = require('./server/config');
-const { setupSocketHandlers } = require('./server/socketHandlers');
+const { setupSocketHandlers, cleanup } = require('./server/socketHandlers');
 
 // 環境變數配置
 const SERVER_PORT = process.env.REACT_APP_SERVER_PORT || 3500;
@@ -100,11 +100,22 @@ function startApplication() {
 
   // 優雅關閉
   process.on('SIGINT', () => {
-    console.log('\n👋 正在關閉服務器...');
+    console.log('\n👋 接收到關閉信號，正在關閉服務器...');
+    
+    // 清理所有定時器和資源
+    cleanup();
+    
+    // 關閉服務器
     server.close(() => {
-      console.log('✅ 服務器已關閉');
+      console.log('✅ 服務器已安全關閉');
       process.exit(0);
     });
+    
+    // 設置強制退出定時器（10秒後強制退出）
+    setTimeout(() => {
+      console.log('⚠️ 強制退出服務器');
+      process.exit(1);
+    }, 10000);
   });
 }
 
