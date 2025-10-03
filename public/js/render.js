@@ -235,19 +235,22 @@ function updateNextBoard(player) {
 
     nextBoard.innerHTML = '';
 
-    // 假設 player.nextBlocks 是一個包含接下來幾個方塊的陣列
-    // for now, we'll just render the single preview block as before.
+    // 使用 nextBlocks 陣列顯示多個預覽方塊
     const nextPieces = player.nextBlocks || [];
+    const maxPreviewCount = Math.min(3, nextPieces.length); // 最多顯示 3 個
 
-    if (player.itemPreBody && player.itemPreBody.length > 0) {
+    for (let i = 0; i < maxPreviewCount; i++) {
+        const piece = nextPieces[i];
+        if (!piece || !piece.blocks || piece.blocks.length === 0) continue;
+
         const previewContainer = document.createElement('div');
         previewContainer.className = 'next-piece-container';
 
         // 計算方塊邊界
-        const minX = Math.min(...player.itemPreBody.map(b => b.x));
-        const maxX = Math.max(...player.itemPreBody.map(b => b.x));
-        const minY = Math.min(...player.itemPreBody.map(b => b.y));
-        const maxY = Math.max(...player.itemPreBody.map(b => b.y));
+        const minX = Math.min(...piece.blocks.map(b => b.x));
+        const maxX = Math.max(...piece.blocks.map(b => b.x));
+        const minY = Math.min(...piece.blocks.map(b => b.y));
+        const maxY = Math.max(...piece.blocks.map(b => b.y));
 
         // 計算偏移量讓方塊居中顯示在 4x4 網格中
         const offsetX = Math.floor((4 - (maxX - minX + 1)) / 2) + 1 - minX;
@@ -262,6 +265,37 @@ function updateNextBoard(player) {
                 // 檢查原始方塊座標映射到網格位置
                 const originalX = x - offsetX;
                 const originalY = y - offsetY;
+                const preBlock = piece.blocks.find(b => b.x === originalX && b.y === originalY);
+
+                if (preBlock) {
+                    cell.classList.add(`block-${piece.type || 0}`);
+                }
+                previewContainer.appendChild(cell);
+            }
+        }
+        nextBoard.appendChild(previewContainer);
+    }
+
+    // 如果 nextBlocks 沒有資料，回退到舚的 itemPreBody 方式
+    if (maxPreviewCount === 0 && player.itemPreBody && player.itemPreBody.length > 0) {
+        const previewContainer = document.createElement('div');
+        previewContainer.className = 'next-piece-container';
+
+        const minX = Math.min(...player.itemPreBody.map(b => b.x));
+        const maxX = Math.max(...player.itemPreBody.map(b => b.x));
+        const minY = Math.min(...player.itemPreBody.map(b => b.y));
+        const maxY = Math.max(...player.itemPreBody.map(b => b.y));
+
+        const offsetX = Math.floor((4 - (maxX - minX + 1)) / 2) + 1 - minX;
+        const offsetY = Math.floor((4 - (maxY - minY + 1)) / 2) + 1 - minY;
+
+        for (let y = 1; y <= 4; y++) {
+            for (let x = 1; x <= 4; x++) {
+                const cell = document.createElement('div');
+                cell.className = 'next-block';
+
+                const originalX = x - offsetX;
+                const originalY = y - offsetY;
                 const preBlock = player.itemPreBody.find(b => b.x === originalX && b.y === originalY);
 
                 if (preBlock) {
@@ -272,9 +306,7 @@ function updateNextBoard(player) {
         }
         nextBoard.appendChild(previewContainer);
     }
-}
-
-/**
+}/**
  * 更新 "Hold" 預覽棋盤
  * @param {Object} player - 玩家數據
  */
