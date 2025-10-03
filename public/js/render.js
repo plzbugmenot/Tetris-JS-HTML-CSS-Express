@@ -9,6 +9,19 @@ import { GAME_CONFIG } from './config.js';
 const clearingAnimations = new Map(); // key: socketID, value: { lineNumbers: [], startTime: timestamp }
 
 /**
+ * 格式化時間顯示
+ * @param {number} seconds - 秒數
+ * @returns {string} 格式化的時間字符串
+ */
+function formatTime(seconds = 0) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+/**
+
+/**
  * 渲染所有玩家的棋盤
  * @param {Array} players - 玩家列表
  * @param {string} mySocketId - 我的 Socket ID
@@ -92,10 +105,12 @@ function createPlayerBoard(player, mySocketId) {
             <div class="hold-board" id="hold-board-${player.socketID}"></div>
         </div>
         <div class="stats-container" id="stats-container-${player.socketID}">
-             <p>KOS: 0</p>
-             <p>PIECES: 0</p>
-             <p>ATTACK: 0</p>
-             <p>TIME: 0:00</p>
+             <p id="kos-${player.socketID}">KOS: ${player.stats ? player.stats.kos : 0}</p>
+             <p id="pieces-${player.socketID}">PIECES: ${player.stats ? player.stats.pieces : 0}</p>
+             <p id="attack-${player.socketID}">ATTACK: ${player.stats ? player.stats.attack : 0}</p>
+             <p id="time-${player.socketID}">TIME: ${formatTime(player.stats ? player.stats.playTime : 0)}</p>
+             <p id="droptime-${player.socketID}">DROP: ${player.stats && player.stats.avgDropTime ? (player.stats.avgDropTime / 1000).toFixed(1) + 's' : '0.0s'}</p>
+             <p id="speed-${player.socketID}">SPEED: ${player.stats ? Math.round(1000 / (player.stats.currentSpeed * 20)) + '/s' : '3.3/s'}</p>
         </div>
     `;
     gameArea.appendChild(leftPanel);
@@ -460,6 +475,28 @@ function playAttackAnimation(attackerID, targetID) {
             targetContainer.classList.remove('defend-flash');
         }, 500);
     }
+}
+
+/**
+ * 更新玩家統計數據顯示
+ * @param {Object} player - 玩家對象
+ */
+export function updatePlayerStats(player) {
+    if (!player.stats) return;
+
+    const kosElement = document.getElementById(`kos-${player.socketID}`);
+    const piecesElement = document.getElementById(`pieces-${player.socketID}`);
+    const attackElement = document.getElementById(`attack-${player.socketID}`);
+    const timeElement = document.getElementById(`time-${player.socketID}`);
+    const dropTimeElement = document.getElementById(`droptime-${player.socketID}`);
+    const speedElement = document.getElementById(`speed-${player.socketID}`);
+
+    if (kosElement) kosElement.textContent = `KOS: ${player.stats.kos}`;
+    if (piecesElement) piecesElement.textContent = `PIECES: ${player.stats.pieces}`;
+    if (attackElement) attackElement.textContent = `ATTACK: ${player.stats.attack}`;
+    if (timeElement) timeElement.textContent = `TIME: ${formatTime(player.stats.playTime)}`;
+    if (dropTimeElement) dropTimeElement.textContent = `DROP: ${player.stats.avgDropTime ? (player.stats.avgDropTime / 1000).toFixed(1) + 's' : '0.0s'}`;
+    if (speedElement) speedElement.textContent = `SPEED: ${Math.round(1000 / (player.stats.currentSpeed * 20)) + '/s'}`;
 }
 
 export default {

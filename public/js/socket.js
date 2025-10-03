@@ -123,6 +123,11 @@ function setupSocketListeners() {
         // 找出我的玩家數據
         myPlayerData = allPlayers.find(p => p.socketID === mySocketId);
 
+        // 更新所有玩家的統計數據顯示
+        allPlayers.forEach(player => {
+            Render.updatePlayerStats(player);
+        });
+
         // 觸發回調
         if (onGameStateUpdate) {
             onGameStateUpdate({

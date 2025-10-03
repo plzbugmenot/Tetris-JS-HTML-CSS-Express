@@ -116,11 +116,22 @@ function moveBlockDown(player) {
 
     if (checkCollision(tmpBlockBody, player.itemGroundBlock)) {
         const nextBlockData = getNextBlock(player);
+        let updatedStats = player.stats ? { ...player.stats, pieces: player.stats.pieces + 1 } : undefined;
+
+        // Calculate drop time for this piece
+        if (updatedStats && updatedStats.currentPieceStartTime) {
+            const pieceDropTime = Date.now() - updatedStats.currentPieceStartTime;
+            updatedStats.dropTime += pieceDropTime;
+            updatedStats.avgDropTime = updatedStats.pieces > 0 ? Math.round(updatedStats.dropTime / updatedStats.pieces) : 0;
+            updatedStats.currentPieceStartTime = Date.now(); // Reset for next piece
+        }
+
         return {
             ...player,
             itemGroundBlock: [...player.itemGroundBlock, ...player.itemBlockBody],
             ...nextBlockData,
             actionTime: config.ACTION_INIT_TIME,
+            stats: updatedStats
         };
     }
 
@@ -318,11 +329,22 @@ function dropBlock(player) {
 
         if (checkCollision(tmpBlockBody, currentPlayer.itemGroundBlock)) {
             const nextBlockData = getNextBlock(currentPlayer);
+            let updatedStats = currentPlayer.stats ? { ...currentPlayer.stats, pieces: currentPlayer.stats.pieces + 1 } : undefined;
+
+            // Calculate drop time for this piece (instant drop)
+            if (updatedStats && updatedStats.currentPieceStartTime) {
+                const pieceDropTime = Date.now() - updatedStats.currentPieceStartTime;
+                updatedStats.dropTime += pieceDropTime;
+                updatedStats.avgDropTime = updatedStats.pieces > 0 ? Math.round(updatedStats.dropTime / updatedStats.pieces) : 0;
+                updatedStats.currentPieceStartTime = Date.now(); // Reset for next piece
+            }
+
             return {
                 ...currentPlayer,
                 itemGroundBlock: [...currentPlayer.itemGroundBlock, ...currentPlayer.itemBlockBody],
                 ...nextBlockData,
                 actionTime: config.ACTION_INIT_TIME,
+                stats: updatedStats
             };
         }
 
@@ -506,11 +528,17 @@ function processPlayerTick(player) {
     const newScore = (movedPlayer.score || 0) + baseScore + comboBonus;
     const attackPower = calculateAttackPower(linesCleared, newLevel, newCombo);
 
+    // Calculate new speed based on level (faster as level increases)
+    const newSpeed = Math.max(5, config.ACTION_INIT_TIME - Math.floor(newLevel / 2)); // Minimum speed is 5 frames
+    const updatedStats = movedPlayer.stats ? { ...movedPlayer.stats, currentSpeed: newSpeed } : undefined;
+
     return {
         ...movedPlayer,
         itemGroundBlock,
         level: newLevel,
         score: newScore,
+        actionTime: newSpeed, // Update action time to new speed
+        stats: updatedStats,
         exp: newTotalExp,
         expToNextLevel,
         combo: newCombo,

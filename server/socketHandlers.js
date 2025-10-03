@@ -291,7 +291,12 @@ function handleStartGame(io, socket) {
         const users = gameState.getAllUsers();
         let updatedUsers = users.map(player => {
             if (player.playerType === config.PLAYER_TYPE_CHALLENGER && player.state !== config.LOSE && player.state !== config.ELIMINATED) {
-                return gameLogic.processPlayerTick(player);
+                const processedPlayer = gameLogic.processPlayerTick(player);
+                // Update play time statistics
+                if (processedPlayer.stats && processedPlayer.stats.startTime) {
+                    processedPlayer.stats.playTime = Math.floor((Date.now() - processedPlayer.stats.startTime) / 1000);
+                }
+                return processedPlayer;
             }
             return player;
         });
@@ -353,6 +358,12 @@ function processAttacksAndBroadcasts(io, users) {
             if (targets.length > 0) {
                 const target = targets[Math.floor(Math.random() * targets.length)];
                 target.itemGroundBlock = gameLogic.addGarbageLines(target.itemGroundBlock, attacker.attackPower);
+
+                // Update attacker's attack statistics
+                if (attacker.stats) {
+                    attacker.stats.attack += attacker.attackPower;
+                }
+
                 io.emit('playerAttacked', {
                     attackerID: attacker.socketID,
                     targetID: target.socketID,
@@ -388,6 +399,15 @@ function checkGameOver(io) {
 
     losers.forEach(loser => {
         io.emit('playerEliminated', { socketID: loser.socketID });
+
+        // Update KO statistics for other players
+        challengers.forEach(player => {
+            if (player.socketID !== loser.socketID && player.state !== config.ELIMINATED && player.state !== config.LOSE) {
+                if (player.stats) {
+                    player.stats.kos += 1;
+                }
+            }
+        });
     });
 
     const remainingPlayers = challengers.filter(p => p.state !== config.ELIMINATED && p.state !== config.LOSE);

@@ -149,6 +149,19 @@ function addUser(socketID, userName, who, playerType = config.PLAYER_TYPE_CHALLE
         holdBlock: null,      // { type, blocks }
         canHold: true,        // Flag to allow holding once per drop
         nextBlocks: initialPieces, // Array of upcoming blocks { type, blocks }
+
+        // Statistics
+        stats: {
+            kos: 0,          // Number of KOs (eliminations)
+            pieces: 0,       // Number of pieces placed
+            attack: 0,       // Total attack power sent
+            startTime: Date.now(), // Game start time for calculating play time
+            playTime: 0,     // Total play time in seconds
+            dropTime: 0,     // Total time spent dropping pieces (in milliseconds)
+            avgDropTime: 0,  // Average drop time per piece (in milliseconds)
+            currentPieceStartTime: Date.now(), // When current piece started falling
+            currentSpeed: config.ACTION_INIT_TIME // Current drop speed (frames per drop)
+        }
     };
     users.push(newUser);
     return newUser;
@@ -284,6 +297,19 @@ function resetAllPlayers(playersToReset = users) {
         user.holdBlock = null;
         user.canHold = true;
         user.nextBlocks = initialPieces;
+
+        // Reset statistics
+        user.stats = {
+            kos: 0,
+            pieces: 0,
+            attack: 0,
+            startTime: Date.now(),
+            playTime: 0,
+            dropTime: 0,
+            avgDropTime: 0,
+            currentPieceStartTime: Date.now(),
+            currentSpeed: config.ACTION_INIT_TIME
+        };
     });
 }
 
