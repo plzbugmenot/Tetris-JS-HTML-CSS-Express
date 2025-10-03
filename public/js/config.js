@@ -31,7 +31,9 @@ export const KEY_CODES = {
     KEY_D: 'KeyD',
     KEY_W: 'KeyW',
     KEY_S: 'KeyS',
+    KEY_C: 'KeyC',
     SPACE: 'Space',
+    SHIFT_LEFT: 'ShiftLeft',
 };
 
 // 方向常數

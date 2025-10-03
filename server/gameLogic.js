@@ -215,9 +215,16 @@ function holdBlock(player) {
         };
     } else {
         const newCurrentBlock = player.holdBlock;
+        // 確保從 hold 取出的方塊也從上方進入
+        const minY = Math.min(...newCurrentBlock.blocks.map(b => b.y));
+        const spawnBlocks = newCurrentBlock.blocks.map(block => ({
+            ...block,
+            y: block.y - minY
+        }));
+
         return {
             ...player,
-            itemBlockBody: newCurrentBlock.blocks,
+            itemBlockBody: spawnBlocks,
             itemBlockType: newCurrentBlock.type,
             holdBlock: blockToHold,
             canHold: false
