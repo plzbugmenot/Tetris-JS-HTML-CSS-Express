@@ -16,8 +16,16 @@ function getNextBlock(player) {
     const nextBlock = newNextBlocks.shift(); // 取出下一個方塊
     newNextBlocks.push(gameState.getRandomDomino()); // 在佇列末尾添加一個新方塊
 
+    // 計算方塊的最低 Y 座標
+    const minY = Math.min(...nextBlock.blocks.map(b => b.y));
+    // 將方塊往上移動，讓最低點從 y=0 開始（棋盤上方）
+    const spawnBlocks = nextBlock.blocks.map(block => ({
+        ...block,
+        y: block.y - minY
+    }));
+
     return {
-        itemBlockBody: nextBlock.blocks,
+        itemBlockBody: spawnBlocks,
         itemBlockType: nextBlock.type,
         itemPreBody: newNextBlocks[0].blocks, // 兼容舊的預覽邏輯
         itemPreType: newNextBlocks[0].type,

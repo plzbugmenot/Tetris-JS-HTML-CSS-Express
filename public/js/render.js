@@ -166,10 +166,29 @@ function updatePlayerBoard(player) {
 
     board.innerHTML = '';
 
-    for (let y = 1; y <= GAME_CONFIG.BOARD_HEIGHT; y++) {
+    // 檢查是否有 y=0 的方塊需要顯示
+    const hasBlocksAtY0 = player.itemBlockBody?.some(b => b.y === 0);
+    const startY = hasBlocksAtY0 ? 0 : 1;
+
+    for (let y = startY; y <= GAME_CONFIG.BOARD_HEIGHT; y++) {
         for (let x = 1; x <= GAME_CONFIG.BOARD_WIDTH; x++) {
             const cell = document.createElement('div');
             cell.className = 'block';
+
+            // 如果是 y=0 的行，只在有方塊的位置顯示
+            if (y === 0) {
+                const currentBlock = player.itemBlockBody?.find(b => b.x === x && b.y === y);
+                if (!currentBlock) {
+                    continue; // 跳過空格子
+                }
+                cell.style.position = 'absolute';
+                cell.style.left = `${(x - 1) * 25}px`;
+                cell.style.top = '-25px'; // 在棋盤上方
+                cell.style.zIndex = '100';
+                cell.classList.add(`block-${player.itemBlockType || 0}`);
+                board.appendChild(cell);
+                continue;
+            }
 
             const currentBlock = player.itemBlockBody?.find(b => b.x === x && b.y === y);
             if (currentBlock) {

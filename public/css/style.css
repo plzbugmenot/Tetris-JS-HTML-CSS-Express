@@ -98,6 +98,8 @@ body {
   grid-template-columns: repeat(10, 1fr);
   border: 3px solid #474747;
   border-radius: 5px;
+  position: relative; /* 支援絕對定位的上方方塊 */
+  overflow: visible; /* 讓上方的方塊能顯示出來 */
 }
 
 /* Block styles */

@@ -122,11 +122,15 @@ function addUser(socketID, userName, who, playerType = config.PLAYER_TYPE_CHALLE
         exp: 0,
         expToNextLevel: config.EXP_LEVEL_THRESHOLDS[0] || 500,
 
-        // Current block
-        itemBlockBody: firstDomino.blocks,
-        itemBlockType: firstDomino.type,
-
-        // Kept for potential compatibility, but nextBlocks is primary
+        // Current block - 讓第一個方塊也從上方進入
+        itemBlockBody: (() => {
+            const minY = Math.min(...firstDomino.blocks.map(b => b.y));
+            return firstDomino.blocks.map(block => ({
+                ...block,
+                y: block.y - minY
+            }));
+        })(),
+        itemBlockType: firstDomino.type,        // Kept for potential compatibility, but nextBlocks is primary
         itemPreBody: secondDomino.blocks,
         itemPreType: secondDomino.type,
 
@@ -258,7 +262,12 @@ function resetAllPlayers(playersToReset = users) {
         user.score = 0;
         user.exp = 0;
         user.expToNextLevel = config.EXP_LEVEL_THRESHOLDS[0] || 500;
-        user.itemBlockBody = firstDomino.blocks;
+        // 讓重置後的方塊也從上方進入
+        const minY = Math.min(...firstDomino.blocks.map(b => b.y));
+        user.itemBlockBody = firstDomino.blocks.map(block => ({
+            ...block,
+            y: block.y - minY
+        }));
         user.itemBlockType = firstDomino.type;
         user.itemPreBody = secondDomino.blocks;
         user.itemPreType = secondDomino.type;
