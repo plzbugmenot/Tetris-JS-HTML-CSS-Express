@@ -281,7 +281,7 @@ function handleStartGame(io, socket) {
     console.log(`🎮 遊戲開始！模式: ${challengers.length === 1 ? '單機' : '多人'}`);
     gameState.setGameState(config.GAME);
     gameState.resetAllPlayers(challengers);
-    
+
     // 記錄遊戲開始時間，給玩家緩衝期
     gameStartTime = Date.now();
 
@@ -300,7 +300,7 @@ function handleStartGame(io, socket) {
         processAttacksAndBroadcasts(io, updatedUsers);
 
         gameState.updateAllUsers(updatedUsers);
-        
+
         // 給玩家 2 秒的緩衝期，避免立即檢查遊戲結束
         if (Date.now() - gameStartTime > 2000) {
             checkGameOver(io);
@@ -406,13 +406,13 @@ function endGame(io, message) {
     console.log(`🏁 遊戲結束: ${message}`);
     gameState.setGameState(config.READY);
     gameStartTime = null; // 重置遊戲開始時間
-    
+
     // 清理之前的自動重啟定時器
     if (autoRestartTimer) {
         clearTimeout(autoRestartTimer);
         autoRestartTimer = null;
     }
-    
+
     if (gameBroadcast) {
         clearInterval(gameBroadcast);
         gameBroadcast = null;
@@ -420,7 +420,12 @@ function endGame(io, message) {
 
     io.emit('allPlayersGameOver', {
         message: message,
-        players: gameState.getChallengers().map(u => ({ userName: u.userName, score: u.score || 0 }))
+        players: gameState.getChallengers().map(u => ({
+            userName: u.userName,
+            score: u.score || 0,
+            level: u.level || 0,
+            who: u.who || u.playerId || 'USER1'
+        }))
     });
 
     // 設置新的自動重啟定時器
@@ -474,25 +479,25 @@ function handlePlayerDisconnect(io, socket) {
  */
 function cleanup() {
     console.log('🧹 清理服務器資源...');
-    
+
     // 清理遊戲廣播定時器
     if (gameBroadcast) {
         clearInterval(gameBroadcast);
         gameBroadcast = null;
         console.log('✅ 遊戲廣播定時器已清理');
     }
-    
+
     // 清理自動重啟定時器
     if (autoRestartTimer) {
         clearTimeout(autoRestartTimer);
         autoRestartTimer = null;
         console.log('✅ 自動重啟定時器已清理');
     }
-    
+
     // 重置遊戲狀態
     gameState.setGameState(config.READY);
     gameStartTime = null;
-    
+
     console.log('✅ 所有資源已清理完成');
 }
 
