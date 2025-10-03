@@ -280,7 +280,11 @@ function clearLines(player) {
     }
 
     if (clearedLines.length === 0) {
-        return { itemGroundBlock: player.itemGroundBlock, linesCleared: 0 };
+        return {
+            itemGroundBlock: player.itemGroundBlock,
+            linesCleared: 0,
+            clearedLineNumbers: []
+        };
     }
 
     let newBoard = player.itemGroundBlock.filter(block => !clearedLines.includes(block.y));

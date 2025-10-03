@@ -428,8 +428,10 @@ export function playLineClearAnimation(socketID, lineNumbers) {
 }
 
 window.addEventListener('playLineClearAnimation', (event) => {
-    const { socketID, lineNumbers } = event.detail;
-    playLineClearAnimation(socketID, lineNumbers);
+    const { socketID, lineNumbers } = event.detail || {};
+    if (socketID && lineNumbers && lineNumbers.length > 0) {
+        playLineClearAnimation(socketID, lineNumbers);
+    }
 });
 
 window.addEventListener('playAttackAnimation', (event) => {

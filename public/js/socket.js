@@ -203,14 +203,17 @@ function setupSocketListeners() {
 
     // 幸運事件
     socket.on('luckyEvent', (data) => {
-        console.log(`🎉 幸運事件！${data.userName} 獲得 ${data.eventName}！經驗 × ${data.multiplier}`);
+        const userName = data.userName || '未知玩家';
+        const multiplier = data.multiplier || 1;
+        const gainedExp = data.gainedExp || 0;
+        console.log(`🎉 幸運事件！${userName} 獲得 ${data.eventName}！經驗 × ${multiplier}`);
 
         // 顯示幸運事件特效
-        UI.showLuckyEventNotification(data.socketID, data.eventName, data.eventColor, data.gainedExp);
+        UI.showLuckyEventNotification(data.socketID, data.eventName, data.eventColor, gainedExp);
 
         // 如果是自己，顯示特別提示
         if (data.socketID === mySocketId) {
-            UI.showMessage(`🎉 ${data.eventName}！經驗 × ${data.multiplier}！`, 'success');
+            UI.showMessage(`🎉 ${data.eventName}！經驗 × ${multiplier}！`, 'success');
         }
     });
 

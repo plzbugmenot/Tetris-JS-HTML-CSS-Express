@@ -361,7 +361,7 @@ export function showLuckyEventNotification(socketID, eventName, eventColor, gain
     `;
     luckyNotif.innerHTML = `
         <div>${eventName}!</div>
-        <div style="font-size: 1.5rem; margin-top: 0.5rem;">+${gainedExp} EXP</div>
+        <div style="font-size: 1.5rem; margin-top: 0.5rem;">+${gainedExp || 0} EXP</div>
     `;
 
     playerContainer.appendChild(luckyNotif);

@@ -300,13 +300,21 @@ function processAttacksAndBroadcasts(io, users) {
 
         io.emit('lineCleared', {
             socketID: attacker.socketID,
+            userName: attacker.userName,
             lineNumbers: attacker.clearedLineNumbers,
+            linesCleared: attacker.clearedLineNumbers.length,
+            combo: attacker.combo || 1,
+            gainedExp: attacker.gainedExp || 0
         });
 
         if (attacker.luckyEvent) {
             io.emit('luckyEvent', {
                 socketID: attacker.socketID,
+                userName: attacker.userName,
                 eventName: attacker.luckyEvent.name,
+                eventColor: attacker.luckyEvent.color,
+                multiplier: attacker.luckyEvent.multiplier,
+                gainedExp: attacker.gainedExp || 0
             });
         }
         if (attacker.leveledUp) {
@@ -389,7 +397,7 @@ function endGame(io, message) {
         if (gameState.getChallengers().length === 1) {
             const player = gameState.getChallengers()[0];
             const playerSocket = io.sockets.sockets.get(player.socketID);
-            if(playerSocket) handleStartGame(io, playerSocket);
+            if (playerSocket) handleStartGame(io, playerSocket);
         }
     }, 5000);
 }
