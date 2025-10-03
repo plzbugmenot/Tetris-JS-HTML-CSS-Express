@@ -86,13 +86,17 @@ function isGameOver(groundBlock) {
  */
 function checkCollision(blockBody, groundBlock) {
     for (let block of blockBody) {
+        // 允許 y=0（棋盤上方），但不能超出左右邊界和底部
         if (block.x < 1 || block.x > config.BOARD_SIZE_WIDTH ||
-            block.y < 1 || block.y > config.BOARD_SIZE_HEIGHT) {
+            block.y > config.BOARD_SIZE_HEIGHT) {
             return true;
         }
-        for (let ground of groundBlock) {
-            if (block.x === ground.x && block.y === ground.y) {
-                return true;
+        // 只有在可見區域內才檢查與地面方塊的碰撞
+        if (block.y >= 1) {
+            for (let ground of groundBlock) {
+                if (block.x === ground.x && block.y === ground.y) {
+                    return true;
+                }
             }
         }
     }
@@ -162,7 +166,7 @@ function moveBlockRight(player) {
 }
 
 /**
- * 方塊旋轉
+ * 方塊旋轉（支援 Wall Kick）
  * @param {Object} player - 玩家對象
  * @returns {Object} 更新後的玩家對象
  */
@@ -181,9 +185,30 @@ function rotateBlock(player) {
         };
     });
 
-    if (!checkCollision(rotatedBlock, player.itemGroundBlock)) {
-        return { ...player, itemBlockBody: rotatedBlock };
+    // Wall Kick 嘗試順序：原位 -> 右移 -> 左移 -> 上移 -> 右移+上移 -> 左移+上移
+    const kickTests = [
+        { dx: 0, dy: 0 },   // 原位
+        { dx: 1, dy: 0 },   // 右移
+        { dx: -1, dy: 0 },  // 左移
+        { dx: 0, dy: -1 },  // 上移
+        { dx: 1, dy: -1 },  // 右移+上移
+        { dx: -1, dy: -1 }, // 左移+上移
+        { dx: 2, dy: 0 },   // 右移2格（用於I方塊）
+        { dx: -2, dy: 0 },  // 左移2格（用於I方塊）
+    ];
+
+    for (const kick of kickTests) {
+        const testBlock = rotatedBlock.map(block => ({
+            x: block.x + kick.dx,
+            y: block.y + kick.dy
+        }));
+
+        if (!checkCollision(testBlock, player.itemGroundBlock)) {
+            return { ...player, itemBlockBody: testBlock };
+        }
     }
+
+    // 所有 Wall Kick 都失敗，不旋轉
     return player;
 }
 
