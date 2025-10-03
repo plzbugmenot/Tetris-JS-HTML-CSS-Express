@@ -71,6 +71,7 @@ function setupSocketListeners() {
             UI.showMessage('🎮 單機模式，遊戲即將開始...', 'success');
             // 隱藏開始按鈕（單機模式自動開始）
             UI.hideStartButton();
+            UI.hideJoinChallengeButton(); // 單人模式也不需要加入挑戰按鈕
         }
         // 觀戰者模式：顯示觀戰提示和加入挑戰按鈕
         else if (myPlayerType === 'SPECTATOR') {
@@ -82,6 +83,7 @@ function setupSocketListeners() {
         else {
             UI.updateRoomStatus(data.challengers, data.spectators, maxPlayers, 'multi');
             UI.showStartButton();
+            UI.hideJoinChallengeButton(); // 挑戰者不應該看到加入挑戰按鈕
         }
     });
 
