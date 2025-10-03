@@ -45,11 +45,12 @@ function initializeGame() {
         handleGameOver
     );
 
-    // 初始化鍵盤控制
+    // 初始化鍵盤控制 (新增 holdBlock)
     Keyboard.initKeyboard(
         Socket.moveBlock,
         Socket.rotateBlock,
-        Socket.dropBlock
+        Socket.dropBlock,
+        Socket.holdBlock // 新增 hold 功能
     );
 
     // 顯示控制說明
@@ -71,7 +72,7 @@ function handleGameStateUpdate(data) {
     Render.renderAllPlayers(allPlayers, mySocketId);
 
     // Debug: 觀察遊戲狀態
-    console.log('GameState:', gameState);
+    // console.log('GameState:', gameState);
 
     if (gameState === GAME_STATES.GAME) {
         // 只有遊戲進行中才渲染方塊
@@ -107,7 +108,6 @@ function handleGameOver(data) {
     console.log('🏁 遊戲結束，排行榜顯示中...', data);
 
     // 2. 呼叫 ui.js 裡的函式來顯示排行榜
-    //    (這一步確認您的程式碼已經在做了)
     UI.showGameOverScreen(data);
 
     // 3. 設定一個計時器，在排行榜顯示一段時間後執行動作
@@ -119,7 +119,7 @@ function handleGameOver(data) {
         console.log('🔄 正在重新整理頁面...');
         location.reload();
 
-    }, 5000); // 5000 毫秒 = 5 秒。您可以根據需要調整這個時間
+    }, 10000); // 10 秒後刷新
 }
 
 // ==================== 全局函數 (供 HTML 調用) ====================
@@ -142,11 +142,10 @@ window.requestStartGame = function () {
 };
 
 /**
- * 加入挑戰並直接開始遊戲 (由 HTML 按鈕調用)
+ * 加入挑戰 (由 HTML 按鈕調用)
  */
 window.requestJoinChallenge = function () {
     Socket.joinChallenge();
-    Socket.startGame(); // 加入挑戰後直接開始遊戲
 };
 
 // ==================== 啟動遊戲 ====================

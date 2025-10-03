@@ -11,6 +11,148 @@ body {
   font-family: "Arial", sans-serif;
 }
 
+/* 遊戲主區域 (三欄式佈局) */
+.game-area {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+
+.left-panel,
+.right-panel {
+  width: 120px; /* 根據圖片調整寬度 */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.panel-header {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ffd700;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+/* Hold and Next Containers */
+.hold-container,
+.next-container {
+  background-color: #000;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 2px solid #474747;
+}
+
+.hold-board {
+  width: 100%;
+  height: 100px; /* 4 blocks tall */
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.next-board {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.next-piece-container {
+  width: 100%;
+  height: 100px; /* 4 blocks tall */
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Stats Container */
+.stats-container {
+  background-color: #000;
+  color: #fff;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 2px solid #474747;
+  font-size: 0.9rem;
+}
+
+.stats-container p {
+  margin: 0.2rem 0;
+}
+
+/* Main game board adjustments */
+.game-board {
+  background-color: #000;
+  width: 250px; /* 10 blocks * 25px */
+  height: 525px; /* 21 blocks * 25px */
+  display: grid;
+  grid-template-rows: repeat(21, 1fr);
+  grid-template-columns: repeat(10, 1fr);
+  border: 3px solid #474747;
+  border-radius: 5px;
+}
+
+/* Block styles */
+.block,
+.hold-block,
+.next-block {
+  width: 25px;
+  height: 25px;
+  box-sizing: border-box;
+  border: 1px solid #333;
+}
+
+/* Color styles for blocks */
+.block-0,
+.hold-block.block-0,
+.next-block.block-0 {
+  background-color: #ff0d72;
+}
+.block-1,
+.hold-block.block-1,
+.next-block.block-1 {
+  background-color: #0dc2ff;
+}
+.block-2,
+.hold-block.block-2,
+.next-block.block-2 {
+  background-color: #0dff72;
+}
+.block-3,
+.hold-block.block-3,
+.next-block.block-3 {
+  background-color: #f538ff;
+}
+.block-4,
+.hold-block.block-4,
+.next-block.block-4 {
+  background-color: #ff8e0d;
+}
+.block-5,
+.hold-block.block-5,
+.next-block.block-5 {
+  background-color: #ffe138;
+}
+.block-6,
+.hold-block.block-6,
+.next-block.block-6 {
+  background-color: #3877ff;
+}
+.block-ground {
+  background-color: #888;
+}
+.block-send {
+  background-color: #ff4444;
+}
+
 /* 註冊區域 */
 #register {
   position: fixed;
@@ -179,72 +321,6 @@ body {
   color: #ffd700;
 }
 
-/* 預覽方塊區域 */
-.pre-game-board {
-  background-color: #1a1a1a;
-  width: 200px;
-  height: 60px;
-  display: grid;
-  grid-template-rows: repeat(3, 1fr);
-  grid-template-columns: repeat(10, 1fr);
-  border: 2px solid #474747;
-  border-radius: 5px;
-  margin-bottom: 0.5rem;
-}
-
-/* 主遊戲棋盤 */
-.game-board {
-  background-color: #000;
-  width: 200px;
-  height: 420px;
-  display: grid;
-  grid-template-rows: repeat(21, 1fr);
-  grid-template-columns: repeat(10, 1fr);
-  border: 3px solid #474747;
-  border-radius: 5px;
-}
-
-/* 方塊樣式 */
-.block {
-  border: 1px solid #333;
-}
-
-.block-0 {
-  background-color: #ff0d72;
-}
-
-.block-1 {
-  background-color: #0dc2ff;
-}
-
-.block-2 {
-  background-color: #0dff72;
-}
-
-.block-3 {
-  background-color: #f538ff;
-}
-
-.block-4 {
-  background-color: #ff8e0d;
-}
-
-.block-5 {
-  background-color: #ffe138;
-}
-
-.block-6 {
-  background-color: #3877ff;
-}
-
-.block-ground {
-  background-color: #888;
-}
-
-.block-send {
-  background-color: #ff4444;
-}
-
 /* 消行動畫效果 */
 .line-clearing {
   animation: clearLineFlash 1s ease-in-out !important;
@@ -338,14 +414,13 @@ body {
 }
 
 @keyframes attackFlash {
-
   0%,
   100% {
     box-shadow: none;
   }
 
   50% {
-    box-shadow: 0 0 30px #FF4444, inset 0 0 20px #FF4444;
+    box-shadow: 0 0 30px #ff4444, inset 0 0 20px #ff4444;
   }
 }
 
@@ -355,7 +430,6 @@ body {
 }
 
 @keyframes defendFlash {
-
   0%,
   100% {
     transform: translateX(0);
@@ -414,223 +488,6 @@ body {
   }
 }
 
-/* 舊的樣式保留以兼容 */
-
-.state-board {
-  width: 200px;
-  min-width: 200px;
-  display: flex;
-  flex-direction: column;
-  color: #eeeeee;
-  font-size: 30px;
-  gap: 1rem;
-  justify-content: space-between;
-}
-
-.state-name,
-.state-level {
-  display: flex;
-  flex-direction: row;
-}
-
-.state-name {
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.state-level {
-  height: 200px;
-  justify-content: space-between;
-}
-
-.level-item {
-  color: #eeeeee;
-  margin: 0;
-  height: 20px;
-}
-
-#user1-title,
-#user2-title {
-  color: #eeeeee;
-  /* font-size: 40px; */
-}
-
-#user1-level,
-#user2-level {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 1rem;
-}
-
-#state-start {
-  display: flex;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-}
-
-.state-text {
-  color: #eeeeee;
-  text-align: center;
-  font-size: 32px;
-}
-
-#game-board-other {
-  background-color: black;
-  width: 200px;
-  height: 420px;
-  min-width: 200px;
-  min-height: 420px;
-  display: grid;
-  grid-template-rows: repeat(21, 1fr);
-  grid-template-columns: repeat(10, 1fr);
-  border: 3px solid #474747;
-}
-
-#pre-game-board {
-  background-color: black;
-  width: 200px;
-  height: 60px;
-  min-width: 200px;
-  min-height: 60px;
-  display: grid;
-  grid-template-rows: repeat(3, 1fr);
-  grid-template-columns: repeat(10, 1fr);
-  /* border: 3px solid #eeeeee; */
-}
-
-.pre-state-board {
-  width: 200px;
-  min-width: 200px;
-}
-
-#pre-game-board-other {
-  background-color: black;
-  width: 200px;
-  height: 60px;
-  min-width: 200px;
-  min-height: 60px;
-  display: grid;
-  grid-template-rows: repeat(3, 1fr);
-  grid-template-columns: repeat(10, 1fr);
-  /* border: 3px solid #eeeeee; */
-}
-
-.game-body {
-  display: flex;
-  flex-direction: column;
-  /* gap: 1rem; */
-}
-
-.top-board,
-.main-board {
-  display: flex;
-  flex-direction: row;
-}
-
-#footer-board {
-  width: 600px;
-  height: 80px;
-  min-width: 600px;
-  min-height: 80px;
-  display: grid;
-  grid-template-rows: repeat(4, 1fr);
-  grid-template-columns: repeat(30, 1fr);
-  /* border: 3px solid #eeeeee; */
-}
-
-.tank {
-  background-color: rgb(255, 0, 0);
-  border: 1px solid rgb(255, 78, 175);
-}
-
-#register {
-  margin-top: 3rem;
-  margin-bottom: 3rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.registerBtn {
-  background-color: black;
-  color: #eeeeee;
-  border-radius: 0.5rem;
-  border: 1px solid #eeeeee;
-  width: 140px;
-  /* 原本120px，增加寬度 */
-  height: 50px;
-  font-size: 22px;
-  margin-top: 10px;
-  white-space: nowrap;
-  /* 防止文字換行 */
-}
-
-.registerBtn:hover {
-  cursor: pointer;
-  background-color: #292929;
-}
-
-#name {
-  font-size: 22px;
-  width: 120px;
-  height: 50px;
-  border-radius: 0.5rem;
-  background-color: black;
-  color: #eeeeee;
-  border-bottom: 1px solid #eeeeee;
-  text-align: center;
-}
-
-.domino-1 {
-  background-color: rgb(255, 17, 0);
-  border: 1px solid rgb(255, 101, 90);
-}
-
-.domino-2 {
-  background-color: rgb(0, 81, 255);
-  border: 1px solid rgb(129, 173, 255);
-}
-
-.domino-3 {
-  background-color: rgb(174, 0, 255);
-  border: 1px solid rgb(195, 90, 255);
-}
-
-.domino-4 {
-  background-color: rgb(73, 73, 73);
-  border: 1px solid rgb(134, 134, 134);
-}
-
-.domino-5 {
-  background-color: rgb(255, 115, 0);
-  border: 1px solid rgb(255, 184, 90);
-}
-
-.domino-6 {
-  background-color: rgb(165, 255, 243);
-  border: 1px solid rgb(90, 222, 255);
-}
-
-.domino-7 {
-  background-color: rgb(43, 255, 0);
-  border: 1px solid rgb(159, 255, 156);
-}
-
-/* send state block */
-
-.domino-8 {
-  background-color: #646464;
-  border: 1px solid #333333;
-}
-
-.init-block {
-  background-color: #1c2a6b;
-  border: 1px solid #2a40a5;
-}
-
 /* 淘汰玩家樣式 */
 .player-container.eliminated {
   opacity: 0.5;
@@ -654,7 +511,6 @@ body {
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     transform: translate(-50%, -50%) scale(1);

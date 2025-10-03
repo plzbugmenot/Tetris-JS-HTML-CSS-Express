@@ -37,7 +37,7 @@ const DOMINO_SHAPES = {
             { x: 5, y: 1 },
             { x: 7, y: 1 },
             { x: 6, y: 1 },
-            { x: 5, y: 2 },
+            { x: 6, y: 2 },
         ]
     },
     L: {  // L 字形
@@ -55,7 +55,7 @@ const DOMINO_SHAPES = {
             { x: 5, y: 2 },
             { x: 7, y: 2 },
             { x: 6, y: 2 },
-            { x: 6, y: 1 },
+            { x: 5, y: 1 },
         ]
     },
     S: {  // S 字形
@@ -102,41 +102,54 @@ function getRandomDomino() {
  * @param {string} playerType - 玩家類型 (CHALLENGER/SPECTATOR)
  */
 function addUser(socketID, userName, who, playerType = config.PLAYER_TYPE_CHALLENGER) {
-    const firstDomino = getRandomDomino();
-    const secondDomino = getRandomDomino();
+    // 產生初始方塊佇列 (1個當前 + 4個預覽)
+    const initialPieces = [];
+    for (let i = 0; i < 5; i++) {
+        initialPieces.push(getRandomDomino());
+    }
+
+    const firstDomino = initialPieces.shift();
+    const secondDomino = initialPieces[0]; // The next block
 
     const newUser = {
         socketID,
         userName,
         who,
-        playerType,                              // 玩家類型（挑戰者/觀戰者）
+        playerType,
         state: playerType === config.PLAYER_TYPE_SPECTATOR ? config.SPECTATOR : config.READY,
         level: 0,
         score: 0,
-        exp: 0,                                  // 當前經驗值
-        expToNextLevel: config.EXP_LEVEL_THRESHOLDS[0] || 500, // 升級所需經驗
+        exp: 0,
+        expToNextLevel: config.EXP_LEVEL_THRESHOLDS[0] || 500,
 
-        // 使用原始屬性名稱以匹配前端
-        itemBlockBody: firstDomino.blocks,       // 當前方塊
-        itemBlockType: firstDomino.type,         // 當前方塊類型
-        itemPreBody: secondDomino.blocks,        // 下一個方塊
-        itemPreType: secondDomino.type,          // 下一個方塊類型
-        itemGroundBlock: [],                     // 已放置的方塊
-        itemLastBlock: [],                       // 最後消除的方塊
+        // Current block
+        itemBlockBody: firstDomino.blocks,
+        itemBlockType: firstDomino.type,
 
-        itemIsNeccessaryBlock: false,            // 是否需要生成新方塊
+        // Kept for potential compatibility, but nextBlocks is primary
+        itemPreBody: secondDomino.blocks,
+        itemPreType: secondDomino.type,
+
+        itemGroundBlock: [],
+        itemLastBlock: [],
+        itemIsNeccessaryBlock: false,
 
         actionTime: config.ACTION_INIT_TIME,
         sendTime: 1,
 
-        // Combo 和攻擊系統
-        combo: 0,                                // 當前 Combo 數
-        lastClearTime: null,                     // 上次消行時間
-        pendingGarbageLines: 0,                  // 待接收的垃圾行數
+        combo: 0,
+        lastClearTime: null,
+        pendingGarbageLines: 0,
+
+        // New properties for Hold and multi-Next
+        holdBlock: null,      // { type, blocks }
+        canHold: true,        // Flag to allow holding once per drop
+        nextBlocks: initialPieces, // Array of upcoming blocks { type, blocks }
     };
     users.push(newUser);
     return newUser;
 }
+
 
 /**
  * 移除玩家
@@ -202,19 +215,7 @@ function convertToChallenger(socketID) {
     const user = users.find(u => u.socketID === socketID);
     if (user && user.playerType === config.PLAYER_TYPE_SPECTATOR) {
         user.playerType = config.PLAYER_TYPE_CHALLENGER;
-        user.state = config.READY;
-
-        // 重新初始化遊戲數據
-        const firstDomino = getRandomDomino();
-        const secondDomino = getRandomDomino();
-        user.itemBlockBody = firstDomino.blocks;
-        user.itemBlockType = firstDomino.type;
-        user.itemPreBody = secondDomino.blocks;
-        user.itemPreType = secondDomino.type;
-        user.itemGroundBlock = [];
-        user.level = 0;
-        user.score = 0;
-
+        resetAllPlayers([user]); // Reset just this user
         return true;
     }
     return false;
@@ -235,12 +236,22 @@ function setGameState(state) {
 }
 
 /**
- * 重置所有玩家狀態
+ * 重置指定或所有玩家的狀態
+ * @param {Array} playersToReset - (Optional) An array of user objects to reset. If not provided, all users are reset.
  */
-function resetAllPlayers() {
-    users.forEach(user => {
-        const firstDomino = getRandomDomino();
-        const secondDomino = getRandomDomino();
+function resetAllPlayers(playersToReset = users) {
+    playersToReset.forEach(user => {
+        // Don't reset spectators unless they are being converted
+        if (user.playerType === config.PLAYER_TYPE_SPECTATOR && user.state === config.SPECTATOR) {
+            return;
+        }
+
+        const initialPieces = [];
+        for (let i = 0; i < 5; i++) {
+            initialPieces.push(getRandomDomino());
+        }
+        const firstDomino = initialPieces.shift();
+        const secondDomino = initialPieces[0];
 
         user.state = config.READY;
         user.level = 0;
@@ -259,8 +270,14 @@ function resetAllPlayers() {
         user.combo = 0;
         user.lastClearTime = null;
         user.pendingGarbageLines = 0;
+
+        // Reset hold and next queue
+        user.holdBlock = null;
+        user.canHold = true;
+        user.nextBlocks = initialPieces;
     });
 }
+
 
 module.exports = {
     addUser,

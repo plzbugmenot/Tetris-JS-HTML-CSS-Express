@@ -8,6 +8,7 @@ import { KEY_CODES, DIRECTIONS } from './config.js';
 let onMoveBlock = null;
 let onRotateBlock = null;
 let onDropBlock = null;
+let onHoldBlock = null; // 新增 hold 回調
 let isGameActive = false;
 
 /**
@@ -15,11 +16,13 @@ let isGameActive = false;
  * @param {Function} moveCallback - 移動方塊回調
  * @param {Function} rotateCallback - 旋轉方塊回調
  * @param {Function} dropCallback - 快速下落回調
+ * @param {Function} holdCallback - 暫存方塊回調
  */
-export function initKeyboard(moveCallback, rotateCallback, dropCallback) {
+export function initKeyboard(moveCallback, rotateCallback, dropCallback, holdCallback) {
     onMoveBlock = moveCallback;
     onRotateBlock = rotateCallback;
     onDropBlock = dropCallback;
+    onHoldBlock = holdCallback; // 設置 hold 回調
 
     document.addEventListener('keydown', handleKeyDown);
     console.log('⌨️ 鍵盤控制已初始化');
@@ -38,54 +41,43 @@ export function setGameActive(active) {
  * @param {KeyboardEvent} event - 鍵盤事件
  */
 function handleKeyDown(event) {
-    // 如果遊戲不活躍,不處理
     if (!isGameActive) return;
 
     const key = event.code;
 
-    // 防止箭頭鍵滾動頁面
-    if ([KEY_CODES.ARROW_UP, KEY_CODES.ARROW_DOWN, KEY_CODES.ARROW_LEFT, KEY_CODES.ARROW_RIGHT, KEY_CODES.SPACE].includes(key)) {
+    if ([KEY_CODES.ARROW_UP, KEY_CODES.ARROW_DOWN, KEY_CODES.ARROW_LEFT, KEY_CODES.ARROW_RIGHT, KEY_CODES.SPACE, KEY_CODES.SHIFT_LEFT].includes(key)) {
         event.preventDefault();
     }
 
     switch (key) {
-        // 左移
         case KEY_CODES.ARROW_LEFT:
         case KEY_CODES.KEY_A:
-            if (onMoveBlock) {
-                onMoveBlock(DIRECTIONS.LEFT);
-            }
+            if (onMoveBlock) onMoveBlock(DIRECTIONS.LEFT);
             break;
 
-        // 右移
         case KEY_CODES.ARROW_RIGHT:
         case KEY_CODES.KEY_D:
-            if (onMoveBlock) {
-                onMoveBlock(DIRECTIONS.RIGHT);
-            }
+            if (onMoveBlock) onMoveBlock(DIRECTIONS.RIGHT);
             break;
 
-        // 下移
         case KEY_CODES.ARROW_DOWN:
         case KEY_CODES.KEY_S:
-            if (onMoveBlock) {
-                onMoveBlock(DIRECTIONS.DOWN);
-            }
+            if (onMoveBlock) onMoveBlock(DIRECTIONS.DOWN);
             break;
 
-        // 旋轉
         case KEY_CODES.ARROW_UP:
         case KEY_CODES.KEY_W:
-            if (onRotateBlock) {
-                onRotateBlock();
-            }
+            if (onRotateBlock) onRotateBlock();
             break;
 
-        // 快速下落
         case KEY_CODES.SPACE:
-            if (onDropBlock) {
-                onDropBlock();
-            }
+            if (onDropBlock) onDropBlock();
+            break;
+        
+        // 新增 hold 功能
+        case KEY_CODES.SHIFT_LEFT:
+        case KEY_CODES.KEY_C: // 添加 C 鍵作為備用
+            if (onHoldBlock) onHoldBlock();
             break;
 
         default:
@@ -112,6 +104,7 @@ export function showControls() {
     ⬇️ S / ↓ : 快速下移
     🔄 W / ↑ : 旋轉
     ⚡ 空白鍵 : 瞬間下落
+    HOLD C / Shift: 暫存方塊
   `;
     console.log(controls);
 }

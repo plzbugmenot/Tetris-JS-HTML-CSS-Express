@@ -343,6 +343,18 @@ export function dropBlock() {
 }
 
 /**
+ * 發送暫存方塊指令
+ */
+export function holdBlock() {
+    if (!socket || !mySocketId) return;
+
+    socket.emit('holdBlock', {
+        socketID: mySocketId
+    });
+}
+
+
+/**
  * 獲取當前玩家數據
  */
 export function getMyPlayerData() {
@@ -395,6 +407,7 @@ export default {
     moveBlock,
     rotateBlock,
     dropBlock,
+    holdBlock,
     getMyPlayerData,
     getAllPlayers,
     getMySocketId,
