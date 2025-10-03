@@ -4,16 +4,9 @@
  */
 
 module.exports = {
-    // 伺服器配置
-    PORT: process.env.REACT_APP_SERVER_PORT || 8800,
-    F_PORT: process.env.REACT_APP_CLIENT_PORT || 3500,
+    // 伺服器配置（整合服務器）
+    PORT: process.env.REACT_APP_SERVER_PORT || 3500,
     HOST: process.env.REACT_APP_SERVER_HOST || "localhost",
-
-    // 客戶端連接地址
-    get CLIENT_HOST() {
-        const host = this.HOST;
-        return process.env.REACT_APP_CLIENT_CONNECT_HOST || (host === "0.0.0.0" ? "localhost" : host);
-    },
 
     // 遊戲常數
     BOARD_SIZE_HEIGHT: 21,

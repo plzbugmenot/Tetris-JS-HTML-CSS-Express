@@ -13,21 +13,17 @@ RUN npm ci --only=production
 # 複製應用程式源代碼
 COPY . .
 
-# 暴露端口
-# 8800: Socket.IO 服務器端口
-# 3500: 客戶端靜態文件服務端口
-EXPOSE 8800 3500
+# 暴露端口（整合服務器：靜態文件 + Socket.IO）
+EXPOSE 3500
 
 # 設置環境變量
 ENV NODE_ENV=production
-ENV REACT_APP_SERVER_PORT=8800
-ENV REACT_APP_CLIENT_PORT=3500
+ENV REACT_APP_SERVER_PORT=3500
 ENV REACT_APP_SERVER_HOST=0.0.0.0
-ENV REACT_APP_CLIENT_CONNECT_HOST=localhost
 
 # 健康檢查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3500/', (r) => {if(r.statusCode !== 200) throw new Error('Health check failed')})"
+    CMD node -e "require('http').get('http://localhost:3500/health', (r) => {if(r.statusCode !== 200) throw new Error('Health check failed')})"
 
 # 啟動應用
 CMD ["node", "index.js"]

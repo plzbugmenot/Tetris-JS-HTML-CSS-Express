@@ -22,7 +22,7 @@
     <div id="players-info" style="display: none; text-align: center;">
         <div id="room-status"></div>
         <button id="join-challenge-btn" onclick="requestJoinChallenge()"
-            style="background: #ffd600; color: #222; border: none; border-radius: 5px; padding: 0.8rem 2rem; font-size: 1.2rem; cursor: pointer; margin: 0 auto;">
+            style="display: none; background: #ffd600; color: #222; border: none; border-radius: 5px; padding: 0.8rem 2rem; font-size: 1.2rem; cursor: pointer; margin: 0 auto;">
             加入挑戰
         </button>
     </div>
@@ -60,45 +60,22 @@
     let socket;
     let isSocketReady = false;
 
-    async function connectToServer() {
-        try {
-            // 使用相對路徑獲取配置（會使用當前頁面的 host 和 port）
-            const response = await fetch('/config');
-            const config = await response.json();
+    // 連接到 Socket.IO（自動使用當前頁面的 origin）
+    socket = io();
+    window.socket = socket; // 賦值給 window 以便前端模組訪問
 
-            // 使用配置中的 host 和 port 連接 Socket.IO
-            const socketUrl = `http://${config.host}:${config.port}`;
-            console.log(`Connecting to: ${socketUrl}`);
+    // 監聽連接成功事件
+    socket.on('connect', () => {
+        console.log(`Socket connected successfully to ${window.location.origin}`);
+        isSocketReady = true;
+        // 觸發自定義事件，通知前端模組 socket 已準備好
+        window.dispatchEvent(new CustomEvent('socketReady'));
+    });
 
-            socket = io.connect(socketUrl);
-            window.socket = socket; // 賦值給 window 以便前端模組訪問
-
-            // 監聽連接成功事件
-            socket.on('connect', () => {
-                console.log('Socket connected successfully');
-                isSocketReady = true;
-                // 觸發自定義事件，通知前端模組 socket 已準備好
-                window.dispatchEvent(new CustomEvent('socketReady'));
-            });
-
-        } catch (error) {
-            console.error('Failed to get server config, using fallback:', error);
-            // 如果無法獲取配置，使用環境變數或預設值
-            const fallbackHost = window.location.hostname || 'localhost';
-            const fallbackPort = '8800'; // 使用預設的 socket 伺服器端口
-            socket = io.connect(`http://${fallbackHost}:${fallbackPort}`);
-            window.socket = socket;
-
-            socket.on('connect', () => {
-                console.log('Socket connected successfully (fallback)');
-                isSocketReady = true;
-                window.dispatchEvent(new CustomEvent('socketReady'));
-            });
-        }
-    }
-
-    // 連接到伺服器
-    connectToServer();
+    // 監聽連接錯誤
+    socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+    });
 
     // 記分板拖曳功能
     const scoreboard = document.getElementById('scoreboard');
