@@ -79,8 +79,11 @@ function setupSocketListeners() {
         // 觀戰者模式：顯示觀戰提示和加入挑戰按鈕
         else if (myPlayerType === 'SPECTATOR') {
             UI.updateRoomStatus(data.challengers, data.spectators, maxPlayers, 'spectator');
-            UI.showMessage('👁️ 你正在觀戰，可以點擊「加入挑戰」參與遊戲', 'info');
             UI.showJoinChallengeButton();
+            // 只在初次成為觀戰者或準備狀態時顯示提示
+            if (gameState === GAME_STATES.READY) {
+                UI.showMessage('👁️ 你正在觀戰，可以點擊「加入挑戰」參與遊戲', 'info');
+            }
         }
         // 多人挑戰模式：顯示房間狀態和開始按鈕
         else {
@@ -206,8 +209,22 @@ function setupSocketListeners() {
     // 成為觀戲者
     socket.on('becomeSpectator', (data) => {
         console.log('👀 成為觀戲者:', data);
+
+        // 更新玩家類型
+        myPlayerType = 'SPECTATOR';
+
+        // 顯示訊息和觀戰模式
         UI.showMessage(data.message, 'info');
         UI.switchToSpectatorMode();
+
+        // 顯示加入挑戰按鈕和觀戰提示
+        UI.showJoinChallengeButton();
+        UI.showMessage('👁️ 你正在觀戰，可以點擊「加入挑戰」參與遊戲', 'info');
+
+        // 請求更新房間狀態以正確顯示統計
+        setTimeout(() => {
+            socket.emit('requestRoomStatus');
+        }, 100);
     });
 
     // 準備狀態 - 重置遊戲

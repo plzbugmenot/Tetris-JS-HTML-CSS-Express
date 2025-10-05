@@ -70,6 +70,21 @@ function setupSocketHandlers(io) {
             handleContinueGameResponse(io, socket, data);
         });
 
+        // 請求房間狀態更新
+        socket.on('requestRoomStatus', () => {
+            const challengers = gameState.getChallengers();
+            const spectators = gameState.getSpectators();
+            const allUsers = gameState.getAllUsers();
+
+            socket.emit('gameStateUpdate', {
+                size: allUsers.length,
+                challengers: challengers.length,
+                spectators: spectators.length,
+                maxPlayers: config.MAX_PLAYERS,
+                gameState: gameState.getGameState()
+            });
+        });
+
         // 玩家斷線
         socket.on('disconnect', () => {
             handlePlayerDisconnect(io, socket);
