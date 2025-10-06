@@ -13,6 +13,7 @@ module.exports = {
     BOARD_SIZE_WIDTH: 10,
     FRAME: 20, // 每 20ms 渲染一次 (遊戲主循環頻率)
     ACTION_INIT_TIME: 15, // 方塊自動下落的初始時間 (數值越小下落越快)
+    LOCK_DELAY: 10, // 鎖定延遲時間 (10 * 20ms = 200ms)
     MAX_PLAYERS: 4, // 最大玩家數 (建議 2-8 人)
     TIME_PER_SECOND: 50,
 

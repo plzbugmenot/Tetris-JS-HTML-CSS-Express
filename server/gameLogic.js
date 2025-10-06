@@ -115,26 +115,15 @@ function moveBlockDown(player) {
     }));
 
     if (checkCollision(tmpBlockBody, player.itemGroundBlock)) {
-        const nextBlockData = getNextBlock(player);
-        let updatedStats = player.stats ? { ...player.stats, pieces: player.stats.pieces + 1 } : undefined;
-
-        // Calculate drop time for this piece
-        if (updatedStats && updatedStats.currentPieceStartTime) {
-            const pieceDropTime = Date.now() - updatedStats.currentPieceStartTime;
-            updatedStats.dropTime += pieceDropTime;
-            updatedStats.avgDropTime = updatedStats.pieces > 0 ? Math.round(updatedStats.dropTime / updatedStats.pieces) : 0;
-            updatedStats.currentPieceStartTime = Date.now(); // Reset for next piece
-        }
-
+        // 偵測到碰撞，啟動鎖定延遲
         return {
             ...player,
-            itemGroundBlock: [...player.itemGroundBlock, ...player.itemBlockBody],
-            ...nextBlockData,
-            actionTime: config.ACTION_INIT_TIME,
-            stats: updatedStats
+            isLocking: true,
+            lockDelayTimer: config.LOCK_DELAY
         };
     }
 
+    // 無碰撞，正常下移
     return {
         ...player,
         itemBlockBody: tmpBlockBody,
@@ -154,7 +143,12 @@ function moveBlockLeft(player) {
     }));
 
     if (!checkCollision(tmpBlockBody, player.itemGroundBlock)) {
-        return { ...player, itemBlockBody: tmpBlockBody };
+        let updatedPlayer = { ...player, itemBlockBody: tmpBlockBody };
+        // 如果移動成功時正在鎖定，則重置計時器
+        if (updatedPlayer.isLocking) {
+            updatedPlayer.lockDelayTimer = config.LOCK_DELAY;
+        }
+        return updatedPlayer;
     }
     return player;
 }
@@ -171,7 +165,12 @@ function moveBlockRight(player) {
     }));
 
     if (!checkCollision(tmpBlockBody, player.itemGroundBlock)) {
-        return { ...player, itemBlockBody: tmpBlockBody };
+        let updatedPlayer = { ...player, itemBlockBody: tmpBlockBody };
+        // 如果移動成功時正在鎖定，則重置計時器
+        if (updatedPlayer.isLocking) {
+            updatedPlayer.lockDelayTimer = config.LOCK_DELAY;
+        }
+        return updatedPlayer;
     }
     return player;
 }
@@ -215,7 +214,12 @@ function rotateBlock(player) {
         }));
 
         if (!checkCollision(testBlock, player.itemGroundBlock)) {
-            return { ...player, itemBlockBody: testBlock };
+            let updatedPlayer = { ...player, itemBlockBody: testBlock };
+            // 如果旋轉成功時正在鎖定，則重置計時器
+            if (updatedPlayer.isLocking) {
+                updatedPlayer.lockDelayTimer = config.LOCK_DELAY;
+            }
+            return updatedPlayer;
         }
     }
 
@@ -507,50 +511,107 @@ function processPlayerTick(player) {
         return player;
     }
 
+    // 處理鎖定延遲
+    if (player.isLocking) {
+        const newLockDelayTimer = player.lockDelayTimer - 1;
+
+        // 檢查方塊是否已不再與地面接觸（例如，被玩家移走）
+        const isStillOnGround = checkCollision(player.itemBlockBody.map(b => ({ ...b, y: b.y + 1 })), player.itemGroundBlock);
+        if (!isStillOnGround) {
+            return { ...player, isLocking: false, lockDelayTimer: 0 };
+        }
+
+        // 計時器歸零，鎖定方塊
+        if (newLockDelayTimer <= 0) {
+            // 1. 建立一個包含已鎖定方塊的中間狀態
+            const lockedPlayer = {
+                ...player,
+                itemGroundBlock: [...player.itemGroundBlock, ...player.itemBlockBody],
+                isLocking: false,
+                lockDelayTimer: 0,
+            };
+
+            // 2. 在這個新狀態上執行消行
+            const { itemGroundBlock, linesCleared, clearedLineNumbers } = clearLines(lockedPlayer);
+
+            // 3. 如果沒有消行，只需獲取下一個方塊並返回
+            if (linesCleared === 0) {
+                const nextBlockData = getNextBlock(lockedPlayer);
+                return {
+                    ...lockedPlayer,
+                    ...nextBlockData,
+                    actionTime: config.ACTION_INIT_TIME,
+                };
+            }
+
+            // 4. 如果有消行，則計算分數、等級等
+            const nextBlockData = getNextBlock(lockedPlayer);
+            const newCombo = updateCombo(lockedPlayer, linesCleared);
+            const now = Date.now();
+            const { exp: gainedExp, luckyEvent } = calculateExp(linesCleared, newCombo);
+            const newTotalExp = (lockedPlayer.exp || 0) + gainedExp;
+            const { newLevel, expToNextLevel, leveledUp } = checkLevelUp(lockedPlayer.level, newTotalExp);
+            const baseScore = linesCleared * 100;
+            const comboBonus = newCombo > 1 ? (newCombo - 1) * 50 : 0;
+            const newScore = (lockedPlayer.score || 0) + baseScore + comboBonus;
+            const attackPower = calculateAttackPower(linesCleared, newLevel, newCombo);
+            const newSpeed = Math.max(5, config.ACTION_INIT_TIME - Math.floor(newLevel / 2));
+            const updatedStats = lockedPlayer.stats ? { ...lockedPlayer.stats, currentSpeed: newSpeed, pieces: lockedPlayer.stats.pieces + 1 } : undefined;
+
+            // 5. 返回最終的、完全更新的狀態
+            return {
+                ...lockedPlayer,
+                ...nextBlockData,
+                itemGroundBlock, // 使用消行後的地形
+                level: newLevel,
+                score: newScore,
+                actionTime: newSpeed,
+                stats: updatedStats,
+                exp: newTotalExp,
+                expToNextLevel,
+                combo: newCombo,
+                lastClearTime: now,
+                clearedLineNumbers,
+                attackPower,
+                linesCleared,
+                gainedExp,
+                luckyEvent,
+                leveledUp,
+            };
+        }
+        // 計時器未歸零，繼續倒數
+        return { ...player, lockDelayTimer: newLockDelayTimer };
+    }
+
+    // 正常重力下落
     if (player.actionTime > 0) {
         return { ...player, actionTime: player.actionTime - 1 };
     }
 
-    const movedPlayer = moveBlockDown(player);
-    const { itemGroundBlock, linesCleared, clearedLineNumbers } = clearLines(movedPlayer);
-
-    if (linesCleared === 0) {
-        return movedPlayer;
-    }
-
-    const newCombo = updateCombo(player, linesCleared);
-    const now = Date.now();
-    const { exp: gainedExp, luckyEvent } = calculateExp(linesCleared, newCombo);
-    const newTotalExp = (movedPlayer.exp || 0) + gainedExp;
-    const { newLevel, expToNextLevel, leveledUp } = checkLevelUp(movedPlayer.level, newTotalExp);
-    const baseScore = linesCleared * 100;
-    const comboBonus = newCombo > 1 ? (newCombo - 1) * 50 : 0;
-    const newScore = (movedPlayer.score || 0) + baseScore + comboBonus;
-    const attackPower = calculateAttackPower(linesCleared, newLevel, newCombo);
-
-    // Calculate new speed based on level (faster as level increases)
-    const newSpeed = Math.max(5, config.ACTION_INIT_TIME - Math.floor(newLevel / 2)); // Minimum speed is 5 frames
-    const updatedStats = movedPlayer.stats ? { ...movedPlayer.stats, currentSpeed: newSpeed } : undefined;
-
-    return {
-        ...movedPlayer,
-        itemGroundBlock,
-        level: newLevel,
-        score: newScore,
-        actionTime: newSpeed, // Update action time to new speed
-        stats: updatedStats,
-        exp: newTotalExp,
-        expToNextLevel,
-        combo: newCombo,
-        lastClearTime: now,
-        clearedLineNumbers,
-        attackPower,
-        linesCleared,
-        gainedExp,
-        luckyEvent,
-        leveledUp
-    };
+    return moveBlockDown(player);
 }
+
+module.exports = {
+    getInitialGroundBlocks,
+    isGameOver,
+    checkCollision,
+    moveBlockDown,
+    moveBlockLeft,
+    moveBlockRight,
+    rotateBlock,
+    holdBlock,
+    clearLines,
+    dropBlock,
+    insertBlockToGround,
+    generateGarbageLines,
+    addGarbageLines,
+    calculateAttackPower,
+    updateCombo,
+    calculateExp,
+    checkLevelUp,
+    checkLuckyEvent,
+    processPlayerTick,
+};
 
 module.exports = {
     getInitialGroundBlocks,

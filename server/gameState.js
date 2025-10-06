@@ -141,6 +141,9 @@ function addUser(socketID, userName, who, playerType = config.PLAYER_TYPE_CHALLE
         actionTime: config.ACTION_INIT_TIME,
         sendTime: 1,
 
+        isLocking: false,
+        lockDelayTimer: 0,
+
         combo: 0,
         lastClearTime: null,
         pendingGarbageLines: 0,
