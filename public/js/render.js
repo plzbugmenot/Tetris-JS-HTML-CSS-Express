@@ -25,8 +25,9 @@ function formatTime(seconds = 0) {
  * 渲染所有玩家的棋盤
  * @param {Array} players - 玩家列表
  * @param {string} mySocketId - 我的 Socket ID
+ * @param {boolean} isSpectator - 是否為觀戰者
  */
-export function renderAllPlayers(players, mySocketId) {
+export function renderAllPlayers(players, mySocketId, isSpectator = false) {
     const container = document.getElementById('game-container');
     if (!container) return;
 
@@ -35,7 +36,36 @@ export function renderAllPlayers(players, mySocketId) {
     // 只渲染挑戰者的棋盤（觀戰者不佔用版面）
     const challengers = players.filter(p => p.playerType !== 'SPECTATOR');
 
-    // 設置網格佈局 class
+    // 如果是觀戰者，只顯示當前觀戰目標的棋盤
+    if (isSpectator) {
+        // 使用全域變數來獲取觀戰目標，避免異步導入問題
+        const spectatorTarget = window.currentSpectatorTarget;
+        const targetPlayer = challengers.find(p => p.socketID === spectatorTarget);
+
+        if (targetPlayer) {
+            // 設置為單一棋盤佈局
+            container.className = 'game-container spectator-view';
+            container.classList.add('single-board');
+
+            const playerContainer = createPlayerBoard(targetPlayer, mySocketId);
+            playerContainer.classList.add('spectator-target');
+            container.appendChild(playerContainer);
+        } else if (challengers.length > 0) {
+            // 如果沒有設置觀戰目標，自動選擇第一個挑戰者
+            const firstChallenger = challengers[0];
+            window.currentSpectatorTarget = firstChallenger.socketID;
+
+            container.className = 'game-container spectator-view';
+            container.classList.add('single-board');
+
+            const playerContainer = createPlayerBoard(firstChallenger, mySocketId);
+            playerContainer.classList.add('spectator-target');
+            container.appendChild(playerContainer);
+        }
+        return;
+    }
+
+    // 挑戰者模式：顯示所有挑戰者棋盤
     container.className = 'game-container';
     if (challengers.length > 0) {
         container.classList.add(`players-${challengers.length}`);
@@ -144,8 +174,23 @@ function createPlayerBoard(player, mySocketId) {
 /**
  * 更新所有玩家的棋盤
  * @param {Array} players - 玩家列表
+ * @param {boolean} isSpectator - 是否為觀戰者
  */
-export function updateAllBoards(players) {
+export function updateAllBoards(players, isSpectator = false) {
+    if (isSpectator) {
+        // 觀戰者模式：只更新觀戰目標的棋盤
+        const spectatorTarget = window.currentSpectatorTarget;
+        const targetPlayer = players.find(p => p.socketID === spectatorTarget);
+
+        if (targetPlayer && targetPlayer.playerType !== 'SPECTATOR') {
+            updatePlayerBoard(targetPlayer);
+            updateNextBoard(targetPlayer);
+            updateHoldBoard(targetPlayer);
+        }
+        return;
+    }
+
+    // 挑戰者模式：更新所有挑戰者的棋盤
     players.forEach(player => {
         if (player.playerType === 'SPECTATOR') {
             return;

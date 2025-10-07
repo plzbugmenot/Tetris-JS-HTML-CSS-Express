@@ -68,15 +68,26 @@ function initializeGame() {
 function handleGameStateUpdate(data) {
     const { allPlayers, myPlayerData, gameState, mySocketId } = data;
 
-    // 渲染所有玩家（只顯示靜態資訊，不渲染方塊）
-    Render.renderAllPlayers(allPlayers, mySocketId);
+    // 檢查是否為觀戰者
+    const isSpectator = myPlayerData && myPlayerData.playerType === 'SPECTATOR';
+
+    // 如果是觀戰者且還沒有設置觀戰目標，自動選擇第一個挑戰者
+    if (isSpectator && !Socket.getSpectatorTarget()) {
+        const challengers = allPlayers.filter(p => p.playerType !== 'SPECTATOR');
+        if (challengers.length > 0) {
+            Socket.setSpectatorTarget(challengers[0].socketID);
+        }
+    }
+
+    // 渲染玩家棋盤
+    Render.renderAllPlayers(allPlayers, mySocketId, isSpectator);
 
     // Debug: 觀察遊戲狀態
     // console.log('GameState:', gameState);
 
     if (gameState === GAME_STATES.GAME) {
         // 只有遊戲進行中才渲染方塊
-        Render.updateAllBoards(allPlayers);
+        Render.updateAllBoards(allPlayers, isSpectator);
 
         // 只有挑戰者可以操作，觀戰者不能操作
         const isChallenger = myPlayerData && myPlayerData.playerType !== 'SPECTATOR';

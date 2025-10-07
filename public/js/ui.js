@@ -5,6 +5,84 @@
 
 import { DOM_IDS, GAME_STATES } from './config.js';
 
+// 防抖變數
+let updateScoreboardTimer = null;
+
+/**
+ * 處理計分板玩家點擊事件
+ * @param {string} socketId - 被點擊玩家的Socket ID
+ * @param {string} userName - 被點擊玩家的名稱
+ */
+function handlePlayerClick(socketId, userName) {
+    // 檢查當前用戶是否為觀戰者
+    if (window.currentPlayerType !== 'SPECTATOR') {
+        console.log('⚠️ 非觀戰者無法切換觀戰目標');
+        return; // 非觀戰者不處理點擊
+    }
+
+    // 檢查是否點擊的是當前已經觀戰的目標
+    if (window.currentSpectatorTarget === socketId) {
+        console.log('ℹ️ 已在觀戰此玩家，無需切換');
+        return; // 已經在觀戰這個玩家了，不需要切換
+    }
+
+    console.log(`🎯 觀戰者點擊切換目標: ${userName} (${socketId})`);
+
+    // 立即更新全域變數，防止重複點擊
+    const previousTarget = window.currentSpectatorTarget;
+    window.currentSpectatorTarget = socketId;
+
+    // 立即高亮選中的玩家
+    highlightSelectedPlayer(socketId);
+
+    // 更新socket模組中的觀戰目標
+    import('./socket.js').then(Socket => {
+        Socket.setSpectatorTarget(socketId);
+
+        // 顯示切換訊息
+        showMessage(`👀 切換觀戰目標到: ${userName}`, 'success');
+
+        console.log(`✅ 觀戰目標已切換: ${previousTarget} → ${socketId}`);
+    }).catch(error => {
+        console.error('❌ 切換觀戰目標失敗:', error);
+        // 如果失敗，恢復之前的目標
+        window.currentSpectatorTarget = previousTarget;
+        highlightSelectedPlayer(previousTarget);
+    });
+}/**
+ * 檢查當前用戶是否為觀戰者
+ * @returns {boolean}
+ */
+function checkIfSpectator() {
+    // 通過全域變數檢查（在socket.js中設置）
+    return window.currentPlayerType === 'SPECTATOR';
+}
+
+/**
+ * 高亮選中的玩家項目
+ * @param {string} selectedSocketId - 選中的玩家Socket ID
+ */
+function highlightSelectedPlayer(selectedSocketId) {
+    // 檢查是否已經選中同一個玩家，避免重複設置
+    const currentSelected = document.querySelector('.score-item.selected');
+    if (currentSelected && currentSelected.dataset.playerId === selectedSocketId) {
+        return; // 已經選中了，不需要重複操作
+    }
+
+    // 移除所有已選中的高亮
+    document.querySelectorAll('.score-item.selected').forEach(item => {
+        item.classList.remove('selected');
+        item.style.borderLeft = '';
+    });
+
+    // 為選中的玩家添加高亮
+    const selectedItem = document.querySelector(`[data-player-id="${selectedSocketId}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('selected');
+        selectedItem.style.borderLeft = '4px solid #4CAF50';
+    }
+}
+
 /**
  * 顯示訊息
  * @param {string} message - 訊息內容
@@ -129,6 +207,21 @@ export function updateScoreboard(players, gameState) {
 
     if (!scoreboard || !scoreList) return;
 
+    // 使用防抖機制，避免過於頻繁的更新
+    if (updateScoreboardTimer) {
+        clearTimeout(updateScoreboardTimer);
+    }
+
+    updateScoreboardTimer = setTimeout(() => {
+        updateScoreboardInternal(players, gameState, scoreboard, scoreList);
+    }, 100); // 100ms 防抖延遲
+}
+
+/**
+ * 內部計分板更新函數
+ */
+function updateScoreboardInternal(players, gameState, scoreboard, scoreList) {
+
     if (gameState === GAME_STATES.GAME && players.length > 0) {
         scoreboard.style.display = 'block';
 
@@ -152,6 +245,33 @@ export function updateScoreboard(players, gameState) {
                 scoreItem.classList.add('spectator');
                 scoreItem.style.opacity = '0.7';
                 scoreItem.style.borderLeft = '3px solid #FF9800';
+            } else {
+                // 為挑戰者添加點擊功能（供觀戰者使用）
+                scoreItem.classList.add('clickable-player');
+                scoreItem.dataset.playerId = player.socketID;
+
+                // 只有觀戰者才能點擊切換
+                if (window.currentPlayerType === 'SPECTATOR') {
+                    scoreItem.style.cursor = 'pointer';
+
+                    // 使用單一事件處理器，避免重複綁定
+                    scoreItem.onclick = function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handlePlayerClick(player.socketID, player.userName);
+                    };
+
+                    // 添加hover效果
+                    scoreItem.onmouseenter = function () {
+                        this.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
+                        this.style.transform = 'scale(1.02)';
+                    };
+
+                    scoreItem.onmouseleave = function () {
+                        this.style.backgroundColor = '';
+                        this.style.transform = '';
+                    };
+                }
             }
 
             // 如果玩家被淘汰，添加 eliminated 類
@@ -175,6 +295,17 @@ export function updateScoreboard(players, gameState) {
 
             scoreList.appendChild(scoreItem);
         });
+
+        // 如果是觀戰者，高亮當前觀戰目標（延遲執行避免閃爍）
+        if (window.currentPlayerType === 'SPECTATOR') {
+            const currentTarget = window.currentSpectatorTarget;
+            if (currentTarget) {
+                // 使用 requestAnimationFrame 確保 DOM 更新完成後再設置高亮
+                requestAnimationFrame(() => {
+                    highlightSelectedPlayer(currentTarget);
+                });
+            }
+        }
     } else {
         scoreboard.style.display = 'none';
     }

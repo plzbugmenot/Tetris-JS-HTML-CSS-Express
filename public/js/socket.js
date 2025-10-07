@@ -16,6 +16,7 @@ let myPlayerData = null;
 let maxPlayers = 4;
 let gameState = GAME_STATES.READY;
 let myPlayerType = 'CHALLENGER'; // 我的玩家類型
+let spectatorTarget = null; // 觀戰者當前觀看的目標玩家ID
 
 // 回調函數
 let onGameStateUpdate = null;
@@ -67,6 +68,8 @@ function setupSocketListeners() {
         console.log(`👤 新玩家加入: ${userName}`, data);
         maxPlayers = data.maxPlayers || 4;
         myPlayerType = data.playerType || 'CHALLENGER';
+        // 暴露玩家類型到全域變數供UI模組使用
+        window.currentPlayerType = myPlayerType;
 
         // 單人模式：第一位玩家，自動開始
         if (data.size === 1 && data.challengers === 1) {
@@ -82,7 +85,7 @@ function setupSocketListeners() {
             UI.showJoinChallengeButton();
             // 只在初次成為觀戰者或準備狀態時顯示提示
             if (gameState === GAME_STATES.READY) {
-                UI.showMessage('👁️ 你正在觀戰，可以點擊「加入挑戰」參與遊戲', 'info');
+                UI.showMessage('👁️ 你正在觀戰，點擊計分板中的玩家可以切換觀戰目標', 'info');
             }
         }
         // 多人挑戰模式：顯示房間狀態和開始按鈕
@@ -212,6 +215,7 @@ function setupSocketListeners() {
 
         // 更新玩家類型
         myPlayerType = 'SPECTATOR';
+        window.currentPlayerType = myPlayerType;
 
         // 顯示訊息和觀戰模式
         UI.showMessage(data.message, 'info');
@@ -219,7 +223,7 @@ function setupSocketListeners() {
 
         // 顯示加入挑戰按鈕和觀戰提示
         UI.showJoinChallengeButton();
-        UI.showMessage('👁️ 你正在觀戰，可以點擊「加入挑戰」參與遊戲', 'info');
+        UI.showMessage('👁️ 你正在觀戰，點擊計分板中的玩家可以切換觀戰目標', 'info');
 
         // 請求更新房間狀態以正確顯示統計
         setTimeout(() => {
@@ -339,6 +343,7 @@ function setupSocketListeners() {
     socket.on('joinChallengeSuccess', (data) => {
         console.log('✅ 成功加入挑戰！', data);
         myPlayerType = 'CHALLENGER';
+        window.currentPlayerType = myPlayerType;
         UI.hideJoinChallengeButton();
         UI.showMessage(data.message, 'success');
         UI.showStartButton();
@@ -490,6 +495,33 @@ export function getMyPlayerType() {
 }
 
 /**
+ * 設置觀戰目標
+ * @param {string} targetSocketId - 目標玩家的 Socket ID
+ */
+export function setSpectatorTarget(targetSocketId) {
+    spectatorTarget = targetSocketId;
+    window.currentSpectatorTarget = targetSocketId; // 暴露到全域變數
+    console.log(`👀 切換觀戰目標到: ${targetSocketId}`);
+
+    // 如果當前是遊戲中狀態，立即更新顯示
+    if (gameState === GAME_STATES.GAME && onGameStateUpdate) {
+        onGameStateUpdate({
+            allPlayers,
+            myPlayerData,
+            gameState,
+            mySocketId
+        });
+    }
+}
+
+/**
+ * 獲取當前觀戰目標
+ */
+export function getSpectatorTarget() {
+    return spectatorTarget;
+}
+
+/**
  * 發送繼續遊玩回應
  * @param {boolean} continueGame - 是否繼續遊玩
  */
@@ -516,4 +548,6 @@ export default {
     getMySocketId,
     getGameState,
     getMyPlayerType,
+    setSpectatorTarget,
+    getSpectatorTarget,
 };
