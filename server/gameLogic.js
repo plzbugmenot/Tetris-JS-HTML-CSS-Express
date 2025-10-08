@@ -325,6 +325,7 @@ function clearLines(player) {
 function dropBlock(player) {
     let currentPlayer = { ...player };
 
+    // 尋找最終落地位置
     while (true) {
         const tmpBlockBody = currentPlayer.itemBlockBody.map(block => ({
             x: block.x,
@@ -332,28 +333,83 @@ function dropBlock(player) {
         }));
 
         if (checkCollision(tmpBlockBody, currentPlayer.itemGroundBlock)) {
-            const nextBlockData = getNextBlock(currentPlayer);
-            let updatedStats = currentPlayer.stats ? { ...currentPlayer.stats, pieces: currentPlayer.stats.pieces + 1 } : undefined;
-
-            // Calculate drop time for this piece (instant drop)
-            if (updatedStats && updatedStats.currentPieceStartTime) {
-                const pieceDropTime = Date.now() - updatedStats.currentPieceStartTime;
-                updatedStats.dropTime += pieceDropTime;
-                updatedStats.avgDropTime = updatedStats.pieces > 0 ? Math.round(updatedStats.dropTime / updatedStats.pieces) : 0;
-                updatedStats.currentPieceStartTime = Date.now(); // Reset for next piece
-            }
-
-            return {
-                ...currentPlayer,
-                itemGroundBlock: [...currentPlayer.itemGroundBlock, ...currentPlayer.itemBlockBody],
-                ...nextBlockData,
-                actionTime: config.ACTION_INIT_TIME,
-                stats: updatedStats
-            };
+            // 找到落地位置，現在 currentPlayer.itemBlockBody 是最終位置
+            break;
         }
 
+        // 繼續下移
         currentPlayer = { ...currentPlayer, itemBlockBody: tmpBlockBody };
     }
+
+    // 1. 建立一個包含已鎖定方塊的中間狀態
+    const lockedPlayer = {
+        ...currentPlayer,
+        itemGroundBlock: [...currentPlayer.itemGroundBlock, ...currentPlayer.itemBlockBody],
+        isLocking: false,
+        lockDelayTimer: 0,
+    };
+
+    // 2. 在這個新狀態上執行消行
+    const { itemGroundBlock, linesCleared, clearedLineNumbers } = clearLines(lockedPlayer);
+
+    // 3. 如果沒有消行，只需獲取下一個方塊並返回
+    if (linesCleared === 0) {
+        const nextBlockData = getNextBlock(lockedPlayer);
+        let updatedStats = lockedPlayer.stats ? { ...lockedPlayer.stats, pieces: lockedPlayer.stats.pieces + 1 } : undefined;
+        if (updatedStats && updatedStats.currentPieceStartTime) {
+            const pieceDropTime = Date.now() - updatedStats.currentPieceStartTime;
+            updatedStats.dropTime += pieceDropTime;
+            updatedStats.avgDropTime = updatedStats.pieces > 0 ? Math.round(updatedStats.dropTime / updatedStats.pieces) : 0;
+            updatedStats.currentPieceStartTime = Date.now(); // Reset for next piece
+        }
+        return {
+            ...lockedPlayer,
+            ...nextBlockData,
+            actionTime: config.ACTION_INIT_TIME,
+            stats: updatedStats,
+        };
+    }
+
+    // 4. 如果有消行，則計算分數、等級等
+    const nextBlockData = getNextBlock(lockedPlayer);
+    const newCombo = updateCombo(lockedPlayer, linesCleared);
+    const now = Date.now();
+    const { exp: gainedExp, luckyEvent } = calculateExp(linesCleared, newCombo);
+    const newTotalExp = (lockedPlayer.exp || 0) + gainedExp;
+    const { newLevel, expToNextLevel, leveledUp } = checkLevelUp(lockedPlayer.level, newTotalExp);
+    const baseScore = linesCleared * 100;
+    const comboBonus = newCombo > 1 ? (newCombo - 1) * 50 : 0;
+    const newScore = (lockedPlayer.score || 0) + baseScore + comboBonus;
+    const attackPower = calculateAttackPower(linesCleared, newLevel, newCombo);
+    const newSpeed = Math.max(5, config.ACTION_INIT_TIME - Math.floor(newLevel / 2));
+    let updatedStats = lockedPlayer.stats ? { ...lockedPlayer.stats, currentSpeed: newSpeed, pieces: lockedPlayer.stats.pieces + 1 } : undefined;
+    if (updatedStats && updatedStats.currentPieceStartTime) {
+        const pieceDropTime = Date.now() - updatedStats.currentPieceStartTime;
+        updatedStats.dropTime += pieceDropTime;
+        updatedStats.avgDropTime = updatedStats.pieces > 0 ? Math.round(updatedStats.dropTime / updatedStats.pieces) : 0;
+        updatedStats.currentPieceStartTime = Date.now(); // Reset for next piece
+    }
+
+    // 5. 返回最終的、完全更新的狀態
+    return {
+        ...lockedPlayer,
+        ...nextBlockData,
+        itemGroundBlock, // 使用消行後的地形
+        level: newLevel,
+        score: newScore,
+        actionTime: newSpeed,
+        stats: updatedStats,
+        exp: newTotalExp,
+        expToNextLevel,
+        combo: newCombo,
+        lastClearTime: now,
+        clearedLineNumbers,
+        attackPower,
+        linesCleared,
+        gainedExp,
+        luckyEvent,
+        leveledUp,
+    };
 }
 
 
