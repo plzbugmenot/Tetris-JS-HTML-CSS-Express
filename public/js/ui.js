@@ -234,12 +234,10 @@ export function updateScoreboard(players, gameState) {
 function updateScoreboardInternal(players, gameState, scoreboard, scoreList) {
 
     if (gameState === GAME_STATES.GAME && players.length > 0) {
-        scoreboard.style.display = 'block';
+        scoreboard.style.display = 'flex';
 
-        // 清空計分板
         scoreList.innerHTML = '';
 
-        // 按分數排序玩家（分數相同則按等級）
         const sortedPlayers = [...players].sort((a, b) => {
             const scoreDiff = (b.score || 0) - (a.score || 0);
             if (scoreDiff !== 0) return scoreDiff;
@@ -249,32 +247,21 @@ function updateScoreboardInternal(players, gameState, scoreboard, scoreList) {
         const myId = window.socket.id;
         const playerType = window.currentPlayerType;
 
-        sortedPlayers.forEach(player => {
+        sortedPlayers.forEach((player, index) => {
             const scoreItem = document.createElement('div');
-            scoreItem.className = 'score-item';
+            const rank = index + 1;
+            scoreItem.className = `score-item rank-${rank}`;
 
             const isSpectator = player.playerType === 'SPECTATOR';
             const isSelf = player.socketID === myId;
 
             if (isSpectator) {
                 scoreItem.classList.add('spectator');
-                scoreItem.style.opacity = '0.7';
-                scoreItem.style.borderLeft = '3px solid #FF9800';
             } else {
-                // 觀戰者或挑戰者都可以點擊其他玩家
                 if (playerType === 'SPECTATOR' || (playerType === 'CHALLENGER' && !isSelf)) {
                     scoreItem.classList.add('clickable-player');
                     scoreItem.dataset.playerId = player.socketID;
-                    scoreItem.style.cursor = 'pointer';
-
-                    scoreItem.onclick = function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handlePlayerClick(player.socketID, player.userName);
-                    };
-
-                    scoreItem.onmouseenter = () => { scoreItem.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; };
-                    scoreItem.onmouseleave = () => { scoreItem.style.backgroundColor = ''; };
+                    scoreItem.onclick = () => handlePlayerClick(player.socketID, player.userName);
                 }
             }
 
@@ -283,33 +270,62 @@ function updateScoreboardInternal(players, gameState, scoreboard, scoreList) {
             }
 
             const playerIcon = isSpectator ? '👁️' : (isSelf ? '👑' : '🎮');
-            const playerStatus = isSpectator ? '觀戰中' : player.who;
+            const attackLines = player.attack || 0;
+            const attackWidth = Math.min(attackLines * 10, 100);
 
             scoreItem.innerHTML = `
-                <div class="player-info">
-                  <div class="player-name-score">${playerIcon} ${player.userName}</div>
-                  <div class="player-status-score" style="color: ${isSpectator ? '#FF9800' : '#aaa'}">${playerStatus}</div>
+                <div class="player-rank">${rank}</div>
+                <div class="mini-board-container">
+                    <div class="mini-board" id="mini-board-${player.socketID}">
+                        ${renderMiniBoard(player)}
+                    </div>
+                    <div class="attack-bar">
+                        <div class="attack-line" style="width: ${attackWidth}%;"></div>
+                    </div>
                 </div>
-                <div class="player-stats">
-                  <div class="player-level-score">Lv ${player.level || 0}</div>
-                  <div class="player-score">分數: ${player.score || 0}</div>
+                <div class="player-details">
+                    <div class="player-name-score">${playerIcon} ${player.userName}</div>
+                    <div class="player-stats-score">
+                        <span>Lv ${player.level || 0}</span>
+                        <span>${player.score || 0}</span>
+                    </div>
                 </div>
             `;
 
             scoreList.appendChild(scoreItem);
         });
 
-        // 高亮當前觀戰目標
         const targetId = playerType === 'SPECTATOR' ? window.currentSpectatorTarget : window.challengeSpectatorTarget;
         if (targetId) {
-            requestAnimationFrame(() => {
-                highlightSelectedPlayer(targetId);
-            });
+            requestAnimationFrame(() => highlightSelectedPlayer(targetId));
         }
 
     } else {
         scoreboard.style.display = 'none';
     }
+}
+
+/**
+ * 渲染迷你棋盤
+ * @param {Object} player - 玩家數據
+ * @returns {string} - 組成迷你棋盤的 HTML 字符串
+ */
+function renderMiniBoard(player) {
+    let boardHtml = '';
+    const ground = player.itemGroundBlock || [];
+    // 為了效能，我們只渲染頂部 20 行
+    for (let y = 1; y <= 20; y++) {
+        for (let x = 1; x <= 10; x++) {
+            const block = ground.find(b => b.x === x && b.y === y);
+            if (block) {
+                // 這裡我們不區分顏色，只用一個通用色塊表示，以提高渲染效率
+                boardHtml += '<div class="mini-block" style="background-color: #555;"></div>';
+            } else {
+                boardHtml += '<div class="mini-block"></div>';
+            }
+        }
+    }
+    return boardHtml;
 }
 
 /**

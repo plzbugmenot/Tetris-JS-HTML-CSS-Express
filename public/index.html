@@ -27,15 +27,17 @@
         </button>
     </div>
 
-    <!-- 左側計分板 -->
-    <div id="scoreboard" style="display: none;">
-        <h3>🏆 計分板</h3>
-        <div id="score-list"></div>
-    </div>
+    <div id="main-content">
+        <!-- 動態遊戲區域 -->
+        <div id="game-container" class="game-container">
+            <!-- 玩家棋盤將動態生成在這裡 -->
+        </div>
 
-    <!-- 動態遊戲區域 -->
-    <div id="game-container" class="game-container">
-        <!-- 玩家棋盤將動態生成在這裡 -->
+        <!-- 右側計分板 -->
+        <div id="scoreboard" style="display: none;">
+            <h3>🏆 計分板</h3>
+            <div id="score-list"></div>
+        </div>
     </div>
 
     <!-- 遊戲結束畫面 -->
@@ -77,28 +79,7 @@
         console.error('Socket connection error:', error);
     });
 
-    // 記分板拖曳功能
-    const scoreboard = document.getElementById('scoreboard');
-    let isDragging = false, offsetX = 0, offsetY = 0;
 
-    scoreboard && scoreboard.addEventListener('mousedown', function (e) {
-        isDragging = true;
-        offsetX = e.clientX - scoreboard.offsetLeft;
-        offsetY = e.clientY - scoreboard.offsetTop;
-        scoreboard.style.transition = 'none';
-    });
-
-    document.addEventListener('mousemove', function (e) {
-        if (isDragging) {
-            scoreboard.style.left = (e.clientX - offsetX) + 'px';
-            scoreboard.style.top = (e.clientY - offsetY) + 'px';
-        }
-    });
-
-    document.addEventListener('mouseup', function () {
-        isDragging = false;
-        scoreboard && (scoreboard.style.transition = '');
-    });
 </script>
 
 </html>
