@@ -1,6 +1,8 @@
 # TETRIS (Javascript, Express, Node)
 
-```diagrams
+![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg) ![License](https://img.shields.io/badge/license-ISC-blue.svg)
+
+```
 ████████╗███████╗████████╗██████╗ ██╗███████╗
 ╚══██╔══╝██╔════╝╚══██╔══╝██╔══██╗██║██╔════╝ 
    ██║   █████╗     ██║   ██████╔╝██║███████╗
@@ -26,13 +28,20 @@ A real-time multiplayer Tetris game built with Node.js and Socket.IO, supporting
 
 ### Local Development
 
-```bash
-# Install dependencies
-npm install
+1. **Install dependencies**
 
-# Start the server (Default: localhost:8800)
-npm start
-```
+    ```bash
+    npm install
+    ```
+
+2. **Start the server**
+
+    ```bash
+    npm start
+    ```
+
+3. **Play the game**
+    Open your browser and go to `http://localhost:3500`.
 
 ### Docker Deployment
 
@@ -86,6 +95,8 @@ docker run -p 3500:3500 -p 8800:8800 tetris-game
     - ➡️ `D` or `→`: Move Right
     - ⬇️ `S` or `↓`: Soft Drop
     - 🔄 `W` or `↑`: Rotate
+    - ⚡ `Space`: Hard Drop
+    - 💾 `C` or `Shift`: Hold
 5. **Elimination**:
     - You are eliminated when blocks stack to the top.
     - Eliminated players are shown on the scoreboard.
@@ -118,6 +129,10 @@ REACT_APP_SERVER_HOST=localhost   # Server hostname
 - HTML, CSS
 - Socket.IO
 - Node.js, Express.js
+
+## License
+
+This project is licensed under the ISC License.
 
 ## 🎉 Latest Release: v2.0 (2025)
 
