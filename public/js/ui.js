@@ -4,6 +4,7 @@
  */
 
 import { DOM_IDS, GAME_STATES } from './config.js';
+import { renderAllPlayers } from './render.js'; // 導入渲染函數
 
 // 防抖變數
 let updateScoreboardTimer = null;
@@ -14,41 +15,48 @@ let updateScoreboardTimer = null;
  * @param {string} userName - 被點擊玩家的名稱
  */
 function handlePlayerClick(socketId, userName) {
-    // 檢查當前用戶是否為觀戰者
-    if (window.currentPlayerType !== 'SPECTATOR') {
-        console.log('⚠️ 非觀戰者無法切換觀戰目標');
-        return; // 非觀戰者不處理點擊
+    const playerType = window.currentPlayerType;
+    const myId = window.socket.id;
+
+    if (playerType === 'SPECTATOR') {
+        if (window.currentSpectatorTarget === socketId) {
+            console.log('ℹ️ 已在觀戰此玩家，無需切換');
+            return;
+        }
+        console.log(`🎯 觀戰者點擊切換目標: ${userName} (${socketId})`);
+        const previousTarget = window.currentSpectatorTarget;
+        window.currentSpectatorTarget = socketId;
+        highlightSelectedPlayer(socketId);
+
+        import('./socket.js').then(Socket => {
+            Socket.setSpectatorTarget(socketId);
+            showMessage(`👀 切換觀戰目標到: ${userName}`, 'success');
+        }).catch(error => {
+            console.error('❌ 切換觀戰目標失敗:', error);
+            window.currentSpectatorTarget = previousTarget;
+            highlightSelectedPlayer(previousTarget);
+        });
+
+    } else if (playerType === 'CHALLENGER') {
+        if (socketId === myId) {
+            console.log('不能選擇自己');
+            return; // 不能選擇自己
+        }
+        if (window.challengeSpectatorTarget === socketId) {
+            console.log('ℹ️ 已在顯示此對手，無需切換');
+            return;
+        }
+        console.log(`🎯 挑戰者切換觀察對手: ${userName} (${socketId})`);
+        window.challengeSpectatorTarget = socketId;
+        highlightSelectedPlayer(socketId);
+        showMessage(`顯示對手: ${userName}`, 'info');
+
+        // 直接觸發重新渲染
+        const players = window.gameGlobalState.players; // 假設全域有玩家狀態
+        if (players) {
+            renderAllPlayers(players, myId, false);
+        }
     }
-
-    // 檢查是否點擊的是當前已經觀戰的目標
-    if (window.currentSpectatorTarget === socketId) {
-        console.log('ℹ️ 已在觀戰此玩家，無需切換');
-        return; // 已經在觀戰這個玩家了，不需要切換
-    }
-
-    console.log(`🎯 觀戰者點擊切換目標: ${userName} (${socketId})`);
-
-    // 立即更新全域變數，防止重複點擊
-    const previousTarget = window.currentSpectatorTarget;
-    window.currentSpectatorTarget = socketId;
-
-    // 立即高亮選中的玩家
-    highlightSelectedPlayer(socketId);
-
-    // 更新socket模組中的觀戰目標
-    import('./socket.js').then(Socket => {
-        Socket.setSpectatorTarget(socketId);
-
-        // 顯示切換訊息
-        showMessage(`👀 切換觀戰目標到: ${userName}`, 'success');
-
-        console.log(`✅ 觀戰目標已切換: ${previousTarget} → ${socketId}`);
-    }).catch(error => {
-        console.error('❌ 切換觀戰目標失敗:', error);
-        // 如果失敗，恢復之前的目標
-        window.currentSpectatorTarget = previousTarget;
-        highlightSelectedPlayer(previousTarget);
-    });
 }/**
  * 檢查當前用戶是否為觀戰者
  * @returns {boolean}
@@ -202,6 +210,9 @@ export function hideJoinChallengeButton() {
  * @param {string} gameState - 遊戲狀態
  */
 export function updateScoreboard(players, gameState) {
+    // 將玩家列表存到全域，方便點擊時調用
+    window.gameGlobalState = { ...window.gameGlobalState, players };
+
     const scoreboard = document.getElementById(DOM_IDS.SCOREBOARD);
     const scoreList = document.getElementById(DOM_IDS.SCORE_LIST);
 
@@ -235,77 +246,67 @@ function updateScoreboardInternal(players, gameState, scoreboard, scoreList) {
             return (b.level || 0) - (a.level || 0);
         });
 
+        const myId = window.socket.id;
+        const playerType = window.currentPlayerType;
+
         sortedPlayers.forEach(player => {
             const scoreItem = document.createElement('div');
             scoreItem.className = 'score-item';
 
-            // 觀戰者添加特殊樣式
             const isSpectator = player.playerType === 'SPECTATOR';
+            const isSelf = player.socketID === myId;
+
             if (isSpectator) {
                 scoreItem.classList.add('spectator');
                 scoreItem.style.opacity = '0.7';
                 scoreItem.style.borderLeft = '3px solid #FF9800';
             } else {
-                // 為挑戰者添加點擊功能（供觀戰者使用）
-                scoreItem.classList.add('clickable-player');
-                scoreItem.dataset.playerId = player.socketID;
-
-                // 只有觀戰者才能點擊切換
-                if (window.currentPlayerType === 'SPECTATOR') {
+                // 觀戰者或挑戰者都可以點擊其他玩家
+                if (playerType === 'SPECTATOR' || (playerType === 'CHALLENGER' && !isSelf)) {
+                    scoreItem.classList.add('clickable-player');
+                    scoreItem.dataset.playerId = player.socketID;
                     scoreItem.style.cursor = 'pointer';
 
-                    // 使用單一事件處理器，避免重複綁定
                     scoreItem.onclick = function (e) {
                         e.preventDefault();
                         e.stopPropagation();
                         handlePlayerClick(player.socketID, player.userName);
                     };
 
-                    // 添加hover效果
-                    scoreItem.onmouseenter = function () {
-                        this.style.backgroundColor = 'rgba(76, 175, 80, 0.2)';
-                        this.style.transform = 'scale(1.02)';
-                    };
-
-                    scoreItem.onmouseleave = function () {
-                        this.style.backgroundColor = '';
-                        this.style.transform = '';
-                    };
+                    scoreItem.onmouseenter = () => { scoreItem.style.backgroundColor = 'rgba(76, 175, 80, 0.2)'; };
+                    scoreItem.onmouseleave = () => { scoreItem.style.backgroundColor = ''; };
                 }
             }
 
-            // 如果玩家被淘汰，添加 eliminated 類
             if (player.state === GAME_STATES.LOSE || player.state === GAME_STATES.ELIMINATED) {
                 scoreItem.classList.add('eliminated');
             }
 
-            const playerIcon = isSpectator ? '👁️' : '🎮';
+            const playerIcon = isSpectator ? '👁️' : (isSelf ? '👑' : '🎮');
             const playerStatus = isSpectator ? '觀戰中' : player.who;
 
             scoreItem.innerHTML = `
-        <div class="player-info">
-          <div class="player-name-score">${playerIcon} ${player.userName}</div>
-          <div class="player-status-score" style="color: ${isSpectator ? '#FF9800' : '#aaa'}">${playerStatus}</div>
-        </div>
-        <div class="player-stats">
-          <div class="player-level-score">Lv ${player.level || 0}</div>
-          <div class="player-score">分數: ${player.score || 0}</div>
-        </div>
-      `;
+                <div class="player-info">
+                  <div class="player-name-score">${playerIcon} ${player.userName}</div>
+                  <div class="player-status-score" style="color: ${isSpectator ? '#FF9800' : '#aaa'}">${playerStatus}</div>
+                </div>
+                <div class="player-stats">
+                  <div class="player-level-score">Lv ${player.level || 0}</div>
+                  <div class="player-score">分數: ${player.score || 0}</div>
+                </div>
+            `;
 
             scoreList.appendChild(scoreItem);
         });
 
-        // 如果是觀戰者，高亮當前觀戰目標（延遲執行避免閃爍）
-        if (window.currentPlayerType === 'SPECTATOR') {
-            const currentTarget = window.currentSpectatorTarget;
-            if (currentTarget) {
-                // 使用 requestAnimationFrame 確保 DOM 更新完成後再設置高亮
-                requestAnimationFrame(() => {
-                    highlightSelectedPlayer(currentTarget);
-                });
-            }
+        // 高亮當前觀戰目標
+        const targetId = playerType === 'SPECTATOR' ? window.currentSpectatorTarget : window.challengeSpectatorTarget;
+        if (targetId) {
+            requestAnimationFrame(() => {
+                highlightSelectedPlayer(targetId);
+            });
         }
+
     } else {
         scoreboard.style.display = 'none';
     }

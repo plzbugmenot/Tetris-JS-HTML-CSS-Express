@@ -66,11 +66,19 @@ export function renderAllPlayers(players, mySocketId, isSpectator = false) {
     }
 
     // 挑戰者模式：改為雙視圖佈局
-    container.className = 'game-container challenge-view'; // 新增 challenge-view class
+    container.className = 'game-container challenge-view';
 
     const myPlayer = challengers.find(p => p.socketID === mySocketId);
-    // 過濾掉自己，找到第一個對手
-    const opponent = challengers.find(p => p.socketID !== mySocketId);
+
+    // 決定在次要視圖中顯示哪個對手
+    let opponent = null;
+    if (window.challengeSpectatorTarget) {
+        opponent = challengers.find(p => p.socketID === window.challengeSpectatorTarget);
+    }
+    // 如果沒有指定目標，或目標不存在，則選擇第一個非自己的玩家
+    if (!opponent) {
+        opponent = challengers.find(p => p.socketID !== mySocketId);
+    }
 
     // 創建主玩家視圖
     if (myPlayer) {
@@ -81,16 +89,19 @@ export function renderAllPlayers(players, mySocketId, isSpectator = false) {
         container.appendChild(mainPlayerView);
     }
 
-    // 創建次要視圖 (對手或排行榜)
+    // 創建次要視圖 (對手)
     const secondaryView = document.createElement('div');
     secondaryView.id = 'secondary-view';
     
     if (opponent) {
         const opponentContainer = createPlayerBoard(opponent, mySocketId);
         secondaryView.appendChild(opponentContainer);
+    } else if (challengers.length > 1) {
+        // 如果沒有對手，但有其他玩家，顯示提示
+        secondaryView.innerHTML = '<div class="player-container"><h3>點擊計分板切換對手</h3></div>';
     } else {
-        // 如果沒有對手，可以顯示提示或其他內容
-        secondaryView.innerHTML = '<p>正在等待對手...</p>';
+        // 只有自己一個人
+        secondaryView.innerHTML = '<div class="player-container"><h3>正在等待對手...</h3></div>';
     }
     container.appendChild(secondaryView);
 }
