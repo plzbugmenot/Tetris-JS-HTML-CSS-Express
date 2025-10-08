@@ -218,14 +218,8 @@ export function updateScoreboard(players, gameState) {
 
     if (!scoreboard || !scoreList) return;
 
-    // 使用防抖機制，避免過於頻繁的更新
-    if (updateScoreboardTimer) {
-        clearTimeout(updateScoreboardTimer);
-    }
-
-    updateScoreboardTimer = setTimeout(() => {
-        updateScoreboardInternal(players, gameState, scoreboard, scoreList);
-    }, 100); // 100ms 防抖延遲
+    // 直接更新，移除防抖
+    updateScoreboardInternal(players, gameState, scoreboard, scoreList);
 }
 
 /**
@@ -233,11 +227,10 @@ export function updateScoreboard(players, gameState) {
  */
 function updateScoreboardInternal(players, gameState, scoreboard, scoreList) {
 
-    if (gameState === GAME_STATES.GAME && players.length > 0) {
-        scoreboard.style.display = 'flex';
+    scoreboard.style.display = 'flex';
+    scoreList.innerHTML = '';
 
-        scoreList.innerHTML = '';
-
+    if (players && players.length > 0) {
         const sortedPlayers = [...players].sort((a, b) => {
             const scoreDiff = (b.score || 0) - (a.score || 0);
             if (scoreDiff !== 0) return scoreDiff;
@@ -299,9 +292,6 @@ function updateScoreboardInternal(players, gameState, scoreboard, scoreList) {
         if (targetId) {
             requestAnimationFrame(() => highlightSelectedPlayer(targetId));
         }
-
-    } else {
-        scoreboard.style.display = 'none';
     }
 }
 

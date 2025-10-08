@@ -248,11 +248,11 @@ function setupSocketListeners() {
         // 清空遊戲棋盤
         Render?.clearGameContainer?.();
 
-        // 隱藏計分板
-        const scoreboard = document.getElementById('scoreboard');
-        if (scoreboard) {
-            scoreboard.style.display = 'none';
-        }
+        // 隱藏計分板 (暫時註解掉，讓計分板保持顯示)
+        // const scoreboard = document.getElementById('scoreboard');
+        // if (scoreboard) {
+        //     scoreboard.style.display = 'none';
+        // }
 
         // 重新顯示玩家資訊區域
         const playersInfo = document.getElementById('players-info');
