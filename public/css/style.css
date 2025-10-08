@@ -785,6 +785,40 @@ body {
   justify-content: space-between;
 }
 
+/* ==================== 挑戰模式：雙視圖佈局 ==================== */
+
+.game-container.challenge-view {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+#main-player-view {
+  flex: 2;
+  display: flex;
+  justify-content: center;
+  min-width: 400px; /* 確保主視圖不會太小 */
+}
+
+#secondary-view {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 300px; /* 確保次要視圖不會太小 */
+}
+
+/* 讓次要視圖的棋盤稍微小一點 */
+#secondary-view .player-container {
+  transform: scale(0.9);
+}
+
+#secondary-view .player-container.other-player {
+    border-color: #2196f3; /* 給對手一個不同的邊框顏色 */
+}
+
+
 /* ==================== 觀戰者專用樣式 ==================== */
 
 /* 觀戰者模式：單一棋盤居中顯示 */

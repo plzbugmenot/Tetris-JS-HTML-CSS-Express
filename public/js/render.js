@@ -65,17 +65,34 @@ export function renderAllPlayers(players, mySocketId, isSpectator = false) {
         return;
     }
 
-    // 挑戰者模式：顯示所有挑戰者棋盤
-    container.className = 'game-container';
-    if (challengers.length > 0) {
-        container.classList.add(`players-${challengers.length}`);
+    // 挑戰者模式：改為雙視圖佈局
+    container.className = 'game-container challenge-view'; // 新增 challenge-view class
+
+    const myPlayer = challengers.find(p => p.socketID === mySocketId);
+    // 過濾掉自己，找到第一個對手
+    const opponent = challengers.find(p => p.socketID !== mySocketId);
+
+    // 創建主玩家視圖
+    if (myPlayer) {
+        const mainPlayerView = document.createElement('div');
+        mainPlayerView.id = 'main-player-view';
+        const playerContainer = createPlayerBoard(myPlayer, mySocketId);
+        mainPlayerView.appendChild(playerContainer);
+        container.appendChild(mainPlayerView);
     }
 
-    // 為每個挑戰者創建棋盤
-    challengers.forEach(player => {
-        const playerContainer = createPlayerBoard(player, mySocketId);
-        container.appendChild(playerContainer);
-    });
+    // 創建次要視圖 (對手或排行榜)
+    const secondaryView = document.createElement('div');
+    secondaryView.id = 'secondary-view';
+    
+    if (opponent) {
+        const opponentContainer = createPlayerBoard(opponent, mySocketId);
+        secondaryView.appendChild(opponentContainer);
+    } else {
+        // 如果沒有對手，可以顯示提示或其他內容
+        secondaryView.innerHTML = '<p>正在等待對手...</p>';
+    }
+    container.appendChild(secondaryView);
 }
 
 /**
