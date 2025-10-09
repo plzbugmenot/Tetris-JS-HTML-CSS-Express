@@ -134,13 +134,13 @@ export function updateRoomStatus(challengers, spectators, maxPlayers, mode = 'mu
         } else if (mode === 'spectator') {
             roomStatus.innerHTML = `
                 👁️ <span style="color: #FF9800;">觀戰模式</span><br>
-                <span style="font-size: 0.9rem;">挑戰者: ${challengers}/${maxPlayers} | 觀戰者: ${spectators}</span>
+                <span style="font-size: 0.9rem;">挑戰者: ${challengers} | 觀戰者: ${spectators}</span>
             `;
             roomStatus.style.fontSize = '1.2rem';
         } else {
             roomStatus.innerHTML = `
                 🎮 <span style="color: #4CAF50;">多人挑戰</span><br>
-                <span style="font-size: 0.9rem;">挑戰者: ${challengers}/${maxPlayers} | 觀戰者: ${spectators}</span>
+                <span style="font-size: 0.9rem;">挑戰者: ${challengers} | 觀戰者: ${spectators}</span>
             `;
             roomStatus.style.fontSize = '1.2rem';
         }

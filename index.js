@@ -90,7 +90,7 @@ function startApplication() {
     console.log(`   地址: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`);
     console.log(`   靜態文件: ✓`);
     console.log(`   Socket.IO: ✓`);
-    console.log(`   最大玩家數: ${config.MAX_PLAYERS}`);
+    console.log(`   挑戰者人數: 無限制`);
     console.log(`\n` + '='.repeat(60));
     console.log(`🚀 請在瀏覽器中打開: http://localhost:${port}`);
     console.log('='.repeat(60) + '\n');
@@ -101,16 +101,16 @@ function startApplication() {
   // 優雅關閉
   process.on('SIGINT', () => {
     console.log('\n👋 接收到關閉信號，正在關閉服務器...');
-    
+
     // 清理所有定時器和資源
     cleanup();
-    
+
     // 關閉服務器
     server.close(() => {
       console.log('✅ 服務器已安全關閉');
       process.exit(0);
     });
-    
+
     // 設置強制退出定時器（10秒後強制退出）
     setTimeout(() => {
       console.log('⚠️ 強制退出服務器');

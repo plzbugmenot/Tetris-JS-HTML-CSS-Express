@@ -12,14 +12,14 @@ body {
 }
 
 #main-content {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1rem;
-    height: 100vh;
-    width: 100%;
-    box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* 遊戲主區域 (三欄式佈局) */
@@ -574,16 +574,16 @@ body {
 
 /* 右側計分板 - tetr.io 風格 */
 #scoreboard {
-    width: 280px; /* Fixed width for the sidebar */
-    flex-shrink: 0; /* Prevent the scoreboard from shrinking */
-    background: rgba(20, 20, 20, 0.85);
-    backdrop-filter: blur(8px);
-    border-radius: 10px;
-    padding: 1rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-    height: calc(100vh - 2rem); /* Full height minus padding */
-    display: flex;
-    flex-direction: column;
+  width: 280px; /* Fixed width for the sidebar */
+  flex-shrink: 0; /* Prevent the scoreboard from shrinking */
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  height: calc(100vh - 2rem); /* Full height minus padding */
+  display: flex;
+  flex-direction: column;
 }
 
 #scoreboard h3 {
@@ -617,20 +617,20 @@ body {
 }
 
 .player-rank {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #aaa;
-    text-align: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #aaa;
+  text-align: center;
 }
 
 .score-item.rank-1 {
-    border-left: 3px solid #ffd700;
+  border-left: 3px solid #ffd700;
 }
 .score-item.rank-2 {
-    border-left: 3px solid #c0c0c0;
+  border-left: 3px solid #c0c0c0;
 }
 .score-item.rank-3 {
-    border-left: 3px solid #cd7f32;
+  border-left: 3px solid #cd7f32;
 }
 
 .score-item.eliminated {
@@ -898,9 +898,8 @@ body {
 }
 
 #secondary-view .player-container.other-player {
-    border-color: #2196f3; /* 給對手一個不同的邊框顏色 */
+  border-color: #2196f3; /* 給對手一個不同的邊框顏色 */
 }
-
 
 /* ==================== 觀戰者專用樣式 ==================== */
 

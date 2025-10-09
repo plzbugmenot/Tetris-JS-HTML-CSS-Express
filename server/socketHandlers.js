@@ -165,10 +165,7 @@ function handleJoinChallenge(io, socket) {
         return;
     }
 
-    if (gameState.getChallengers().length >= config.MAX_PLAYERS) {
-        socket.emit('joinChallengeFailed', { reason: `挑戰者已滿` });
-        return;
-    }
+    // 已移除挑戰者人數上限限制，允許無限挑戰者
 
     if (gameState.convertToChallenger(socket.id)) {
         const updatedUser = gameState.findUser(socket.id);

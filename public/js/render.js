@@ -92,7 +92,7 @@ export function renderAllPlayers(players, mySocketId, isSpectator = false) {
     // 創建次要視圖 (對手)
     const secondaryView = document.createElement('div');
     secondaryView.id = 'secondary-view';
-    
+
     if (opponent) {
         const opponentContainer = createPlayerBoard(opponent, mySocketId);
         secondaryView.appendChild(opponentContainer);

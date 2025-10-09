@@ -18,7 +18,7 @@ export const GAME_CONFIG = {
     FRAME: 10,
     BOARD_HEIGHT: 21,
     BOARD_WIDTH: 10,
-    MAX_PLAYERS: 8,
+    MAX_PLAYERS: 999, // 顯示用的參考值 (實際已移除人數限制)
 };
 
 // 鍵盤按鍵映射

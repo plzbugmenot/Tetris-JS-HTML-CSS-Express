@@ -13,7 +13,7 @@ let socket = null;
 let mySocketId = null;
 let allPlayers = [];
 let myPlayerData = null;
-let maxPlayers = 4;
+let maxPlayers = 999; // 顯示用的參考值 (實際已移除人數限制)
 let gameState = GAME_STATES.READY;
 let myPlayerType = 'CHALLENGER'; // 我的玩家類型
 let spectatorTarget = null; // 觀戰者當前觀看的目標玩家ID
@@ -66,7 +66,7 @@ function setupSocketListeners() {
     socket.on('newUserResponse', (data) => {
         const userName = data.newUser?.userName || '未知玩家';
         console.log(`👤 新玩家加入: ${userName}`, data);
-        maxPlayers = data.maxPlayers || 4;
+        maxPlayers = data.maxPlayers || 999; // 顯示用的參考值
         myPlayerType = data.playerType || 'CHALLENGER';
         // 暴露玩家類型到全域變數供UI模組使用
         window.currentPlayerType = myPlayerType;

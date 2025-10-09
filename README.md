@@ -4,14 +4,14 @@
 
 ```
 ████████╗███████╗████████╗██████╗ ██╗███████╗
-╚══██╔══╝██╔════╝╚══██╔══╝██╔══██╗██║██╔════╝ 
+╚══██╔══╝██╔════╝╚══██╔══╝██╔══██╗██║██╔════╝
    ██║   █████╗     ██║   ██████╔╝██║███████╗
    ██║   ██╔══╝     ██║   ██╔══██╗██║╚════██║
    ██║   ███████╗   ██║   ██║  ██║██║███████║
    ╚═╝   ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝╚══════╝
 ```
 
-A real-time multiplayer Tetris game built with Node.js and Socket.IO, supporting 2-8 players.
+A real-time multiplayer Tetris game built with Node.js and Socket.IO, supporting unlimited players.
 
 ## Video
 
@@ -19,7 +19,7 @@ A real-time multiplayer Tetris game built with Node.js and Socket.IO, supporting
 
 ## ✨ Features
 
-- **Real-time Multiplayer**: Supports 2-8 players simultaneously.
+- **Real-time Multiplayer**: Supports unlimited players simultaneously.
 - **Competitive Mode**: Last player standing wins.
 - **Live Scoreboard**: See all players' stats in real-time.
 - **Docker Support**: Easy deployment with Docker.
@@ -30,18 +30,18 @@ A real-time multiplayer Tetris game built with Node.js and Socket.IO, supporting
 
 1. **Install dependencies**
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 2. **Start the server**
 
-    ```bash
-    npm start
-    ```
+   ```bash
+   npm start
+   ```
 
 3. **Play the game**
-    Open your browser and go to `http://localhost:3500`.
+   Open your browser and go to `http://localhost:3500`.
 
 ### Docker Deployment
 
@@ -88,19 +88,19 @@ docker run -p 3500:3500 -p 8800:8800 tetris-game
 ## 🎮 Game Rules & Controls
 
 1. **Join Room**: Enter your name to join the game room.
-2. **Wait for Players**: A minimum of 2 players is required to start.
+2. **Wait for Players**: A minimum of 1 player is required to start (single player mode) or multiple players for competitive mode.
 3. **Start Game**: Any player can click the "Start Game" button.
 4. **Controls**:
-    - ⬅️ `A` or `←`: Move Left
-    - ➡️ `D` or `→`: Move Right
-    - ⬇️ `S` or `↓`: Soft Drop
-    - 🔄 `W` or `↑`: Rotate
-    - ⚡ `Space`: Hard Drop
-    - 💾 `C` or `Shift`: Hold
+   - ⬅️ `A` or `←`: Move Left
+   - ➡️ `D` or `→`: Move Right
+   - ⬇️ `S` or `↓`: Soft Drop
+   - 🔄 `W` or `↑`: Rotate
+   - ⚡ `Space`: Hard Drop
+   - 💾 `C` or `Shift`: Hold
 5. **Elimination**:
-    - You are eliminated when blocks stack to the top.
-    - Eliminated players are shown on the scoreboard.
-    - The game continues until one player remains.
+   - You are eliminated when blocks stack to the top.
+   - Eliminated players are shown on the scoreboard.
+   - The game continues until one player remains.
 6. **Game Over**: Final rankings are displayed, and the game resets automatically after 3 seconds.
 
 ## ⚙️ Environment Variables
