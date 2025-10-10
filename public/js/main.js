@@ -56,8 +56,22 @@ function initializeGame() {
     // 顯示控制說明
     Keyboard.showControls();
 
+    // 新增觀戰功能
+    setupSpectatorSwitch();
+
     isInitialized = true;
     console.log('✅ 遊戲初始化完成');
+}
+
+// 新增觀戰功能
+function setupSpectatorSwitch() {
+    const playerElements = document.querySelectorAll('.player'); // 假設每個玩家都有 .player 類別
+    playerElements.forEach(playerElement => {
+        playerElement.addEventListener('click', () => {
+            const socketID = playerElement.dataset.socketId; // 假設 socketID 存在於 data-attribute
+            Socket.setSpectatorTarget(socketID);
+        });
+    });
 }
 
 // ==================== 回調函數 ====================
@@ -81,6 +95,9 @@ function handleGameStateUpdate(data) {
 
     // 渲染玩家棋盤
     Render.renderAllPlayers(allPlayers, mySocketId, isSpectator);
+
+    // 每次重新渲染玩家列表後，都要重新設定點擊事件
+    setupSpectatorSwitch();
 
     // Debug: 觀察遊戲狀態
     // console.log('GameState:', gameState);

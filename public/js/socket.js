@@ -231,8 +231,12 @@ function setupSocketListeners() {
         }, 100);
     });
 
+
     // 準備狀態 - 重置遊戲
     socket.on('readyStateEmit', () => {
+        // V V V V V V V 在這裡加上日誌 V V V V V V V
+        console.log('%c ✅✅✅ 遊戲重置事件 readyStateEmit 已觸發！✅✅✅', 'color: lightgreen; font-size: 20px;');
+        // ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
         console.log('🔄 接收到重置信號，正在重置遊戲狀態...');
 
         // 重置遊戲狀態

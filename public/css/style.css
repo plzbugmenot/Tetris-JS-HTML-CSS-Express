@@ -18,7 +18,6 @@ body {
   gap: 1rem;
   padding: 1rem;
   height: 100vh;
-  width: 100%;
   box-sizing: border-box;
 }
 
@@ -33,7 +32,8 @@ body {
 
 .left-panel,
 .right-panel {
-  width: 120px; /* 根據圖片調整寬度 */
+  width: 120px;
+  /* 根據圖片調整寬度 */
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -64,7 +64,8 @@ body {
 
 .hold-board {
   width: 100%;
-  height: 100px; /* 4 blocks tall */
+  height: 100px;
+  /* 4 blocks tall */
   display: grid;
   grid-template-rows: repeat(4, 1fr);
   grid-template-columns: repeat(4, 1fr);
@@ -79,7 +80,8 @@ body {
 
 .next-piece-container {
   width: 100%;
-  height: 80px; /* 4 blocks tall */
+  height: 80px;
+  /* 4 blocks tall */
   display: grid;
   grid-template-rows: repeat(4, 1fr);
   grid-template-columns: repeat(4, 1fr);
@@ -102,15 +104,19 @@ body {
 /* Main game board adjustments */
 .game-board {
   background-color: #000;
-  width: 250px; /* 10 blocks * 25px */
-  height: 525px; /* 21 blocks * 25px */
+  width: 250px;
+  /* 10 blocks * 25px */
+  height: 525px;
+  /* 21 blocks * 25px */
   display: grid;
   grid-template-rows: repeat(21, 1fr);
   grid-template-columns: repeat(10, 1fr);
   border: 3px solid #474747;
   border-radius: 5px;
-  position: relative; /* 支援絕對定位的上方方塊 */
-  overflow: visible; /* 讓上方的方塊能顯示出來 */
+  position: relative;
+  /* 支援絕對定位的上方方塊 */
+  overflow: visible;
+  /* 讓上方的方塊能顯示出來 */
 }
 
 /* Block styles */
@@ -129,39 +135,47 @@ body {
 .next-block.block-0 {
   background-color: #ff0d72;
 }
+
 .block-1,
 .hold-block.block-1,
 .next-block.block-1 {
   background-color: #0dc2ff;
 }
+
 .block-2,
 .hold-block.block-2,
 .next-block.block-2 {
   background-color: #0dff72;
 }
+
 .block-3,
 .hold-block.block-3,
 .next-block.block-3 {
   background-color: #f538ff;
 }
+
 .block-4,
 .hold-block.block-4,
 .next-block.block-4 {
   background-color: #ff8e0d;
 }
+
 .block-5,
 .hold-block.block-5,
 .next-block.block-5 {
   background-color: #ffe138;
 }
+
 .block-6,
 .hold-block.block-6,
 .next-block.block-6 {
   background-color: #3877ff;
 }
+
 .block-ground {
   background-color: #888;
 }
+
 .block-send {
   background-color: #ff4444;
 }
@@ -263,7 +277,7 @@ body {
   display: grid;
   gap: 1rem;
   padding: 1rem;
-  width: 100%;
+  /* width: 100%; ❌ 這就是問題所在 */
   max-width: 1800px;
   justify-content: center;
   margin: 0 auto;
@@ -442,6 +456,7 @@ body {
 }
 
 @keyframes attackFlash {
+
   0%,
   100% {
     box-shadow: none;
@@ -458,6 +473,7 @@ body {
 }
 
 @keyframes defendFlash {
+
   0%,
   100% {
     transform: translateX(0);
@@ -539,6 +555,7 @@ body {
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     transform: translate(-50%, -50%) scale(1);
@@ -574,16 +591,21 @@ body {
 
 /* 右側計分板 - tetr.io 風格 */
 #scoreboard {
-  width: 280px; /* Fixed width for the sidebar */
-  flex-shrink: 0; /* Prevent the scoreboard from shrinking */
+  width: 280px;
+  /* Fixed width for the sidebar */
+  flex-shrink: 0;
+  /* Prevent the scoreboard from shrinking */
   background: rgba(20, 20, 20, 0.85);
   backdrop-filter: blur(8px);
   border-radius: 10px;
   padding: 1rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-  height: calc(100vh - 2rem); /* Full height minus padding */
+  height: calc(100vh - 2rem);
+  /* Full height minus padding */
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 10;
 }
 
 #scoreboard h3 {
@@ -593,7 +615,8 @@ body {
   font-size: 1.2rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid #444;
-  flex-shrink: 0; /* 防止標題被壓縮 */
+  flex-shrink: 0;
+  /* 防止標題被壓縮 */
 }
 
 #score-list {
@@ -626,9 +649,11 @@ body {
 .score-item.rank-1 {
   border-left: 3px solid #ffd700;
 }
+
 .score-item.rank-2 {
   border-left: 3px solid #c0c0c0;
 }
+
 .score-item.rank-3 {
   border-left: 3px solid #cd7f32;
 }
@@ -672,7 +697,8 @@ body {
 .attack-line {
   height: 100%;
   background: #ff4444;
-  width: 0%; /* JS會更新 */
+  width: 0%;
+  /* JS會更新 */
   transition: width 0.3s ease;
 }
 
@@ -882,14 +908,16 @@ body {
   flex: 2;
   display: flex;
   justify-content: center;
-  min-width: 400px; /* 確保主視圖不會太小 */
+  min-width: 400px;
+  /* 確保主視圖不會太小 */
 }
 
 #secondary-view {
   flex: 1;
   display: flex;
   justify-content: center;
-  min-width: 300px; /* 確保次要視圖不會太小 */
+  min-width: 300px;
+  /* 確保次要視圖不會太小 */
 }
 
 /* 讓次要視圖的棋盤稍微小一點 */
@@ -898,7 +926,8 @@ body {
 }
 
 #secondary-view .player-container.other-player {
-  border-color: #2196f3; /* 給對手一個不同的邊框顏色 */
+  border-color: #2196f3;
+  /* 給對手一個不同的邊框顏色 */
 }
 
 /* ==================== 觀戰者專用樣式 ==================== */
@@ -937,6 +966,7 @@ body {
 
 /* 計分板中可點擊的玩家項目樣式 */
 .score-item.clickable-player {
+  cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
 }
@@ -960,8 +990,10 @@ body {
   top: 50%;
   transform: translateY(-50%);
   font-size: 1.2rem;
-  transition: none; /* 防止閃爍 */
-  animation: none; /* 關閉任何動畫 */
+  transition: none;
+  /* 防止閃爍 */
+  animation: none;
+  /* 關閉任何動畫 */
 }
 
 /* 觀戰者提示文字 */
@@ -980,10 +1012,12 @@ body {
 }
 
 @keyframes fadeInOut {
+
   0%,
   100% {
     opacity: 0;
   }
+
   20%,
   80% {
     opacity: 1;

@@ -51,7 +51,7 @@ docker-compose up -d
 
 # Or with Docker
 docker build -t tetris-game .
-docker run -p 3500:3500 -p 8800:8800 tetris-game
+docker run -p 3500:3500 tetris-game
 ```
 
 ## 📁 Project Structure
