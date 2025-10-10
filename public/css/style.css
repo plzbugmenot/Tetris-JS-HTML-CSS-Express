@@ -1026,18 +1026,135 @@ body {
 
 /* 響應式設計 - 觀戰者模式在小屏幕上的適配 */
 @media (max-width: 768px) {
-  .game-container.spectator-view.single-board {
-    padding: 0.5rem;
-    min-height: calc(100vh - 150px);
+
+  /* 讓主內容區變成縱向排列 */
+  #main-content {
+    flex-direction: column;
+    padding: 5px;
+    /* 減少邊距 */
   }
 
-  .player-container.spectator-target {
-    transform: scale(0.9);
-    max-width: 95vw;
+  /* 挑戰者雙畫面模式在手機上的調整 */
+  .game-container.challenge-view {
+    flex-direction: column;
   }
 
-  .player-container.spectator-target::before {
-    font-size: 0.8rem;
-    padding: 0.2rem 0.6rem;
+  /* 隱藏次要畫面 (對手畫面) */
+  #secondary-view {
+    display: none;
+  }
+
+  /* 讓主要畫面 (自己畫面) 佔滿寬度 */
+  #main-player-view {
+    width: 100%;
+    min-width: unset;
+  }
+
+  /* 調整遊戲面板尺寸以適應小螢幕 */
+  .game-board {
+    width: 200px;
+    height: 420px;
+  }
+
+  .block {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* 計分板也需要調整，例如變成橫向或預設隱藏 */
+  #scoreboard {
+    width: 100%;
+    order: -1;
+    /* 把它放到最上面 */
+    height: 150px;
+    /* 給一個固定高度 */
+  }
+
+  #score-list {
+    flex-direction: row;
+    /* 讓玩家列表橫向滾動 */
+    overflow-x: auto;
+  }
+
+  .score-item {
+    flex-shrink: 0;
+    /* 防止項目被壓縮 */
+    width: 150px;
+  }
+}
+
+/* 觸控按鈕的容器 (這部分大部分不變) */
+.touch-controls-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 15px;
+  box-sizing: border-box;
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  z-index: 1500;
+  touch-action: manipulation;
+}
+
+/* ==================== 核心修改區塊 ==================== */
+
+/* 新增：十字方向鍵 (D-pad) 的容器 */
+.controls-dpad {
+  display: flex;
+  flex-direction: column;
+  /* 讓上下兩行垂直排列 */
+  align-items: center;
+  /* 讓下方的「下」按鈕居中 */
+  gap: 5px;
+  /* 行之間的間距 */
+}
+
+/* 新增：D-pad 每一行的樣式 */
+.dpad-row {
+  display: flex;
+  gap: 20px;
+  /* 左右按鈕之間的間距 */
+}
+
+/* 舊的 .controls-left 已經不需要，這裡只保留 .controls-right */
+.controls-right {
+  display: flex;
+  gap: 10px;
+}
+
+/* ======================================================= */
+
+
+/* 按鈕通用樣式 (這部分不變) */
+.touch-controls-container button {
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+  color: white;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  user-select: none;
+}
+
+/* 新增：為瞬間下落按鈕的閃電圖示調整大小 */
+#btn-drop {
+  font-size: 20px;
+}
+
+/* 按下時的效果 (這部分不變) */
+.touch-controls-container button:active {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* 媒體查詢 (這部分不變) */
+@media (max-width: 768px) {
+  .touch-controls-container {
+    display: flex;
   }
 }

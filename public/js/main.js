@@ -5,6 +5,7 @@
 
 import { GAME_STATES } from './config.js';
 import * as Socket from './socket.js';
+import { DIRECTIONS } from './config.js';
 import * as UI from './ui.js';
 import * as Render from './render.js';
 import * as Keyboard from './keyboard.js';
@@ -59,8 +60,84 @@ function initializeGame() {
     // 新增觀戰功能
     setupSpectatorSwitch();
 
+    // 設定觸控按鈕的事件監聽
+    setupTouchControls();
+
     isInitialized = true;
     console.log('✅ 遊戲初始化完成');
+}
+
+// V V V V V V V 新增的完整函數 V V V V V V V
+/**
+ * 設定觸控按鈕的事件監聽 (【支援長按的最終版本】)
+ */
+function setupTouchControls() {
+    console.log('📱 觸控按鈕已設定 (支援長按)');
+
+    const controls = {
+        'btn-left': () => Socket.moveBlock(DIRECTIONS.LEFT),
+        'btn-right': () => Socket.moveBlock(DIRECTIONS.RIGHT),
+        'btn-down': () => Socket.moveBlock(DIRECTIONS.DOWN),
+        'btn-rotate': () => Socket.rotateBlock(),
+        'btn-drop': () => Socket.dropBlock(),
+        'btn-hold': () => Socket.holdBlock()
+    };
+
+    // 用於儲存計時器ID，以便後續清除
+    let activeIntervals = {};
+    // 連續觸發的間隔時間 (毫秒)，數字越小，重複速度越快。你可以自行調整這個值。
+    const REPEAT_DELAY = 120;
+
+    for (const [btnId, action] of Object.entries(controls)) {
+        const button = document.getElementById(btnId);
+        if (button) {
+            // 在這裡定義哪些按鈕需要支援長按連續觸發
+            const continuousActions = ['btn-left', 'btn-right', 'btn-down', 'btn-rotate'];
+
+            if (continuousActions.includes(btnId)) {
+                // --- 處理需要「長按」的按鈕 (左, 右, 下, 旋轉) ---
+
+                // 定義「開始動作」的函數
+                const startAction = (e) => {
+                    e.preventDefault();
+                    if (activeIntervals[btnId]) return; // 防止重複啟動計時器
+
+                    action(); // 1. 按下時，立刻執行一次
+                    // 2. 啟動計時器，之後每隔 REPEAT_DELAY 毫秒重複執行
+                    activeIntervals[btnId] = setInterval(action, REPEAT_DELAY);
+                };
+
+                // 定義「停止動作」的函數
+                const stopAction = (e) => {
+                    e.preventDefault();
+                    // 3. 手指或滑鼠離開時，清除計時器
+                    clearInterval(activeIntervals[btnId]);
+                    delete activeIntervals[btnId]; // 從記錄中移除
+                };
+
+                // 為了兼容電腦和手機，我們監聽所有代表「開始」和「結束」的事件
+                button.addEventListener('mousedown', startAction);   // 滑鼠按下
+                button.addEventListener('touchstart', startAction);  // 手指按下
+
+                button.addEventListener('mouseup', stopAction);      // 滑鼠鬆開
+                button.addEventListener('mouseleave', stopAction);   // 滑鼠移出按鈕範圍
+                button.addEventListener('touchend', stopAction);     // 手指離開螢幕
+                button.addEventListener('touchcancel', stopAction);  // 觸控被系統取消
+
+            } else {
+                // --- 處理只需要「單次點擊」的按鈕 (瞬間下落, HOLD) ---
+                const handleTap = (e) => {
+                    e.preventDefault();
+                    action();
+                };
+                button.addEventListener('click', handleTap);
+                button.addEventListener('touchstart', handleTap);
+            }
+        } else {
+            console.error(`❌ 警告：找不到 ID 為 "${btnId}" 的按鈕元素！`);
+        }
+    }
+    console.log('📱 觸控按鈕已設定');
 }
 
 // 新增觀戰功能
