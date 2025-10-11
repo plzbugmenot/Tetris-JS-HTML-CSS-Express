@@ -456,7 +456,6 @@ body {
 }
 
 @keyframes attackFlash {
-
   0%,
   100% {
     box-shadow: none;
@@ -473,7 +472,6 @@ body {
 }
 
 @keyframes defendFlash {
-
   0%,
   100% {
     transform: translateX(0);
@@ -555,7 +553,6 @@ body {
 }
 
 @keyframes pulse {
-
   0%,
   100% {
     transform: translate(-50%, -50%) scale(1);
@@ -920,9 +917,9 @@ body {
   /* 確保次要視圖不會太小 */
 }
 
-/* 讓次要視圖的棋盤稍微小一點 */
+/* 次要視圖的棋盤與主視圖大小相同，不進行縮放 */
 #secondary-view .player-container {
-  transform: scale(0.9);
+  /* 移除縮放，保持與主視圖相同大小 */
 }
 
 #secondary-view .player-container.other-player {
@@ -1012,7 +1009,6 @@ body {
 }
 
 @keyframes fadeInOut {
-
   0%,
   100% {
     opacity: 0;
@@ -1026,7 +1022,6 @@ body {
 
 /* 響應式設計 - 觀戰者模式在小屏幕上的適配 */
 @media (max-width: 768px) {
-
   /* 讓主內容區變成縱向排列 */
   #main-content {
     flex-direction: column;
@@ -1128,7 +1123,6 @@ body {
 }
 
 /* ======================================================= */
-
 
 /* 按鈕通用樣式 (這部分不變) */
 .touch-controls-container button {

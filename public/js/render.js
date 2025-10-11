@@ -100,7 +100,8 @@ export function renderAllPlayers(players, mySocketId, isSpectator = false) {
     secondaryView.id = 'secondary-view';
 
     if (opponent) {
-        secondaryView.appendChild(createPlayerBoard(opponent, mySocketId));
+        // 傳入第三個參數 true，表示這是次要視圖，不顯示 Hold 和 Next
+        secondaryView.appendChild(createPlayerBoard(opponent, mySocketId, true));
     } else if (challengers.length > 1) {
         // 這種情況很少發生，除非對手數據有問題
         secondaryView.innerHTML = '<div class="player-container"><h3>正在尋找對手...</h3></div>';
@@ -115,9 +116,10 @@ export function renderAllPlayers(players, mySocketId, isSpectator = false) {
  * 創建玩家棋盤容器
  * @param {Object} player - 玩家數據
  * @param {string} mySocketId - 我的 Socket ID
+ * @param {boolean} isSecondaryView - 是否為次要視圖（觀戰對象），如果是則不顯示Hold和Next
  * @returns {HTMLElement} 玩家容器元素
  */
-function createPlayerBoard(player, mySocketId) {
+function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
     const isMyPlayer = player.socketID === mySocketId;
 
     // 創建玩家容器
@@ -159,24 +161,26 @@ function createPlayerBoard(player, mySocketId) {
     const gameArea = document.createElement('div');
     gameArea.className = 'game-area';
 
-    // 左側欄
-    const leftPanel = document.createElement('div');
-    leftPanel.className = 'left-panel';
-    leftPanel.innerHTML = `
-        <div class="hold-container">
-            <div class="panel-header">HOLD</div>
-            <div class="hold-board" id="hold-board-${player.socketID}"></div>
-        </div>
-        <div class="stats-container" id="stats-container-${player.socketID}">
-             <p id="kos-${player.socketID}">KOS: ${player.stats ? player.stats.kos : 0}</p>
-             <p id="pieces-${player.socketID}">PIECES: ${player.stats ? player.stats.pieces : 0}</p>
-             <p id="attack-${player.socketID}">ATTACK: ${player.stats ? player.stats.attack : 0}</p>
-             <p id="time-${player.socketID}">TIME: ${formatTime(player.stats ? player.stats.playTime : 0)}</p>
-             <p id="droptime-${player.socketID}">DROP: ${player.stats && player.stats.avgDropTime ? (player.stats.avgDropTime / 1000).toFixed(1) + 's' : '0.0s'}</p>
-             <p id="speed-${player.socketID}">SPEED: ${player.stats ? Math.round(1000 / (player.stats.currentSpeed * 20)) + '/s' : '3.3/s'}</p>
-        </div>
-    `;
-    gameArea.appendChild(leftPanel);
+    // 如果不是次要視圖，渲染左側欄（Hold 和統計）
+    if (!isSecondaryView) {
+        const leftPanel = document.createElement('div');
+        leftPanel.className = 'left-panel';
+        leftPanel.innerHTML = `
+            <div class="hold-container">
+                <div class="panel-header">HOLD</div>
+                <div class="hold-board" id="hold-board-${player.socketID}"></div>
+            </div>
+            <div class="stats-container" id="stats-container-${player.socketID}">
+                 <p id="kos-${player.socketID}">KOS: ${player.stats ? player.stats.kos : 0}</p>
+                 <p id="pieces-${player.socketID}">PIECES: ${player.stats ? player.stats.pieces : 0}</p>
+                 <p id="attack-${player.socketID}">ATTACK: ${player.stats ? player.stats.attack : 0}</p>
+                 <p id="time-${player.socketID}">TIME: ${formatTime(player.stats ? player.stats.playTime : 0)}</p>
+                 <p id="droptime-${player.socketID}">DROP: ${player.stats && player.stats.avgDropTime ? (player.stats.avgDropTime / 1000).toFixed(1) + 's' : '0.0s'}</p>
+                 <p id="speed-${player.socketID}">SPEED: ${player.stats ? Math.round(1000 / (player.stats.currentSpeed * 20)) + '/s' : '3.3/s'}</p>
+            </div>
+        `;
+        gameArea.appendChild(leftPanel);
+    }
 
     // 中間主棋盤
     const centerPanel = document.createElement('div');
@@ -187,16 +191,18 @@ function createPlayerBoard(player, mySocketId) {
     centerPanel.appendChild(gameBoard);
     gameArea.appendChild(centerPanel);
 
-    // 右側欄
-    const rightPanel = document.createElement('div');
-    rightPanel.className = 'right-panel';
-    rightPanel.innerHTML = `
-        <div class="next-container">
-            <div class="panel-header">NEXT</div>
-            <div class="next-board" id="next-board-${player.socketID}"></div>
-        </div>
-    `;
-    gameArea.appendChild(rightPanel);
+    // 如果不是次要視圖，渲染右側欄（Next）
+    if (!isSecondaryView) {
+        const rightPanel = document.createElement('div');
+        rightPanel.className = 'right-panel';
+        rightPanel.innerHTML = `
+            <div class="next-container">
+                <div class="panel-header">NEXT</div>
+                <div class="next-board" id="next-board-${player.socketID}"></div>
+            </div>
+        `;
+        gameArea.appendChild(rightPanel);
+    }
 
     container.appendChild(gameArea);
 
