@@ -3,6 +3,39 @@
  * 整合所有模組並初始化遊戲
  */
 
+// --- HACKER THEME DYNAMIC BACKGROUND ---
+function createDigitalRain() {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const width = 400;
+    const height = 600;
+    canvas.width = width;
+    canvas.height = height;
+
+    ctx.fillStyle = '#04060a';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = 'rgba(57, 255, 20, 0.5)';
+    ctx.font = '12px "Share Tech Mono"';
+
+    const columns = Math.floor(width / 12);
+    for (let i = 0; i < columns; i++) {
+        const x = i * 12;
+        for (let j = 0; j < 50; j++) {
+            const y = j * 12;
+            const char = String.fromCharCode(33 + Math.random() * 94);
+            if (Math.random() > 0.1) { // Add some randomness to the rain
+                ctx.fillText(char, x + (Math.random() - 0.5) * 5, y + (Math.random() - 0.5) * 5);
+            }
+        }
+    }
+
+    const dataUrl = canvas.toDataURL();
+    document.documentElement.style.setProperty('--digital-rain-bg', `url(${dataUrl})`);
+}
+// --- END HACKER THEME DYNAMIC BACKGROUND ---
+
 import { GAME_STATES } from './config.js';
 import * as Socket from './socket.js';
 import { DIRECTIONS } from './config.js';
@@ -38,6 +71,9 @@ function initializeGame() {
         console.warn('⚠️ 遊戲已經初始化');
         return;
     }
+
+    // 創建駭客主題背景
+    createDigitalRain();
 
     // 初始化 Socket
     Socket.initSocket(

@@ -2,11 +2,14 @@
 <html lang="en">
 
 <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>多人俄羅斯方塊</title>
+    <title>CYBER TRICKSTER</title>
     <script src="./socket.io/socket.io.js"></script>
     <!-- 使用模組化的主入口 -->
     <script type="module" src="js/main.js"></script>
@@ -14,16 +17,15 @@
 
 <body>
     <div id="register">
-        <input id="name" type="text" maxlength="10" placeholder="輸入玩家名稱" />
-        <button onclick="registerPlayer()" class="registerBtn">加入遊戲</button>
+        <input id="name" type="text" maxlength="10" placeholder="ENTER YOUR CODENAME" />
+        <button onclick="registerPlayer()" class="registerBtn">INITIATE CONNECTION</button>
     </div>
 
     <!-- 玩家信息區 -->
     <div id="players-info" style="display: none; text-align: center;">
         <div id="room-status"></div>
-        <button id="join-challenge-btn" onclick="requestJoinChallenge()"
-            style="display: none; background: #ffd600; color: #222; border: none; border-radius: 5px; padding: 0.8rem 2rem; font-size: 1.2rem; cursor: pointer; margin: 0 auto;">
-            加入挑戰
+        <button id="join-challenge-btn" onclick="requestJoinChallenge()">
+            JOIN THE ATTACK
         </button>
     </div>
 
@@ -35,7 +37,7 @@
 
         <!-- 右側計分板 -->
         <div id="scoreboard" style="display: none;">
-            <h3>🏆 計分板</h3>
+            <h3>SYSTEM STATUS</h3>
             <div id="score-list"></div>
         </div>
     </div>
@@ -43,13 +45,13 @@
     <!-- 遊戲結束畫面 -->
     <div id="game-over-overlay">
         <div id="game-over-content">
-            <h1>🎮 遊戲結束</h1>
-            <p id="game-over-message">所有玩家都失敗了！</p>
+            <h1>CONNECTION LOST</h1>
+            <p id="game-over-message">All agents have been compromised.</p>
             <div class="final-scores">
-                <h3>最終排名</h3>
+                <h3>FINAL RANKING</h3>
                 <div id="final-score-list"></div>
             </div>
-            <p style="color: #aaa; font-size: 1rem;">3秒後自動重置...</p>
+            <p style="color: #aaa; font-size: 1rem;">Re-establishing connection in 3s...</p>
         </div>
     </div>
 

@@ -143,17 +143,17 @@ function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
     const expPercent = Math.min((currentExp / maxExp) * 100, 100);
 
     header.innerHTML = `
-        <div class="player-name">🎮 ${player.userName} ${myTag}</div>
+        <div class="player-name">${isMyPlayer ? '💀' : '🤖'} ${player.userName} ${myTag}</div>
         <div class="player-status">${player.who}</div>
         <div class="player-stats">
-            <div class="player-level">Level: ${player.level || 0}</div>
-            <div class="player-score">分數: ${player.score || 0}</div>
+            <div class="player-level">Security Level: ${player.level || 0}</div>
+            <div class="player-score">Data Secured: ${player.score || 0}</div>
             ${comboDisplay}
         </div>
         <div class="exp-bar-container" style="width: 100%; height: 8px; background: #333; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
-            <div class="exp-bar" style="width: ${expPercent}%; height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); transition: width 0.3s ease;"></div>
+            <div class="exp-bar" style="width: ${expPercent}%; height: 100%; background: linear-gradient(90deg, #39ff14, #20c997); transition: width 0.3s ease;"></div>
         </div>
-        <div class="exp-text" style="font-size: 0.7rem; color: #aaa; margin-top: 0.2rem; text-align: center;">EXP: ${currentExp} / ${maxExp}</div>
+        <div class="exp-text" style="font-size: 0.7rem; color: #aaa; margin-top: 0.2rem; text-align: center;">DATA PACKETS: ${currentExp} / ${maxExp}</div>
     `;
     container.appendChild(header);
 
@@ -167,13 +167,13 @@ function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
         leftPanel.className = 'left-panel';
         leftPanel.innerHTML = `
             <div class="hold-container">
-                <div class="panel-header">HOLD</div>
+                <div class="panel-header">STASH</div>
                 <div class="hold-board" id="hold-board-${player.socketID}"></div>
             </div>
             <div class="stats-container" id="stats-container-${player.socketID}">
-                 <p id="kos-${player.socketID}">KOS: ${player.stats ? player.stats.kos : 0}</p>
+                 <p id="kos-${player.socketID}">K.O.s: ${player.stats ? player.stats.kos : 0}</p>
                  <p id="pieces-${player.socketID}">PIECES: ${player.stats ? player.stats.pieces : 0}</p>
-                 <p id="attack-${player.socketID}">ATTACK: ${player.stats ? player.stats.attack : 0}</p>
+                 <p id="attack-${player.socketID}">JUNK SENT: ${player.stats ? player.stats.attack : 0}</p>
                  <p id="time-${player.socketID}">TIME: ${formatTime(player.stats ? player.stats.playTime : 0)}</p>
                  <p id="droptime-${player.socketID}">DROP: ${player.stats && player.stats.avgDropTime ? (player.stats.avgDropTime / 1000).toFixed(1) + 's' : '0.0s'}</p>
                  <p id="speed-${player.socketID}">SPEED: ${player.stats ? Math.round(1000 / (player.stats.currentSpeed * 20)) + '/s' : '3.3/s'}</p>
@@ -197,7 +197,7 @@ function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
         rightPanel.className = 'right-panel';
         rightPanel.innerHTML = `
             <div class="next-container">
-                <div class="panel-header">NEXT</div>
+                <div class="panel-header">QUEUE</div>
                 <div class="next-board" id="next-board-${player.socketID}"></div>
             </div>
         `;

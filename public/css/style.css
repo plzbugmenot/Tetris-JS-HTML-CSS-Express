@@ -5,9 +5,9 @@ body {
   flex-direction: column;
   margin: 0;
   padding: 0;
-  background-color: #1a1a1a;
-  color: #eeeeee;
-  font-family: "Arial", sans-serif;
+  background-color: #04060a;
+  color: #00FF00; /* Bright green for main text */
+  font-family: "Share Tech Mono", monospace;
   overflow-x: auto;
 }
 
@@ -48,18 +48,20 @@ body {
 .panel-header {
   font-size: 1.2rem;
   font-weight: bold;
-  color: #ffd700;
+  color: #008F11; /* Darker green for headers */
   text-align: center;
   margin-bottom: 0.5rem;
+  text-shadow: none; /* Removed glow */
 }
 
 /* Hold and Next Containers */
 .hold-container,
 .next-container {
-  background-color: #000;
+  background-color: rgba(15, 61, 15, 0.2); /* Very subtle background */
   padding: 0.5rem;
   border-radius: 8px;
-  border: 2px solid #474747;
+  border: 1px solid #0F3D0F; /* Deep green for borders */
+  box-shadow: none; /* Removed glow */
 }
 
 .hold-board {
@@ -89,11 +91,12 @@ body {
 
 /* Stats Container */
 .stats-container {
-  background-color: #000;
-  color: #fff;
+  background-color: rgba(15, 61, 15, 0.2);
+  color: #008F11; /* Darker green for stats text */
   padding: 0.5rem;
   border-radius: 8px;
-  border: 2px solid #474747;
+  border: 1px solid #0F3D0F;
+  box-shadow: none;
   font-size: 0.9rem;
 }
 
@@ -103,7 +106,7 @@ body {
 
 /* Main game board adjustments */
 .game-board {
-  background-color: #000;
+  background-color: rgba(15, 61, 15, 0.1);
   width: 250px;
   /* 10 blocks * 25px */
   height: 525px;
@@ -111,12 +114,13 @@ body {
   display: grid;
   grid-template-rows: repeat(21, 1fr);
   grid-template-columns: repeat(10, 1fr);
-  border: 3px solid #474747;
+  border: 1px solid #0F3D0F;
   border-radius: 5px;
   position: relative;
   /* 支援絕對定位的上方方塊 */
   overflow: visible;
   /* 讓上方的方塊能顯示出來 */
+  box-shadow: none;
 }
 
 /* Block styles */
@@ -126,58 +130,36 @@ body {
   width: 25px;
   height: 25px;
   box-sizing: border-box;
-  border: 1px solid #333;
+  border: 1px solid #0F3D0F; /* Dark green grid lines */
+  box-shadow: none;
 }
 
-/* Color styles for blocks */
-.block-0,
-.hold-block.block-0,
-.next-block.block-0 {
-  background-color: #ff0d72;
-}
+/* Color styles for blocks - Refined Cyber Theme */
+.block-0, .hold-block.block-0, .next-block.block-0 { background-color: #29D5FF; } /* I piece - Cyan */
+.block-1, .hold-block.block-1, .next-block.block-1 { background-color: #FFD700; } /* O piece - Yellow */
+.block-2, .hold-block.block-2, .next-block.block-2 { background-color: #F538FF; } /* T piece - Magenta */
+.block-3, .hold-block.block-3, .next-block.block-3 { background-color: #3877FF; } /* L piece - Blue */
+.block-4, .hold-block.block-4, .next-block.block-4 { background-color: #FFFFFF; } /* J piece - White */
+.block-5, .hold-block.block-5, .next-block.block-5 { background-color: #FF1744; } /* S piece - Red */
+.block-6, .hold-block.block-6, .next-block.block-6 { background-color: #FF8E0D; } /* Z piece - Orange */
 
-.block-1,
-.hold-block.block-1,
-.next-block.block-1 {
-  background-color: #0dc2ff;
-}
-
-.block-2,
-.hold-block.block-2,
-.next-block.block-2 {
-  background-color: #0dff72;
-}
-
-.block-3,
-.hold-block.block-3,
-.next-block.block-3 {
-  background-color: #f538ff;
-}
-
-.block-4,
-.hold-block.block-4,
-.next-block.block-4 {
-  background-color: #ff8e0d;
-}
-
-.block-5,
-.hold-block.block-5,
-.next-block.block-5 {
-  background-color: #ffe138;
-}
-
-.block-6,
-.hold-block.block-6,
-.next-block.block-6 {
-  background-color: #3877ff;
+.block, .hold-block, .next-block {
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
 }
 
 .block-ground {
-  background-color: #888;
+  background-color: #0F3D0F; /* Use the frame color for landed blocks */
+  box-shadow: inset 0 0 4px #000;
 }
 
 .block-send {
-  background-color: #ff4444;
+  background-color: #ff1744;
+  box-shadow: 0 0 5px #ff1744;
+}
+
+.block-virus {
+    background-color: #f538ff; /* A distinct magenta for the virus */
+    box-shadow: 0 0 5px #f538ff, inset 0 0 3px #fff;
 }
 
 /* 註冊區域 */
@@ -186,10 +168,11 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #2a2a2a;
+  background: #04060a;
   padding: 2rem;
   border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid #39ff14;
+  box-shadow: 0 0 20px #39ff14;
   z-index: 1000;
   min-width: 300px;
   max-width: 90vw;
@@ -198,26 +181,31 @@ body {
 #register input {
   padding: 0.5rem 1rem;
   font-size: 1.2rem;
-  border: 2px solid #474747;
+  border: 1px solid #39ff14;
   border-radius: 5px;
   margin-right: 0.5rem;
-  background: #1a1a1a;
-  color: #eeeeee;
+  background: #04060a;
+  color: #39ff14;
+  font-family: "Share Tech Mono", monospace;
 }
 
 #register button {
   padding: 0.5rem 1.5rem;
   font-size: 1.2rem;
-  background: #4caf50;
-  color: white;
+  background: #39ff14;
+  color: #04060a;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
+  font-family: "Share Tech Mono", monospace;
+  text-transform: uppercase;
 }
 
 #register button:hover {
-  background: #45a049;
+  background: #04060a;
+  color: #39ff14;
+  box-shadow: 0 0 10px #39ff14;
 }
 
 /* 玩家信息區 */
@@ -237,23 +225,28 @@ body {
 #room-status {
   font-size: 1.5rem;
   margin-bottom: 1rem;
-  color: #4caf50;
+  color: #39ff14;
+  text-shadow: 0 0 5px #39ff14;
 }
 
-#start-game-btn {
+#start-game-btn, #join-challenge-btn {
   padding: 0.8rem 2rem;
   font-size: 1.2rem;
-  background: #2196f3;
-  color: white;
-  border: none;
+  background: transparent;
+  color: #39ff14;
+  border: 1px solid #39ff14;
   border-radius: 5px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
   display: none;
+  font-family: "Share Tech Mono", monospace;
+  text-transform: uppercase;
 }
 
-#start-game-btn:hover {
-  background: #0b7dda;
+#start-game-btn:hover, #join-challenge-btn:hover {
+  background: #39ff14;
+  color: #04060a;
+  box-shadow: 0 0 15px #39ff14;
 }
 
 /* 訊息顯示 */
@@ -262,7 +255,9 @@ body {
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 152, 0, 0.9);
+  background: #04060a;
+  border: 1px solid #ff1744;
+  color: #ff1744;
   padding: 1rem 2rem;
   border-radius: 5px;
   display: none;
@@ -270,6 +265,8 @@ body {
   max-width: 90vw;
   word-wrap: break-word;
   text-align: center;
+  box-shadow: 0 0 15px #ff1744;
+  font-family: "Share Tech Mono", monospace;
 }
 
 /* 遊戲容器 - 響應式網格佈局 */
@@ -320,19 +317,19 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #2a2a2a;
+  background: rgba(15, 61, 15, 0.2);
   border-radius: 10px;
   padding: 1rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: 1px solid #0F3D0F;
+  box-shadow: none;
 }
 
 .player-container.my-player {
-  border: 3px solid #4caf50;
-  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.5);
+  border: 2px solid #008F11; /* Darker green for my player */
 }
 
 .player-container.other-player {
-  border: 3px solid #474747;
+  border: 1px solid #0F3D0F;
 }
 
 /* 玩家信息頭部 */
@@ -345,22 +342,24 @@ body {
 .player-name {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #4caf50;
+  color: #29D5FF; /* Cyan accent for player names */
   margin-bottom: 0.5rem;
+  text-shadow: none;
 }
 
 .player-container.other-player .player-name {
-  color: #2196f3;
+  color: #29D5FF;
+  text-shadow: none;
 }
 
 .player-status {
   font-size: 1rem;
-  color: #aaa;
+  color: #008F11; /* Darker green */
 }
 
 .player-level {
   font-size: 1.2rem;
-  color: #ffd700;
+  color: #00FF00; /* Bright green for level */
 }
 
 /* 消行動畫效果 */
@@ -462,8 +461,21 @@ body {
   }
 
   50% {
-    box-shadow: 0 0 30px #ff4444, inset 0 0 20px #ff4444;
+    box-shadow: 0 0 30px #ff1744, inset 0 0 20px #ff1744;
   }
+}
+
+.attack-warning {
+    animation: attack-warning-glow 0.8s infinite;
+}
+
+@keyframes attack-warning-glow {
+    0%, 100% {
+        box-shadow: 0 0 20px #ff1744, inset 0 0 10px rgba(255, 23, 68, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 35px #ff1744, inset 0 0 20px rgba(255, 23, 68, 0.8);
+    }
 }
 
 /* 被攻擊特效 */
@@ -489,43 +501,11 @@ body {
 @keyframes clearLineFlash {
   0% {
     opacity: 1;
-    background-color: #ffffff !important;
-    box-shadow: 0 0 10px #ffffff;
+    box-shadow: 0 0 15px #fff, inset 0 0 10px #fff;
     transform: scale(1.05);
   }
-
-  20% {
-    opacity: 1;
-    background-color: #ffd700 !important;
-    box-shadow: 0 0 15px #ffd700;
-    transform: scale(1.1);
-  }
-
-  40% {
-    opacity: 1;
-    background-color: #ff4444 !important;
-    box-shadow: 0 0 15px #ff4444;
-    transform: scale(1.1);
-  }
-
-  60% {
-    opacity: 0.9;
-    background-color: #00ffff !important;
-    box-shadow: 0 0 15px #00ffff;
-    transform: scale(1.05);
-  }
-
-  80% {
-    opacity: 0.5;
-    background-color: #ff00ff !important;
-    box-shadow: 0 0 10px #ff00ff;
-    transform: scale(1);
-  }
-
   100% {
     opacity: 0;
-    background-color: transparent !important;
-    box-shadow: none;
     transform: scale(0.5);
   }
 }
@@ -539,16 +519,16 @@ body {
 }
 
 .player-container.eliminated::before {
-  content: "❌ 淘汰";
+  content: "❌ ELIMINATED";
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 2rem;
-  color: #ff4444;
+  color: #ff1744;
   font-weight: bold;
   z-index: 10;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 0 10px #ff1744;
   animation: pulse 1s infinite;
 }
 
@@ -586,17 +566,17 @@ body {
   }
 }
 
-/* 右側計分板 - tetr.io 風格 */
+/* 右側計分板 - Cyber 風格 */
 #scoreboard {
   width: 280px;
   /* Fixed width for the sidebar */
   flex-shrink: 0;
   /* Prevent the scoreboard from shrinking */
-  background: rgba(20, 20, 20, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(15, 61, 15, 0.2);
+  border: 1px solid #0F3D0F;
   border-radius: 10px;
   padding: 1rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  box-shadow: none;
   height: calc(100vh - 2rem);
   /* Full height minus padding */
   display: flex;
@@ -607,13 +587,14 @@ body {
 
 #scoreboard h3 {
   margin: 0 0 0.8rem 0;
-  color: #4caf50;
+  color: #008F11; /* Darker green for header */
   text-align: center;
   font-size: 1.2rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid #0F3D0F;
   flex-shrink: 0;
   /* 防止標題被壓縮 */
+  text-shadow: none;
 }
 
 #score-list {
@@ -629,9 +610,9 @@ body {
   grid-template-columns: 20px 40px 1fr;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: #1a1a1a;
+  background: transparent;
   border-radius: 5px;
-  border: 1px solid #333;
+  border: 1px solid transparent; /* Transparent by default */
   transition: all 0.2s ease;
   align-items: center;
 }
@@ -639,20 +620,20 @@ body {
 .player-rank {
   font-size: 1.1rem;
   font-weight: bold;
-  color: #aaa;
+  color: #008F11; /* Darker green */
   text-align: center;
 }
 
 .score-item.rank-1 {
-  border-left: 3px solid #ffd700;
+  border-left: 3px solid #00FF00; /* Bright green for rank 1 */
 }
 
 .score-item.rank-2 {
-  border-left: 3px solid #c0c0c0;
+  border-left: 3px solid #20c997;
 }
 
 .score-item.rank-3 {
-  border-left: 3px solid #cd7f32;
+  border-left: 3px solid #20c997;
 }
 
 .score-item.eliminated {
@@ -670,8 +651,8 @@ body {
 .mini-board {
   width: 40px;
   height: 80px;
-  background: #000;
-  border: 1px solid #444;
+  background: #04060a;
+  border: 1px solid #0F3D0F; /* Deep green border */
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(20, 1fr);
@@ -685,7 +666,7 @@ body {
 .attack-bar {
   width: 100%;
   height: 5px;
-  background: #333;
+  background: #0F3D0F; /* Dark green background */
   margin-top: 4px;
   border-radius: 2px;
   overflow: hidden;
@@ -693,10 +674,11 @@ body {
 
 .attack-line {
   height: 100%;
-  background: #ff4444;
+  background: #ff1744;
   width: 0%;
   /* JS會更新 */
   transition: width 0.3s ease;
+  box-shadow: none;
 }
 
 .player-details {
@@ -708,7 +690,7 @@ body {
 
 .player-name-score {
   font-weight: bold;
-  color: #eee;
+  color: #29D5FF; /* Cyan accent */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -716,21 +698,20 @@ body {
 
 .player-stats-score {
   font-size: 0.8rem;
-  color: #aaa;
+  color: #008F11; /* Darker green */
   display: flex;
   justify-content: space-between;
 }
 
 .score-item.clickable-player:hover {
-  background-color: rgba(76, 175, 80, 0.2) !important;
-  transform: scale(1.03);
-  border-color: #4caf50;
+  background-color: rgba(0, 255, 0, 0.1) !important;
+  border-color: #008F11 !important;
 }
 
 .score-item.selected {
-  border-color: #4caf50 !important;
-  background-color: rgba(76, 175, 80, 0.1);
-  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+  border-color: #00FF00 !important;
+  background-color: rgba(0, 255, 0, 0.05);
+  box-shadow: none;
 }
 
 /* 響應式設計 */
@@ -832,12 +813,13 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(4, 6, 10, 0.9);
   display: none;
   justify-content: center;
   align-items: center;
   z-index: 2000;
   animation: fadeIn 0.5s;
+  backdrop-filter: blur(5px);
 }
 
 @keyframes fadeIn {
@@ -851,23 +833,24 @@ body {
 }
 
 #game-over-content {
-  background: #2a2a2a;
+  background: #04060a;
   padding: 3rem;
   border-radius: 15px;
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  border: 1px solid #ff1744;
+  box-shadow: 0 0 30px #ff1744;
   max-width: 600px;
 }
 
 #game-over-content h1 {
-  color: #ff4444;
+  color: #ff1744;
   font-size: 3rem;
   margin: 0 0 1rem 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 0 10px #ff1744;
 }
 
 #game-over-content p {
-  color: #eeeeee;
+  color: #39ff14;
   font-size: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -878,12 +861,14 @@ body {
 }
 
 #game-over-content .final-scores h3 {
-  color: #4caf50;
+  color: #39ff14;
   margin-bottom: 1rem;
+  text-shadow: 0 0 5px #39ff14;
 }
 
 #game-over-content .score-item {
-  background: #1a1a1a;
+  background: rgba(57, 255, 20, 0.1);
+  border: 1px solid #39ff14;
   padding: 1rem;
   margin-bottom: 0.5rem;
   border-radius: 5px;
@@ -940,25 +925,26 @@ body {
 /* 觀戰目標棋盤樣式 */
 .player-container.spectator-target {
   transform: scale(1.1);
-  border: 3px solid #ff9800 !important;
-  box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4) !important;
-  background: linear-gradient(135deg, #2a2a2a, #333333);
+  border: 2px solid #ff1744 !important;
+  box-shadow: 0 0 25px rgba(255, 23, 68, 0.7) !important;
+  background: linear-gradient(135deg, #04060a, #1a1a1a);
 }
 
 /* 觀戰目標標識 */
 .player-container.spectator-target::before {
-  content: "👀 正在觀戰";
+  content: "👀 SPECTATING";
   position: absolute;
   top: -15px;
   left: 50%;
   transform: translateX(-50%);
-  background: #ff9800;
-  color: #fff;
+  background: #ff1744;
+  color: #04060a;
   padding: 0.3rem 0.8rem;
   border-radius: 15px;
   font-size: 0.9rem;
   font-weight: bold;
   z-index: 10;
+  text-shadow: none;
 }
 
 /* 計分板中可點擊的玩家項目樣式 */
@@ -999,13 +985,14 @@ body {
   top: 100px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 152, 0, 0.9);
-  color: #fff;
+  background: #39ff14;
+  color: #04060a;
   padding: 0.5rem 1rem;
   border-radius: 5px;
   font-size: 0.9rem;
   z-index: 1000;
   animation: fadeInOut 3s ease-in-out;
+  text-shadow: none;
 }
 
 @keyframes fadeInOut {
@@ -1129,11 +1116,12 @@ body {
   width: 60px;
   height: 60px;
   font-size: 24px;
-  color: white;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: #39ff14;
+  background: transparent;
+  border: 1px solid #39ff14;
   border-radius: 50%;
   user-select: none;
+  text-shadow: 0 0 5px #39ff14;
 }
 
 /* 新增：為瞬間下落按鈕的閃電圖示調整大小 */
@@ -1143,7 +1131,9 @@ body {
 
 /* 按下時的效果 (這部分不變) */
 .touch-controls-container button:active {
-  background: rgba(255, 255, 255, 0.4);
+  background: #39ff14;
+  color: #04060a;
+  box-shadow: 0 0 15px #39ff14;
 }
 
 /* 媒體查詢 (這部分不變) */

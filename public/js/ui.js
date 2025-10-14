@@ -300,7 +300,7 @@ function updateScoreboardInternal(players, gameState, scoreboard, scoreList) {
             scoreList.insertBefore(scoreItem, scoreList.children[index]);
         }
 
-        const playerIcon = player.playerType === 'SPECTATOR' ? '👁️' : (isSelf ? '👑' : '🎮');
+        const playerIcon = player.playerType === 'SPECTATOR' ? '👁️' : (isSelf ? '💀' : '🤖');
         const attackWidth = Math.min((player.attack || 0) * 10, 100);
 
         // 只更新具體元素的內容
@@ -308,7 +308,7 @@ function updateScoreboardInternal(players, gameState, scoreboard, scoreList) {
         scoreItem.querySelector('.mini-board').innerHTML = renderMiniBoard(player);
         scoreItem.querySelector('.attack-line').style.width = `${attackWidth}%`;
         scoreItem.querySelector('.player-name-score').textContent = `${playerIcon} ${player.userName}`;
-        scoreItem.querySelector('.player-level-value').textContent = `Lv ${player.level || 0}`;
+        scoreItem.querySelector('.player-level-value').textContent = `SLv ${player.level || 0}`;
         scoreItem.querySelector('.player-score-value').textContent = player.score || 0;
     });
 
@@ -393,14 +393,14 @@ export function showGameOverScreen(data) {
         if (data.isSinglePlayer) {
             scoreItem.innerHTML = `
                 <div style="text-align: center; padding: 1rem;">
-                    <div style="font-size: 1.5rem; color: #4CAF50; margin-bottom: 0.5rem;">
+                    <div style="font-size: 1.5rem; color: #39ff14; margin-bottom: 0.5rem;">
                         ${player.userName}
                     </div>
-                    <div style="font-size: 2rem; color: #ffd700; font-weight: bold;">
-                        ${player.score || 0} 分
+                    <div style="font-size: 2rem; color: #20c997; font-weight: bold;">
+                        ${player.score || 0} DATA SECURED
                     </div>
                     <div style="font-size: 1.2rem; color: #aaa; margin-top: 0.3rem;">
-                        Level ${player.level || 0}
+                        Security Level ${player.level || 0}
                     </div>
                 </div>
             `;
@@ -410,7 +410,7 @@ export function showGameOverScreen(data) {
             const medal = medals[index] || '';
             scoreItem.innerHTML = `
                 <span>${medal} ${player.userName} (${player.who})</span>
-                <span style="color: #ffd700;">Level ${player.level || 0} | 分數: ${player.score || 0}</span>
+                <span style="color: #20c997;">SLv ${player.level || 0} | Data Secured: ${player.score || 0}</span>
             `;
         }
 
