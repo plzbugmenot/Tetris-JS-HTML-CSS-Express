@@ -125,22 +125,16 @@ export function updateRoomStatus(challengers, spectators, maxPlayers, mode = 'mu
 
     if (roomStatus) {
         if (mode === 'single') {
-            roomStatus.innerHTML = `🎮 <span style="color: #4CAF50;">單機模式</span>`;
-            roomStatus.style.fontSize = '1.5rem';
+            roomStatus.innerHTML = `SYSTEM: <span style="color: #00FF00;">STANDALONE MODE</span>`;
         } else if (mode === 'spectator') {
             roomStatus.innerHTML = `
-                👁️ <span style="color: #FF9800;">觀戰模式</span><br>
-                <span style="font-size: 0.9rem;">挑戰者: ${challengers} | 觀戰者: ${spectators}</span>
+                SYSTEM: <span style="color: #29D5FF;">SPECTATOR MODE</span> | AGENTS: ${challengers} | OBSERVERS: ${spectators}
             `;
-            roomStatus.style.fontSize = '1.2rem';
         } else {
             roomStatus.innerHTML = `
-                🎮 <span style="color: #4CAF50;">多人挑戰</span><br>
-                <span style="font-size: 0.9rem;">挑戰者: ${challengers} | 觀戰者: ${spectators}</span>
+                SYSTEM: <span style="color: #00FF00;">MULTIPLAYER MODE</span> | AGENTS: ${challengers} | OBSERVERS: ${spectators}
             `;
-            roomStatus.style.fontSize = '1.2rem';
         }
-        roomStatus.style.color = '#eeeeee';
     }
 
     if (playersInfo) {
