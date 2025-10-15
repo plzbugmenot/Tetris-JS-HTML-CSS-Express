@@ -145,10 +145,15 @@ function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
 
     if (isMobile) {
         header.innerHTML = `
-            <div class="player-name">${player.userName}</div>
             <div class="player-stats-mobile">
-                <span>SLv: ${player.level || 0}</span>
-                <span>Data: ${player.score || 0}</span>
+                <div class="stat-item">
+                    <span class="stat-label">SCORE</span>
+                    <span class="stat-value">${player.score || 0}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">LEVEL</span>
+                    <span class="stat-value">${player.level || 0}</span>
+                </div>
             </div>
         `;
     } else {
@@ -179,6 +184,7 @@ function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
             <div class="panel-header">STASH</div>
             <div class="hold-board" id="hold-board-${player.socketID}"></div>
         </div>
+        <button id="mobile-hold-btn" class="mobile-hold-btn-style">STASH</button>
         <div class="stats-container" id="stats-container-${player.socketID}">
              <p id="kos-${player.socketID}">K.O.s: ${player.stats ? player.stats.kos : 0}</p>
              <p id="pieces-${player.socketID}">PIECES: ${player.stats ? player.stats.pieces : 0}</p>

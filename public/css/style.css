@@ -759,6 +759,45 @@ body {
       bottom: 0;
   }
 
+  .gesture-hint {
+      display: none; /* Hidden by default */
+      position: absolute;
+      bottom: 60px; /* Position above the control bar */
+      width: 100%;
+      text-align: center;
+      color: #008F11; /* Darker green */
+      font-size: 0.8rem;
+      pointer-events: none; /* Make it non-interactive */
+  }
+
+  @media (max-width: 768px) {
+    .gesture-hint {
+        display: block;
+    }
+
+    #main-content {
+        border-left: 1px solid #0F3D0F;
+        border-right: 1px solid #0F3D0F;
+    }
+
+    .mobile-hold-btn-style {
+        background: transparent;
+        border: 1px solid #29D5FF;
+        color: #29D5FF;
+        padding: 10px 20px;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 1rem;
+        border-radius: 5px;
+        margin-top: 0.5rem;
+        width: 100%;
+    }
+
+    .mobile-hold-btn-style:active {
+        background: #29D5FF;
+        color: #04060a;
+    }
+  }
+
   #mobile-hold-btn {
       background: transparent;
       border: 1px solid #29D5FF;
@@ -861,10 +900,28 @@ body {
   .player-stats-mobile {
       display: flex;
       justify-content: space-around;
-      width: 100%;
+      width: 90vw;
       color: #00FF00;
-      font-size: 1rem;
+      font-size: 1.1rem;
       margin-top: 0.5rem;
+      background: rgba(15, 61, 15, 0.5);
+      border: 1px solid #0F3D0F;
+      padding: 0.5rem;
+      border-radius: 5px;
+  }
+
+  .stat-item {
+      text-align: center;
+  }
+
+  .stat-label {
+      display: block;
+      font-size: 0.7rem;
+      color: #008F11;
+  }
+
+  .stat-value {
+      font-weight: bold;
   }
 }
 

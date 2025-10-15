@@ -21,14 +21,14 @@ function handleGesture() {
     const dy = touchEndY - touchStartY;
     const elapsedTime = Date.now() - touchStartTime;
 
-    // Check for tap first
+    // Check for tap first (low movement, short time)
     if (Math.abs(dx) < TAP_THRESHOLD && Math.abs(dy) < TAP_THRESHOLD && elapsedTime < TAP_TIME_THRESHOLD) {
         console.log('Gesture: Tap (Rotate)');
         Socket.rotateBlock();
         return;
     }
 
-    // Check for vertical swipe (drop)
+    // Check for vertical swipe (drop) - must be more vertical than horizontal
     if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_THRESHOLD) {
         if (dy > 0) { // Downward swipe
             const velocity = dy / elapsedTime;
@@ -40,15 +40,19 @@ function handleGesture() {
                 Socket.moveBlock(DIRECTIONS.DOWN);
             }
         }
+        // Upward swipe could be another action, but is ignored for now.
     }
-    // Check for horizontal swipe (move)
+    // Check for horizontal swipe (move) - must be more horizontal than vertical
     else if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_THRESHOLD) {
-        if (dx > 0) {
-            console.log('Gesture: Move Right');
-            Socket.moveBlock(DIRECTIONS.RIGHT);
-        } else {
-            console.log('Gesture: Move Left');
-            Socket.moveBlock(DIRECTIONS.LEFT);
+        const moveCount = Math.floor(Math.abs(dx) / (SWIPE_THRESHOLD / 2));
+        for (let i = 0; i < moveCount; i++) {
+            if (dx > 0) {
+                console.log('Gesture: Move Right');
+                Socket.moveBlock(DIRECTIONS.RIGHT);
+            } else {
+                console.log('Gesture: Move Left');
+                Socket.moveBlock(DIRECTIONS.LEFT);
+            }
         }
     }
 }
