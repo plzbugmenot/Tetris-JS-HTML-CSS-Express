@@ -1,5 +1,13 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #000;
+}
+
 body {
-  min-height: 100vh;
+  min-height: 100%; /* Use 100% instead of 100vh here */
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -17,7 +25,7 @@ body {
   align-items: flex-start;
   gap: 1rem;
   padding: 1rem;
-  height: 100vh;
+  height: 100%; /* Use 100% to fill the body */
   box-sizing: border-box;
 }
 

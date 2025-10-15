@@ -74,6 +74,10 @@ export function initTouchControls() {
         touchStartTime = Date.now();
     }, { passive: true });
 
+    gameContainer.addEventListener('touchmove', (e) => {
+        e.preventDefault(); // Prevent browser scrolling
+    }, { passive: false });
+
     gameContainer.addEventListener('touchend', (e) => {
         touchEndX = e.changedTouches[0].screenX;
         touchEndY = e.changedTouches[0].screenY;
