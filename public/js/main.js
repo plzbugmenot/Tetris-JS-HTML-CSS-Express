@@ -42,6 +42,7 @@ import { DIRECTIONS } from './config.js';
 import * as UI from './ui.js';
 import * as Render from './render.js';
 import * as Keyboard from './keyboard.js';
+import * as Touch from './touch.js';
 
 // ==================== 全局變數 ====================
 let isInitialized = false;
@@ -97,7 +98,11 @@ function initializeGame() {
     setupSpectatorSwitch();
 
     // 設定觸控按鈕的事件監聽
-    setupTouchControls();
+    if (window.innerWidth <= 768) {
+        Touch.initTouchControls();
+    } else {
+        setupTouchControls(); // Keep legacy buttons for desktop/tablet
+    }
 
     isInitialized = true;
     console.log('✅ 遊戲初始化完成');

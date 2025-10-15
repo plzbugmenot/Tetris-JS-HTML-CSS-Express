@@ -64,8 +64,8 @@ function setupSocketListeners() {
 
     // 新玩家加入響應
     socket.on('newUserResponse', (data) => {
-        const userName = data.newUser?.userName || 'Unknown Agent';
-        console.log(`👤 New agent joined: ${userName}`, data);
+        const userName = data.newUser?.userName || '未知玩家';
+        console.log(`👤 新玩家加入: ${userName}`, data);
         maxPlayers = data.maxPlayers || 999; // 顯示用的參考值
         myPlayerType = data.playerType || 'CHALLENGER';
         // 暴露玩家類型到全域變數供UI模組使用
@@ -74,7 +74,7 @@ function setupSocketListeners() {
         // 單人模式：第一位玩家，自動開始
         if (data.size === 1 && data.challengers === 1) {
             UI.updateRoomStatus(data.challengers, data.spectators, maxPlayers, 'single');
-            UI.showMessage('SYSTEM: Standalone mode. Initiating...', 'success');
+            UI.showMessage('🎮 單機模式，遊戲即將開始...', 'success');
             // 隱藏開始按鈕（單機模式自動開始）
             UI.hideStartButton();
             UI.hideJoinChallengeButton(); // 單人模式也不需要加入挑戰按鈕
@@ -85,7 +85,7 @@ function setupSocketListeners() {
             UI.showJoinChallengeButton();
             // 只在初次成為觀戰者或準備狀態時顯示提示
             if (gameState === GAME_STATES.READY) {
-                UI.showMessage('SYSTEM: Spectator mode. Click on an agent in the status panel to observe.', 'info');
+                UI.showMessage('👁️ 你正在觀戰，點擊計分板中的玩家可以切換觀戰目標', 'info');
             }
         }
         // 多人挑戰模式：顯示房間狀態和開始按鈕
@@ -109,8 +109,8 @@ function setupSocketListeners() {
 
     // 玩家離線
     socket.on('playerDisconnected', (data) => {
-        const userType = data.playerType === 'SPECTATOR' ? 'Observer' : 'Agent';
-        UI.showMessage(`${userType} ${data.userName} has disconnected.`, 'info');
+        const userType = data.playerType === 'SPECTATOR' ? '觀戰者' : '挑戰者';
+        UI.showMessage(`${userType} ${data.userName} 已離開遊戲`, 'info');
 
         // 根據剩餘人數更新UI
         const mode = data.remainingChallengers === 1 ? 'single' : 'multi';
@@ -152,16 +152,16 @@ function setupSocketListeners() {
 
     // 玩家被淘汰
     socket.on('playerEliminated', (data) => {
-        const userName = data.userName || 'Unknown Agent';
+        const userName = data.userName || '未知玩家';
         const who = data.who || data.socketID || 'undefined';
 
         if (data.showEliminationOnly) {
-            console.log(`� ELIMINATION EFFECT: ${userName} (${who})`);
+            console.log(`� 棋盤淘汰效果: ${userName} (${who})`);
         } else {
-            console.log(`🚫 AGENT ELIMINATED: ${userName} (${who})`);
+            console.log(`🚫 玩家淘汰: ${userName} (${who})`);
             // 只有在明確標記要顯示遊戲結束時才顯示訊息
             if (data.showGameOver !== false) {
-                UI.showMessage(`Agent ${userName} has been compromised!`, 'error');
+                UI.showMessage(`${userName} 被淘汰！`, 'error');
             }
         }
 
@@ -176,7 +176,7 @@ function setupSocketListeners() {
 
     // 所有玩家都失敗
     socket.on('allPlayersGameOver', (data) => {
-        console.log('🎮 Mission Over!', data);
+        console.log('🎮 遊戲結束！', data);
 
         // 檢查當前玩家是否為觀戰者
         const myPlayer = getMyPlayerData();
@@ -186,9 +186,9 @@ function setupSocketListeners() {
             // 只有非觀戰者才顯示遊戲結束畫面
             UI.showGameOverScreen(data);
         } else {
-            console.log('👀 Spectator does not see the game over screen');
+            console.log('👀 觀戰者不顯示遊戲結束畫面');
             // 觀戰者只顯示簡單訊息
-            UI.showMessage('Mission failed. Awaiting new agents...', 'info');
+            UI.showMessage('遊戲結束，等待新的挑戰者加入...', 'info');
         }
 
         // 觸發回調
@@ -199,19 +199,19 @@ function setupSocketListeners() {
 
     // 詢問是否繼續遊玩
     socket.on('askContinueGame', (data) => {
-        console.log('❓ Received continue game query:', data);
+        console.log('❓ 收到繼續遊玩詢問:', data);
         UI.showContinueGameDialog(data);
     });
 
     // 確認繼續遊玩
     socket.on('continueGameConfirmed', (data) => {
-        console.log('✅ Continue game confirmed:', data);
+        console.log('✅ 繼續遊玩確認:', data);
         UI.showMessage(data.message, 'success');
     });
 
     // 成為觀戲者
     socket.on('becomeSpectator', (data) => {
-        console.log('👀 Becoming spectator:', data);
+        console.log('👀 成為觀戲者:', data);
 
         // 更新玩家類型
         myPlayerType = 'SPECTATOR';
@@ -223,7 +223,7 @@ function setupSocketListeners() {
 
         // 顯示加入挑戰按鈕和觀戰提示
         UI.showJoinChallengeButton();
-        UI.showMessage('SYSTEM: Spectator mode. Click on an agent in the status panel to observe.', 'info');
+        UI.showMessage('👁️ 你正在觀戰，點擊計分板中的玩家可以切換觀戰目標', 'info');
 
         // 請求更新房間狀態以正確顯示統計
         setTimeout(() => {
@@ -267,16 +267,16 @@ function setupSocketListeners() {
 
     // 準備開始遊戲事件
     socket.on('readyToStart', () => {
-        console.log('🎮 Ready to start game');
-        UI.showMessage('System ready. Press SPACE to initiate.', 'success');
+        console.log('🎮 準備開始遊戲');
+        UI.showMessage('🎮 已準備就緒！按 SPACE 開始遊戲', 'success');
         // 可以在這裡添加一個開始按鈕或鍵盤監聽
     });
 
     // 消行動畫事件
     socket.on('lineCleared', (data) => {
         const comboText = data.combo > 1 ? ` (Combo x${data.combo})` : '';
-        const expText = data.gainedExp ? `, Data Packets: +${data.gainedExp}` : '';
-        console.log(`✨ BREACH SEALED: ${data.userName} sealed ${data.linesCleared} breaches${comboText}${expText}`);
+        const expText = data.gainedExp ? `, 經驗: +${data.gainedExp}` : '';
+        console.log(`✨ 消行動畫: ${data.userName} 消除了 ${data.linesCleared} 行${comboText}${expText}`);
 
         // 觸發自定義事件，通知渲染模組播放動畫
         window.dispatchEvent(new CustomEvent('playLineClearAnimation', {
@@ -296,45 +296,45 @@ function setupSocketListeners() {
 
     // 幸運事件
     socket.on('luckyEvent', (data) => {
-        const userName = data.userName || 'Unknown Agent';
+        const userName = data.userName || '未知玩家';
         const multiplier = data.multiplier || 1;
         const gainedExp = data.gainedExp || 0;
-        console.log(`🎉 LUCKY EVENT! ${userName} got ${data.eventName}! Data Packets x${multiplier}`);
+        console.log(`🎉 幸運事件！${userName} 獲得 ${data.eventName}！經驗 × ${multiplier}`);
 
         // 顯示幸運事件特效
         UI.showLuckyEventNotification(data.socketID, data.eventName, data.eventColor, gainedExp);
 
         // 如果是自己，顯示特別提示
         if (data.socketID === mySocketId) {
-            UI.showMessage(`🎉 ${data.eventName}! Data Packets x${multiplier}!`, 'success');
+            UI.showMessage(`🎉 ${data.eventName}！經驗 × ${multiplier}！`, 'success');
         }
     });
 
     // 玩家升級事件
     socket.on('playerLevelUp', (data) => {
-        console.log(`🎊 ${data.userName} has reached Security Level ${data.newLevel}!`);
+        console.log(`🎊 ${data.userName} 升級到 Level ${data.newLevel}！`);
 
         // 顯示升級特效
         UI.showLevelUpNotification(data.socketID, data.newLevel);
 
         // 如果是自己，顯示特別提示
         if (data.socketID === mySocketId) {
-            UI.showMessage(`🎊 Security Level UP! New Level: ${data.newLevel}`, 'success');
+            UI.showMessage(`🎊 升級！Level ${data.newLevel}`, 'success');
         }
     });
 
     // 玩家攻擊事件
     socket.on('playerAttacked', (data) => {
-        console.log(`⚔️ ATTACK! ${data.attackerName} -> ${data.targetName}, Garbage Lines: ${data.attackPower}`);
+        console.log(`⚔️ 攻擊！${data.attackerName} → ${data.targetName}，垃圾行: ${data.attackPower}`);
 
         // 顯示攻擊提示
         const isMyAttack = data.attackerID === mySocketId;
         const isMyDefense = data.targetID === mySocketId;
 
         if (isMyAttack) {
-            UI.showMessage(`⚔️ Attack successful! Sent ${data.attackPower} garbage lines to ${data.targetName}.`, 'success');
+            UI.showMessage(`⚔️ 攻擊成功！給 ${data.targetName} 添加了 ${data.attackPower} 行垃圾！`, 'success');
         } else if (isMyDefense) {
-            UI.showMessage(`🛡️ Under attack! Received ${data.attackPower} garbage lines from ${data.attackerName}.`, 'error');
+            UI.showMessage(`🛡️ 受到攻擊！${data.attackerName} 給你添加了 ${data.attackPower} 行垃圾！`, 'error');
         }
 
         // 觸發攻擊動畫
@@ -345,7 +345,7 @@ function setupSocketListeners() {
 
     // 玩家加入挑戰成功
     socket.on('joinChallengeSuccess', (data) => {
-        console.log('✅ Successfully joined the attack!', data);
+        console.log('✅ 成功加入挑戰！', data);
         myPlayerType = 'CHALLENGER';
         window.currentPlayerType = myPlayerType;
         UI.hideJoinChallengeButton();
@@ -355,14 +355,14 @@ function setupSocketListeners() {
 
     // 玩家加入挑戰失敗
     socket.on('joinChallengeFailed', (data) => {
-        console.log('❌ Failed to join the attack:', data.reason);
+        console.log('❌ 加入挑戰失敗:', data.reason);
         UI.showMessage(data.reason, 'error');
     });
 
     // 有觀戰者加入挑戰（通知所有人）
     socket.on('playerJoinedChallenge', (data) => {
-        console.log(`👤 ${data.userName} has joined the attack!`);
-        UI.showMessage(`${data.userName} has joined the attack!`, 'success');
+        console.log(`👤 ${data.userName} 加入挑戰！`);
+        UI.showMessage(`${data.userName} 加入挑戰！`, 'success');
         UI.updateRoomStatus(data.challengers, data.spectators, maxPlayers, 'multi');
     });
 }

@@ -739,43 +739,132 @@ body {
 }
 
 @media (max-width: 768px) {
-  .game-container {
-    gap: 0.5rem;
-    padding: 0.5rem;
+  body {
+    overflow: hidden; /* Prevent scrolling on mobile */
   }
 
-  .game-container.players-2,
-  .game-container.players-3,
-  .game-container.players-4 {
-    grid-template-columns: repeat(2, 1fr);
+  #touch-controls, #scoreboard, .stats-container {
+      display: none !important; /* Hide old controls, scoreboard and desktop stats */
   }
 
-  .player-container {
-    padding: 0.5rem;
+  .mobile-controls-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      padding: 10px 0;
+      background: rgba(4, 6, 10, 0.5);
+      border-top: 1px solid #0F3D0F;
+      position: absolute;
+      bottom: 0;
   }
 
-  .game-board {
-    width: 200px;
-    height: 420px;
+  #mobile-hold-btn {
+      background: transparent;
+      border: 1px solid #29D5FF;
+      color: #29D5FF;
+      padding: 10px 20px;
+      font-family: "Share Tech Mono", monospace;
+      font-size: 1rem;
+      border-radius: 5px;
   }
 
-  .block,
-  .hold-block,
-  .next-block {
-    width: 20px;
-    height: 20px;
+  #main-content {
+    flex-direction: column;
+    padding: 0;
+    height: 100vh;
+    justify-content: space-between;
   }
 
   #scoreboard {
-    position: relative;
+    display: none; /* Hide desktop scoreboard on mobile */
+  }
+
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Align to top */
+    height: calc(100vh - 100px); /* Adjust height to leave space for controls */
+    padding: 1rem 0;
+    gap: 1rem;
+  }
+
+  .player-container {
     width: 100%;
-    margin-bottom: 1rem;
-    max-width: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .game-area {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .left-panel, .right-panel {
+      display: none; /* Hide desktop side panels */
+  }
+
+  .center-panel {
+      order: 2; /* Game board in the middle */
+  }
+
+  .game-board {
+      width: 90vw;
+      height: calc(90vw * 2.1); /* Maintain aspect ratio */
+      max-height: 70vh;
+  }
+
+  .block {
+      width: 100%;
+      height: 100%;
   }
 
   #players-info {
-    position: relative;
-    top: auto;
+      position: relative;
+      top: auto;
+      width: 100%;
+      padding: 0.5rem 0;
+  }
+
+  .mobile-top-panels {
+    display: flex;
+    justify-content: space-around;
+    width: 90vw;
+    order: 1; /* Stash/Queue above board */
+  }
+
+  .mobile-top-panels {
+    display: flex;
+    justify-content: space-between;
+    width: 90vw;
+    margin-bottom: 1rem;
+  }
+
+  .mobile-top-panels .left-panel,
+  .mobile-top-panels .right-panel {
+      display: block;
+      width: 120px; /* Give them a fixed width */
+  }
+
+  .stats-container {
+      display: none; /* Hide stats on mobile */
+  }
+
+  .player-header {
+      padding: 0.5rem;
+      width: 100%;
+      box-sizing: border-box;
+  }
+
+  .player-stats-mobile {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      color: #00FF00;
+      font-size: 1rem;
+      margin-top: 0.5rem;
   }
 }
 
@@ -1015,59 +1104,90 @@ body {
 
 /* 響應式設計 - 觀戰者模式在小屏幕上的適配 */
 @media (max-width: 768px) {
-  /* 讓主內容區變成縱向排列 */
+  body {
+    overflow: hidden; /* Prevent scrolling on mobile */
+  }
+
   #main-content {
     flex-direction: column;
-    padding: 5px;
-    /* 減少邊距 */
+    height: 100vh;
+    padding: 0;
   }
 
-  /* 挑戰者雙畫面模式在手機上的調整 */
-  .game-container.challenge-view {
+  #scoreboard, .right-panel, .stats-container {
+    display: none !important; /* Hide desktop elements */
+  }
+
+  .game-container {
     flex-direction: column;
-  }
-
-  /* 隱藏次要畫面 (對手畫面) */
-  #secondary-view {
-    display: none;
-  }
-
-  /* 讓主要畫面 (自己畫面) 佔滿寬度 */
-  #main-player-view {
+    align-items: center;
+    justify-content: center;
+    height: 100%;
     width: 100%;
-    min-width: unset;
+    padding: 0;
+    gap: 1rem;
   }
 
-  /* 調整遊戲面板尺寸以適應小螢幕 */
+  .player-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+  }
+
+  .game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .player-header {
+      order: 1;
+      padding: 0.5rem;
+  }
+
+  .mobile-top-panels {
+      order: 2;
+      display: flex;
+      justify-content: space-around;
+      width: 90vw;
+      margin-bottom: 1rem;
+  }
+
+  .mobile-top-panels .left-panel, .mobile-top-panels .right-panel {
+      display: block;
+      width: 45%;
+  }
+
+  .center-panel {
+      order: 3;
+  }
+
+  .mobile-top-panels {
+    display: flex;
+    justify-content: space-around;
+    width: 90vw;
+    margin-bottom: 1rem;
+  }
+
+  .mobile-top-panels .left-panel,
+  .mobile-top-panels .right-panel {
+      display: block !important; /* Force display */
+      width: 45%;
+  }
+
   .game-board {
-    width: 200px;
-    height: 420px;
+    width: 90vw;
+    height: calc(90vw * 2); /* Maintain aspect ratio */
+    max-height: 65vh;
   }
 
-  .block {
-    width: 20px;
-    height: 20px;
-  }
-
-  /* 計分板也需要調整，例如變成橫向或預設隱藏 */
-  #scoreboard {
-    width: 100%;
-    order: -1;
-    /* 把它放到最上面 */
-    height: 150px;
-    /* 給一個固定高度 */
-  }
-
-  #score-list {
-    flex-direction: row;
-    /* 讓玩家列表橫向滾動 */
-    overflow-x: auto;
-  }
-
-  .score-item {
-    flex-shrink: 0;
-    /* 防止項目被壓縮 */
-    width: 150px;
+  .block, .hold-block, .next-block {
+    width: auto;
+    height: auto;
   }
 }
 

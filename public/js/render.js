@@ -120,6 +120,7 @@ export function renderAllPlayers(players, mySocketId, isSpectator = false) {
  * @returns {HTMLElement} 玩家容器元素
  */
 function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
+    const isMobile = window.innerWidth <= 768;
     const isMyPlayer = player.socketID === mySocketId;
 
     // 創建玩家容器
@@ -134,74 +135,87 @@ function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
     // 玩家信息頭部
     const header = document.createElement('div');
     header.className = 'player-header';
-    const myTag = isMyPlayer ? '<span style="color: #4CAF50;">(你)</span>' : '';
+    const myTag = isMyPlayer ? '<span style="color: #29D5FF;">(You)</span>' : '';
     const comboDisplay = (player.combo && player.combo > 1)
-        ? `<div class="player-combo" style="color: #FFD700; font-weight: bold;">🔥 Combo x${player.combo}</div>`
+        ? `<div class="player-combo" style="color: #FFD700; font-weight: bold;">🔥 Chain Attack x${player.combo}</div>`
         : '';
     const currentExp = player.exp || 0;
     const maxExp = player.expToNextLevel || 500;
     const expPercent = Math.min((currentExp / maxExp) * 100, 100);
 
-    header.innerHTML = `
-        <div class="player-name">${isMyPlayer ? '💀' : '🤖'} ${player.userName} ${myTag}</div>
-        <div class="player-status">${player.who}</div>
-        <div class="player-stats">
-            <div class="player-level">Security Level: ${player.level || 0}</div>
-            <div class="player-score">Data Secured: ${player.score || 0}</div>
-            ${comboDisplay}
-        </div>
-        <div class="exp-bar-container" style="width: 100%; height: 8px; background: #333; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
-            <div class="exp-bar" style="width: ${expPercent}%; height: 100%; background: linear-gradient(90deg, #39ff14, #20c997); transition: width 0.3s ease;"></div>
-        </div>
-        <div class="exp-text" style="font-size: 0.7rem; color: #aaa; margin-top: 0.2rem; text-align: center;">DATA PACKETS: ${currentExp} / ${maxExp}</div>
-    `;
+    if (isMobile) {
+        header.innerHTML = `
+            <div class="player-name">${player.userName}</div>
+            <div class="player-stats-mobile">
+                <span>SLv: ${player.level || 0}</span>
+                <span>Data: ${player.score || 0}</span>
+            </div>
+        `;
+    } else {
+        header.innerHTML = `
+            <div class="player-name">${isMyPlayer ? '💀' : '🤖'} ${player.userName} ${myTag}</div>
+            <div class="player-status">${player.who}</div>
+            <div class="player-stats">
+                <div class="player-level">Security Level: ${player.level || 0}</div>
+                <div class="player-score">Data Secured: ${player.score || 0}</div>
+                ${comboDisplay}
+            </div>
+            <div class="exp-bar-container" style="width: 100%; height: 8px; background: #333; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
+                <div class="exp-bar" style="width: ${expPercent}%; height: 100%; background: linear-gradient(90deg, #39ff14, #20c997); transition: width 0.3s ease;"></div>
+            </div>
+            <div class="exp-text" style="font-size: 0.7rem; color: #aaa; margin-top: 0.2rem; text-align: center;">DATA PACKETS: ${currentExp} / ${maxExp}</div>
+        `;
+    }
     container.appendChild(header);
 
-    // 遊戲主區域 (三欄式佈局)
+    // 遊戲主區域
     const gameArea = document.createElement('div');
     gameArea.className = 'game-area';
 
-    // 如果不是次要視圖，渲染左側欄（Hold 和統計）
-    if (!isSecondaryView) {
-        const leftPanel = document.createElement('div');
-        leftPanel.className = 'left-panel';
-        leftPanel.innerHTML = `
-            <div class="hold-container">
-                <div class="panel-header">STASH</div>
-                <div class="hold-board" id="hold-board-${player.socketID}"></div>
-            </div>
-            <div class="stats-container" id="stats-container-${player.socketID}">
-                 <p id="kos-${player.socketID}">K.O.s: ${player.stats ? player.stats.kos : 0}</p>
-                 <p id="pieces-${player.socketID}">PIECES: ${player.stats ? player.stats.pieces : 0}</p>
-                 <p id="attack-${player.socketID}">JUNK SENT: ${player.stats ? player.stats.attack : 0}</p>
-                 <p id="time-${player.socketID}">TIME: ${formatTime(player.stats ? player.stats.playTime : 0)}</p>
-                 <p id="droptime-${player.socketID}">DROP: ${player.stats && player.stats.avgDropTime ? (player.stats.avgDropTime / 1000).toFixed(1) + 's' : '0.0s'}</p>
-                 <p id="speed-${player.socketID}">SPEED: ${player.stats ? Math.round(1000 / (player.stats.currentSpeed * 20)) + '/s' : '3.3/s'}</p>
-            </div>
-        `;
-        gameArea.appendChild(leftPanel);
-    }
+    const leftPanel = document.createElement('div');
+    leftPanel.className = 'left-panel';
+    leftPanel.innerHTML = `
+        <div class="hold-container">
+            <div class="panel-header">STASH</div>
+            <div class="hold-board" id="hold-board-${player.socketID}"></div>
+        </div>
+        <div class="stats-container" id="stats-container-${player.socketID}">
+             <p id="kos-${player.socketID}">K.O.s: ${player.stats ? player.stats.kos : 0}</p>
+             <p id="pieces-${player.socketID}">PIECES: ${player.stats ? player.stats.pieces : 0}</p>
+             <p id="attack-${player.socketID}">JUNK SENT: ${player.stats ? player.stats.attack : 0}</p>
+             <p id="time-${player.socketID}">TIME: ${formatTime(player.stats ? player.stats.playTime : 0)}</p>
+             <p id="droptime-${player.socketID}">DROP: ${player.stats && player.stats.avgDropTime ? (player.stats.avgDropTime / 1000).toFixed(1) + 's' : '0.0s'}</p>
+             <p id="speed-${player.socketID}">SPEED: ${player.stats ? Math.round(1000 / (player.stats.currentSpeed * 20)) + '/s' : '3.3/s'}</p>
+        </div>
+    `;
 
-    // 中間主棋盤
+    const rightPanel = document.createElement('div');
+    rightPanel.className = 'right-panel';
+    rightPanel.innerHTML = `
+        <div class="next-container">
+            <div class="panel-header">QUEUE</div>
+            <div class="next-board" id="next-board-${player.socketID}"></div>
+        </div>
+    `;
+
     const centerPanel = document.createElement('div');
     centerPanel.className = 'center-panel';
     const gameBoard = document.createElement('div');
     gameBoard.className = 'game-board';
     gameBoard.id = `board-${player.socketID}`;
     centerPanel.appendChild(gameBoard);
-    gameArea.appendChild(centerPanel);
 
-    // 如果不是次要視圖，渲染右側欄（Next）
-    if (!isSecondaryView) {
-        const rightPanel = document.createElement('div');
-        rightPanel.className = 'right-panel';
-        rightPanel.innerHTML = `
-            <div class="next-container">
-                <div class="panel-header">QUEUE</div>
-                <div class="next-board" id="next-board-${player.socketID}"></div>
-            </div>
-        `;
-        gameArea.appendChild(rightPanel);
+    if (isMobile) {
+        const topPanels = document.createElement('div');
+        topPanels.className = 'mobile-top-panels';
+        topPanels.appendChild(leftPanel);
+        topPanels.appendChild(rightPanel);
+        gameArea.appendChild(topPanels);
+        gameArea.appendChild(centerPanel);
+    } else {
+        if (!isSecondaryView) gameArea.appendChild(leftPanel);
+        gameArea.appendChild(centerPanel);
+        if (!isSecondaryView) gameArea.appendChild(rightPanel);
     }
 
     container.appendChild(gameArea);
