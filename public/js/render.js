@@ -123,7 +123,6 @@ function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
     const isMobile = window.innerWidth <= 768;
     const isMyPlayer = player.socketID === mySocketId;
 
-    // 創建玩家容器
     const container = document.createElement('div');
     container.className = `player-container ${isMyPlayer ? 'my-player' : 'other-player'}`;
     container.id = `player-${player.socketID}`;
@@ -132,99 +131,63 @@ function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
         container.classList.add('eliminated');
     }
 
-    // 玩家信息頭部
+    // Header
     const header = document.createElement('div');
     header.className = 'player-header';
-    const myTag = isMyPlayer ? '<span style="color: #29D5FF;">(You)</span>' : '';
-    const comboDisplay = (player.combo && player.combo > 1)
-        ? `<div class="player-combo" style="color: #FFD700; font-weight: bold;">🔥 Chain Attack x${player.combo}</div>`
-        : '';
-    const currentExp = player.exp || 0;
-    const maxExp = player.expToNextLevel || 500;
-    const expPercent = Math.min((currentExp / maxExp) * 100, 100);
-
     if (isMobile) {
         header.innerHTML = `
             <div class="player-stats-mobile">
-                <div class="stat-item">
-                    <span class="stat-label">SCORE</span>
-                    <span class="stat-value">${player.score || 0}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">LEVEL</span>
-                    <span class="stat-value">${player.level || 0}</span>
-                </div>
-            </div>
-        `;
+                <div class="stat-item"><span class="stat-label">SCORE</span><span class="stat-value">${player.score || 0}</span></div>
+                <div class="stat-item"><span class="stat-label">LEVEL</span><span class="stat-value">${player.level || 0}</span></div>
+            </div>`;
     } else {
-        header.innerHTML = `
-            <div class="player-name">${isMyPlayer ? '💀' : '🤖'} ${player.userName} ${myTag}</div>
-            <div class="player-status">${player.who}</div>
-            <div class="player-stats">
-                <div class="player-level">Security Level: ${player.level || 0}</div>
-                <div class="player-score">Data Secured: ${player.score || 0}</div>
-                ${comboDisplay}
-            </div>
-            <div class="exp-bar-container" style="width: 100%; height: 8px; background: #333; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
-                <div class="exp-bar" style="width: ${expPercent}%; height: 100%; background: linear-gradient(90deg, #39ff14, #20c997); transition: width 0.3s ease;"></div>
-            </div>
-            <div class="exp-text" style="font-size: 0.7rem; color: #aaa; margin-top: 0.2rem; text-align: center;">DATA PACKETS: ${currentExp} / ${maxExp}</div>
-        `;
+        const myTag = isMyPlayer ? '<span style="color: #29D5FF;">(You)</span>' : '';
+        header.innerHTML = `<div class="player-name">${isMyPlayer ? '💀' : '🤖'} ${player.userName} ${myTag}</div>`;
     }
     container.appendChild(header);
 
-    // 遊戲主區域
-    const gameArea = document.createElement('div');
-    gameArea.className = 'game-area';
+    // Main Game Area
+    const gameBoardArea = document.createElement('div');
+    gameBoardArea.className = 'game-board-area';
 
-    const leftPanel = document.createElement('div');
-    leftPanel.className = 'left-panel';
-    leftPanel.innerHTML = `
+    // Stash Column (Left)
+    const stashColumn = document.createElement('div');
+    stashColumn.className = 'stash-column left-panel'; // Use left-panel for consistency
+    stashColumn.innerHTML = `
         <div class="hold-container">
             <div class="panel-header">STASH</div>
             <div class="hold-board" id="hold-board-${player.socketID}"></div>
         </div>
         <button id="mobile-hold-btn" class="mobile-hold-btn-style">STASH</button>
         <div class="stats-container" id="stats-container-${player.socketID}">
-             <p id="kos-${player.socketID}">K.O.s: ${player.stats ? player.stats.kos : 0}</p>
-             <p id="pieces-${player.socketID}">PIECES: ${player.stats ? player.stats.pieces : 0}</p>
-             <p id="attack-${player.socketID}">JUNK SENT: ${player.stats ? player.stats.attack : 0}</p>
-             <p id="time-${player.socketID}">TIME: ${formatTime(player.stats ? player.stats.playTime : 0)}</p>
-             <p id="droptime-${player.socketID}">DROP: ${player.stats && player.stats.avgDropTime ? (player.stats.avgDropTime / 1000).toFixed(1) + 's' : '0.0s'}</p>
-             <p id="speed-${player.socketID}">SPEED: ${player.stats ? Math.round(1000 / (player.stats.currentSpeed * 20)) + '/s' : '3.3/s'}</p>
-        </div>
-    `;
+             <p>K.O.s: ${player.stats ? player.stats.kos : 0}</p>
+             <p>PIECES: ${player.stats ? player.stats.pieces : 0}</p>
+             <p>JUNK SENT: ${player.stats ? player.stats.attack : 0}</p>
+             <p>TIME: ${formatTime(player.stats ? player.stats.playTime : 0)}</p>
+        </div>`;
 
-    const rightPanel = document.createElement('div');
-    rightPanel.className = 'right-panel';
-    rightPanel.innerHTML = `
+    // Playfield Column (Center)
+    const playfieldColumn = document.createElement('div');
+    playfieldColumn.className = 'playfield-column center-panel'; // Use center-panel for consistency
+    const gameBoard = document.createElement('div');
+    gameBoard.className = 'game-board'; // The main playfield
+    gameBoard.id = `board-${player.socketID}`;
+    playfieldColumn.appendChild(gameBoard);
+
+    // Queue Column (Right)
+    const queueColumn = document.createElement('div');
+    queueColumn.className = 'queue-column right-panel'; // Use right-panel for consistency
+    queueColumn.innerHTML = `
         <div class="next-container">
             <div class="panel-header">QUEUE</div>
             <div class="next-board" id="next-board-${player.socketID}"></div>
-        </div>
-    `;
+        </div>`;
 
-    const centerPanel = document.createElement('div');
-    centerPanel.className = 'center-panel';
-    const gameBoard = document.createElement('div');
-    gameBoard.className = 'game-board';
-    gameBoard.id = `board-${player.socketID}`;
-    centerPanel.appendChild(gameBoard);
+    gameBoardArea.appendChild(stashColumn);
+    gameBoardArea.appendChild(playfieldColumn);
+    gameBoardArea.appendChild(queueColumn);
 
-    if (isMobile) {
-        const topPanels = document.createElement('div');
-        topPanels.className = 'mobile-top-panels';
-        topPanels.appendChild(leftPanel);
-        topPanels.appendChild(rightPanel);
-        gameArea.appendChild(topPanels);
-        gameArea.appendChild(centerPanel);
-    } else {
-        if (!isSecondaryView) gameArea.appendChild(leftPanel);
-        gameArea.appendChild(centerPanel);
-        if (!isSecondaryView) gameArea.appendChild(rightPanel);
-    }
-
-    container.appendChild(gameArea);
+    container.appendChild(gameBoardArea);
 
     return container;
 }
