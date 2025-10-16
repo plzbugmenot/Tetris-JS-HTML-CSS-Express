@@ -8,6 +8,7 @@ import { renderAllPlayers } from './render.js'; // 導入渲染函數
 
 // 防抖變數
 let updateScoreboardTimer = null;
+let messageTimeoutId = null;
 
 /**
  * 處理計分板玩家點擊事件 (【偵錯版本】)
@@ -96,20 +97,23 @@ export function showMessage(message, type = 'info') {
     const messageDisplay = document.getElementById(DOM_IDS.MESSAGE_DISPLAY);
     if (!messageDisplay) return;
 
+    const typeClasses = ['message-banner--info', 'message-banner--success', 'message-banner--error'];
+    const resolvedType = ['info', 'success', 'error'].includes(type) ? type : 'info';
+
+    messageDisplay.classList.add('message-banner');
+    typeClasses.forEach(cls => messageDisplay.classList.remove(cls));
+    messageDisplay.classList.remove('is-hidden');
+    messageDisplay.classList.add(`message-banner--${resolvedType}`);
+
     messageDisplay.textContent = message;
-    messageDisplay.style.display = 'block';
 
-    const bgColors = {
-        error: 'rgba(244, 67, 54, 0.9)',
-        success: 'rgba(76, 175, 80, 0.9)',
-        info: 'rgba(255, 152, 0, 0.9)'
-    };
+    if (messageTimeoutId) {
+        clearTimeout(messageTimeoutId);
+    }
 
-    messageDisplay.style.background = bgColors[type] || bgColors.info;
-
-    setTimeout(() => {
-        messageDisplay.style.display = 'none';
-    }, 3000);
+    messageTimeoutId = setTimeout(() => {
+        messageDisplay.classList.add('is-hidden');
+    }, 3200);
 }
 
 /**
@@ -124,23 +128,31 @@ export function updateRoomStatus(challengers, spectators, maxPlayers, mode = 'mu
     const playersInfo = document.getElementById(DOM_IDS.PLAYERS_INFO);
 
     if (roomStatus) {
-        if (mode === 'single') {
-            roomStatus.innerHTML = `🎮 <span style="color: #4CAF50;">單機模式</span>`;
-            roomStatus.style.fontSize = '1.5rem';
-        } else if (mode === 'spectator') {
-            roomStatus.innerHTML = `
-                👁️ <span style="color: #FF9800;">觀戰模式</span><br>
-                <span style="font-size: 0.9rem;">挑戰者: ${challengers} | 觀戰者: ${spectators}</span>
-            `;
-            roomStatus.style.fontSize = '1.2rem';
-        } else {
-            roomStatus.innerHTML = `
-                🎮 <span style="color: #4CAF50;">多人挑戰</span><br>
-                <span style="font-size: 0.9rem;">挑戰者: ${challengers} | 觀戰者: ${spectators}</span>
-            `;
-            roomStatus.style.fontSize = '1.2rem';
-        }
-        roomStatus.style.color = '#eeeeee';
+        const modeClassMap = {
+            single: 'status-chip--single',
+            spectator: 'status-chip--spectator',
+            multi: 'status-chip--multi'
+        };
+        const labelMap = {
+            single: '單機模式',
+            spectator: '觀戰模式',
+            multi: '多人挑戰'
+        };
+
+        const metaMap = {
+            single: `最大挑戰者: ${maxPlayers}`,
+            spectator: `挑戰者: ${challengers} | 觀戰者: ${spectators}`,
+            multi: `挑戰者: ${challengers} | 觀戰者: ${spectators}`
+        };
+
+        roomStatus.className = `status-chip ${modeClassMap[mode] || modeClassMap.multi}`;
+        const label = labelMap[mode] || labelMap.multi;
+        const meta = metaMap[mode] || metaMap.multi;
+
+        roomStatus.innerHTML = `
+            <span class="status-chip__label">${label}</span>
+            <span class="status-chip__meta">${meta}</span>
+        `;
     }
 
     if (playersInfo) {
@@ -180,11 +192,9 @@ export function showJoinChallengeButton() {
     if (!joinButton) {
         joinButton = document.createElement('button');
         joinButton.id = 'join-challenge-btn';
-        joinButton.className = 'registerBtn';
-        joinButton.textContent = '🎮 加入挑戰';
+        joinButton.className = 'cyber-button cyber-button--primary';
+        joinButton.textContent = '加入挑戰';
         joinButton.onclick = () => window.requestJoinChallenge();
-        joinButton.style.marginTop = '1rem';
-        joinButton.style.background = '#FF9800';
         playersInfo.appendChild(joinButton);
     }
     joinButton.style.display = 'block';
@@ -366,15 +376,14 @@ export function showGameOverScreen(data) {
         return;
     }
 
-    // 單機模式顯示不同的訊息
-    if (data.isSinglePlayer) {
-        message.innerHTML = `
-            <h2>🎮 遊戲結束</h2>
-            <p style="color: #4CAF50; font-size: 1.2rem;">單機模式</p>
-        `;
-    } else {
-        message.textContent = data.message || '遊戲結束！';
-    }
+    const variant = data.isSinglePlayer ? 'solo' : 'multi';
+    const titleText = data.isSinglePlayer ? '單機模式結束' : '遊戲結束';
+    const subtitleText = data.message || (data.isSinglePlayer ? '任務完成' : '挑戰已結束');
+
+    message.innerHTML = `
+        <div class="game-over-title game-over-title--${variant}">${titleText}</div>
+        <p class="game-over-subtitle">${subtitleText}</p>
+    `;
 
     // 清空最終分數列表
     finalScoreList.innerHTML = '';
@@ -392,26 +401,20 @@ export function showGameOverScreen(data) {
 
         // 單機模式只顯示成績，不需要獎牌
         if (data.isSinglePlayer) {
+            scoreItem.classList.add('score-item--solo');
             scoreItem.innerHTML = `
-                <div style="text-align: center; padding: 1rem;">
-                    <div style="font-size: 1.5rem; color: #4CAF50; margin-bottom: 0.5rem;">
-                        ${player.userName}
-                    </div>
-                    <div style="font-size: 2rem; color: #ffd700; font-weight: bold;">
-                        ${player.score || 0} 分
-                    </div>
-                    <div style="font-size: 1.2rem; color: #aaa; margin-top: 0.3rem;">
-                        Level ${player.level || 0}
-                    </div>
-                </div>
+                <div class="score-item__label">${player.userName}</div>
+                <div class="score-item__value">${player.score || 0}<span class="score-item__unit">分</span></div>
+                <div class="score-item__meta">Level ${player.level || 0}</div>
             `;
         } else {
             // 多人模式顯示排名
             const medals = ['🥇', '🥈', '🥉'];
             const medal = medals[index] || '';
+            scoreItem.classList.add('score-item--multi');
             scoreItem.innerHTML = `
-                <span>${medal} ${player.userName} (${player.who})</span>
-                <span style="color: #ffd700;">Level ${player.level || 0} | 分數: ${player.score || 0}</span>
+                <div class="score-item__label">${medal ? `<span class="score-item__medal">${medal}</span>` : ''}${player.userName} (${player.who})</div>
+                <div class="score-item__meta">Level ${player.level || 0} ｜ 分數 ${player.score || 0}</div>
             `;
         }
 
@@ -426,9 +429,7 @@ export function showGameOverScreen(data) {
     // 單機模式：提示自動重新開始
     if (data.isSinglePlayer) {
         const autoRestartHint = document.createElement('p');
-        autoRestartHint.style.color = '#aaa';
-        autoRestartHint.style.fontSize = '1rem';
-        autoRestartHint.style.marginTop = '1rem';
+        autoRestartHint.className = 'game-over-hint';
         autoRestartHint.textContent = '3秒後自動重新開始...';
         finalScoreList.appendChild(autoRestartHint);
     }
@@ -621,92 +622,19 @@ export function showContinueGameDialog(data) {
         dialog.className = 'continue-game-dialog';
         dialog.innerHTML = `
             <div class="dialog-overlay">
-                <div class="dialog-content">
-                    <h3>🎮 遊戲結束</h3>
-                    <p>${data.message}</p>
-                    <div class="dialog-buttons">
-                        <button id="continue-yes" class="btn btn-success">✅ 繼續遊玩</button>
-                        <button id="continue-no" class="btn btn-secondary">❌ 觀戰模式</button>
+                <div class="dialog-card">
+                    <div class="dialog-card__title">遊戲結束</div>
+                    <p class="dialog-card__message">${data.message}</p>
+                    <div class="dialog-card__buttons">
+                        <button id="continue-yes" class="cyber-button cyber-button--primary">繼續遊玩</button>
+                        <button id="continue-no" class="cyber-button cyber-button--ghost">觀戰模式</button>
                     </div>
-                    <div class="countdown">
+                    <div class="dialog-card__countdown">
                         <span id="countdown-timer">10</span> 秒後自動選擇觀戰模式
                     </div>
                 </div>
             </div>
         `;
-
-        // 添加 CSS 樣式
-        const style = document.createElement('style');
-        style.textContent = `
-            .continue-game-dialog {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 10000;
-            }
-            .dialog-overlay {
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                width: 100%;
-                height: 100%;
-            }
-            .dialog-content {
-                background: white;
-                padding: 30px;
-                border-radius: 10px;
-                text-align: center;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-                max-width: 400px;
-                width: 90%;
-            }
-            .dialog-content h3 {
-                margin-top: 0;
-                color: #333;
-            }
-            .dialog-buttons {
-                display: flex;
-                gap: 15px;
-                justify-content: center;
-                margin: 20px 0;
-            }
-            .btn {
-                padding: 10px 20px;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                font-size: 16px;
-                transition: background-color 0.3s;
-            }
-            .btn-success {
-                background: #4CAF50;
-                color: white;
-            }
-            .btn-success:hover {
-                background: #45a049;
-            }
-            .btn-secondary {
-                background: #6c757d;
-                color: white;
-            }
-            .btn-secondary:hover {
-                background: #5a6268;
-            }
-            .countdown {
-                color: #666;
-                font-size: 14px;
-                margin-top: 10px;
-            }
-            #countdown-timer {
-                font-weight: bold;
-                color: #ff6b6b;
-            }
-        `;
-
-        document.head.appendChild(style);
         document.body.appendChild(dialog);
 
         // 設置按鈕事件
@@ -721,23 +649,20 @@ export function showContinueGameDialog(data) {
             if (timeLeft <= 0) {
                 clearInterval(countdownInterval);
                 Socket.sendContinueGameResponse(false);
-                document.body.removeChild(dialog);
-                document.head.removeChild(style);
+                dialog.remove();
             }
         }, 1000);
 
         yesBtn.addEventListener('click', () => {
             clearInterval(countdownInterval);
             Socket.sendContinueGameResponse(true);
-            document.body.removeChild(dialog);
-            document.head.removeChild(style);
+            dialog.remove();
         });
 
         noBtn.addEventListener('click', () => {
             clearInterval(countdownInterval);
             Socket.sendContinueGameResponse(false);
-            document.body.removeChild(dialog);
-            document.head.removeChild(style);
+            dialog.remove();
         });
     }).catch(err => {
         console.error('❌ 無法載入 Socket 模組:', err);

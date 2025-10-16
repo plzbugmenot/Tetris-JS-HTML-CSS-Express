@@ -353,44 +353,78 @@ body {
   width: 100%;
   text-align: center;
   z-index: 100;
-  border: 1px solid #29d5ff;
-  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
+  display: none;
+  background: rgba(4, 6, 10, 0.92);
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(41, 213, 255, 0.35);
+  box-shadow: 0 12px 30px rgba(4, 6, 10, 0.65);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 #room-status {
-  font-size: 1.2rem; /* Adjusted for more content */
   margin-bottom: 1rem;
-  color: #00ff00;
-  text-shadow: none;
-  background: rgba(15, 61, 15, 0.5);
-  border: 1px solid #0f3d0f;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  display: inline-block;
+}
+
+.status-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 12px;
+  background: rgba(4, 6, 10, 0.88);
+  border: 1px solid #29d5ff;
+  box-shadow: 0 0 18px rgba(41, 213, 255, 0.25);
+  color: #29d5ff;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: center;
+  min-width: 220px;
+}
+
+.status-chip__label {
+  font-size: 1rem;
+}
+
+.status-chip__meta {
+  font-size: 0.85rem;
+  color: #9af9ff;
+  letter-spacing: 0.08em;
+}
+
+.status-chip--single {
+  border-color: #39ff14;
+  color: #39ff14;
+  box-shadow: 0 0 18px rgba(57, 255, 20, 0.25);
+}
+
+.status-chip--single .status-chip__meta {
+  color: #aefbba;
+}
+
+.status-chip--spectator {
+  border-color: #ffb347;
+  color: #ffb347;
+  box-shadow: 0 0 18px rgba(255, 179, 71, 0.25);
+}
+
+.status-chip--spectator .status-chip__meta {
+  color: #ffd8a1;
+}
+
+.status-chip--multi {
+  border-color: #29d5ff;
+  color: #29d5ff;
 }
 
 #start-game-btn,
 #join-challenge-btn {
-  padding: 0.8rem 2rem;
-  font-size: 1.2rem;
-  background: transparent;
-  color: #39ff14;
-  border: 1px solid #39ff14;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.3s;
   display: none;
-  font-family: "Share Tech Mono", monospace;
-  text-transform: uppercase;
 }
 
-#start-game-btn:hover,
-#join-challenge-btn:hover {
-  background: #39ff14;
-  color: #04060a;
-  box-shadow: 0 0 15px #39ff14;
+#join-challenge-btn {
+  margin-top: 1rem;
 }
 
 /* 訊息顯示 */
@@ -399,20 +433,150 @@ body {
   top: 2rem;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(15, 61, 15, 0.5); /* Dark, semi-transparent background */
-  border: 1px solid #29d5ff; /* Cyan border */
-  color: #29d5ff; /* Cyan text */
-  padding: 0.5rem 1.5rem;
-  border-radius: 5px;
-  display: none;
+  padding: 0.6rem 1.8rem;
+  border-radius: 999px;
   z-index: 1000;
   max-width: 90vw;
   word-wrap: break-word;
   text-align: center;
-  box-shadow: 0 0 10px rgba(41, 213, 255, 0.5);
   font-family: "Share Tech Mono", monospace;
-  -webkit-backdrop-filter: blur(3px);
-  backdrop-filter: blur(3px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: opacity 0.3s ease;
+}
+
+.message-banner {
+  background: rgba(4, 6, 10, 0.92);
+  border: 1px solid #29d5ff;
+  color: #29d5ff;
+  box-shadow: 0 0 12px rgba(41, 213, 255, 0.35);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+.message-banner--success {
+  border-color: #39ff14;
+  color: #39ff14;
+  box-shadow: 0 0 14px rgba(57, 255, 20, 0.35);
+}
+
+.message-banner--error {
+  border-color: #ff4976;
+  color: #ff4976;
+  box-shadow: 0 0 14px rgba(255, 73, 118, 0.35);
+}
+
+.message-banner--info {
+  border-color: #29d5ff;
+  color: #29d5ff;
+}
+
+.continue-game-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+}
+
+.continue-game-dialog .dialog-overlay {
+  background: rgba(4, 6, 10, 0.88);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.dialog-card {
+  background: rgba(4, 6, 10, 0.96);
+  border: 1px solid #29d5ff;
+  box-shadow: 0 0 28px rgba(41, 213, 255, 0.28);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  width: min(90vw, 420px);
+  font-family: "Share Tech Mono", monospace;
+  letter-spacing: 0.08em;
+}
+
+.dialog-card__title {
+  font-size: 1.6rem;
+  color: #29d5ff;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(41, 213, 255, 0.35);
+}
+
+.dialog-card__message {
+  color: #a5f4ff;
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.dialog-card__buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.cyber-button {
+  padding: 0.75rem 1.75rem;
+  border-radius: 999px;
+  border: 1px solid #29d5ff;
+  background: transparent;
+  color: #29d5ff;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.cyber-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 18px rgba(41, 213, 255, 0.35);
+}
+
+.cyber-button--primary {
+  border-color: #39ff14;
+  color: #39ff14;
+  box-shadow: 0 0 18px rgba(57, 255, 20, 0.28);
+}
+
+.cyber-button--primary:hover {
+  box-shadow: 0 0 24px rgba(57, 255, 20, 0.4);
+  background: rgba(57, 255, 20, 0.08);
+}
+
+.cyber-button--ghost {
+  border-color: #ff4976;
+  color: #ff4976;
+  box-shadow: 0 0 18px rgba(255, 73, 118, 0.28);
+}
+
+.cyber-button--ghost:hover {
+  box-shadow: 0 0 24px rgba(255, 73, 118, 0.4);
+  background: rgba(255, 73, 118, 0.08);
+}
+
+.dialog-card__countdown {
+  color: #9af9ff;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+}
+
+.dialog-card__countdown #countdown-timer {
+  color: #ffb347;
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-right: 0.25rem;
 }
 
 /* 遊戲容器 - 響應式網格佈局 */
@@ -1081,47 +1245,104 @@ body {
 }
 
 #game-over-content {
-  background: #04060a;
-  padding: 3rem;
-  border-radius: 15px;
+  background: rgba(4, 6, 10, 0.94);
+  padding: 2.75rem;
+  border-radius: 14px;
   text-align: center;
-  border: 1px solid #ff1744;
-  box-shadow: 0 0 30px #ff1744;
-  max-width: 600px;
+  border: 1px solid #29d5ff;
+  box-shadow: 0 0 28px rgba(41, 213, 255, 0.28);
+  max-width: 640px;
+  width: calc(100% - 2rem);
 }
 
-#game-over-content h1 {
-  color: #ff1744;
-  font-size: 3rem;
-  margin: 0 0 1rem 0;
-  text-shadow: 0 0 10px #ff1744;
+.game-over-title {
+  font-size: 2.25rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #29d5ff;
+  margin-bottom: 0.75rem;
+  text-shadow: 0 0 12px rgba(41, 213, 255, 0.45);
 }
 
-#game-over-content p {
+.game-over-title--solo {
   color: #39ff14;
-  font-size: 1.5rem;
+  text-shadow: 0 0 15px rgba(57, 255, 20, 0.45);
+}
+
+.game-over-subtitle {
+  color: #a5f4ff;
+  font-size: 1rem;
   margin-bottom: 2rem;
+  letter-spacing: 0.1em;
 }
 
 #game-over-content .final-scores {
   text-align: left;
-  margin: 2rem 0;
+  margin: 1.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 #game-over-content .final-scores h3 {
-  color: #39ff14;
-  margin-bottom: 1rem;
-  text-shadow: 0 0 5px #39ff14;
+  color: #29d5ff;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(41, 213, 255, 0.4);
 }
 
 #game-over-content .score-item {
-  background: rgba(57, 255, 20, 0.1);
-  border: 1px solid #39ff14;
-  padding: 1rem;
-  margin-bottom: 0.5rem;
-  border-radius: 5px;
+  background: rgba(41, 213, 255, 0.08);
+  border: 1px solid rgba(41, 213, 255, 0.45);
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 0.4rem;
+  letter-spacing: 0.06em;
+}
+
+#game-over-content .score-item--solo {
+  align-items: center;
+  text-align: center;
+  background: rgba(57, 255, 20, 0.08);
+  border-color: rgba(57, 255, 20, 0.4);
+}
+
+#game-over-content .score-item__label {
+  color: #29d5ff;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+#game-over-content .score-item__medal {
+  margin-right: 0.5rem;
+}
+
+#game-over-content .score-item__meta {
+  color: #9af9ff;
+  font-size: 0.85rem;
+}
+
+#game-over-content .score-item__value {
+  color: #ffd700;
+  font-size: 2rem;
+  font-weight: bold;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
+}
+
+#game-over-content .score-item__unit {
+  font-size: 1rem;
+  margin-left: 0.3rem;
+  color: #d6be6c;
+}
+
+.game-over-hint {
+  color: #9af9ff;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  letter-spacing: 0.06em;
 }
 
 /* ==================== 挑戰模式：雙視圖佈局 ==================== */
