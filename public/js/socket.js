@@ -18,6 +18,9 @@ let gameState = GAME_STATES.READY;
 let myPlayerType = 'CHALLENGER'; // 我的玩家類型
 let spectatorTarget = null; // 觀戰者當前觀看的目標玩家ID
 
+// 預設將玩家類型同步到全域，避免 UI 讀取到未定義的狀態
+globalThis.currentPlayerType = myPlayerType;
+
 // 回調函數
 let onGameStateUpdate = null;
 let onPlayerEliminated = null;
@@ -31,7 +34,7 @@ let onGameOver = null;
  */
 export function initSocket(onStateUpdate, onEliminated, onGameEnd) {
     // 從全局獲取 socket (由 index.html 提供)
-    socket = window.socket;
+    socket = globalThis.socket;
 
     if (!socket) {
         console.error('Socket not available');
@@ -67,9 +70,13 @@ function setupSocketListeners() {
         const userName = data.newUser?.userName || '未知玩家';
         console.log(`👤 新玩家加入: ${userName}`, data);
         maxPlayers = data.maxPlayers || 999; // 顯示用的參考值
-        myPlayerType = data.playerType || 'CHALLENGER';
-        // 暴露玩家類型到全域變數供UI模組使用
-        window.currentPlayerType = myPlayerType;
+
+        const isSelfJoin = data.newUser?.socketID === mySocketId;
+        if (isSelfJoin) {
+            myPlayerType = data.playerType || 'CHALLENGER';
+            // 暴露玩家類型到全域變數供UI模組使用
+            globalThis.currentPlayerType = myPlayerType;
+        }
 
         // 單人模式：第一位玩家，自動開始
         if (data.size === 1 && data.challengers === 1) {
@@ -215,7 +222,7 @@ function setupSocketListeners() {
 
         // 更新玩家類型
         myPlayerType = 'SPECTATOR';
-        window.currentPlayerType = myPlayerType;
+        globalThis.currentPlayerType = myPlayerType;
 
         // 顯示訊息和觀戰模式
         UI.showMessage(data.message, 'info');
@@ -280,7 +287,7 @@ function setupSocketListeners() {
         console.log(`✨ 消行動畫: ${data.userName} 消除了 ${data.linesCleared} 行${comboText}${expText}`);
 
         // 觸發自定義事件，通知渲染模組播放動畫
-        window.dispatchEvent(new CustomEvent('playLineClearAnimation', {
+        globalThis.dispatchEvent(new CustomEvent('playLineClearAnimation', {
             detail: data
         }));
 
@@ -339,7 +346,7 @@ function setupSocketListeners() {
         }
 
         // 觸發攻擊動畫
-        window.dispatchEvent(new CustomEvent('playAttackAnimation', {
+        globalThis.dispatchEvent(new CustomEvent('playAttackAnimation', {
             detail: data
         }));
     });
@@ -348,7 +355,7 @@ function setupSocketListeners() {
     socket.on('joinChallengeSuccess', (data) => {
         console.log('✅ 成功加入挑戰！', data);
         myPlayerType = 'CHALLENGER';
-        window.currentPlayerType = myPlayerType;
+        globalThis.currentPlayerType = myPlayerType;
         UI.hideJoinChallengeButton();
         UI.showMessage(data.message, 'success');
         UI.showStartButton();
@@ -505,7 +512,7 @@ export function getMyPlayerType() {
  */
 export function setSpectatorTarget(targetSocketId) {
     spectatorTarget = targetSocketId;
-    window.currentSpectatorTarget = targetSocketId; // 暴露到全域變數
+    globalThis.currentSpectatorTarget = targetSocketId; // 暴露到全域變數
     console.log(`👀 切換觀戰目標到: ${targetSocketId}`);
 
     // 如果當前是遊戲中狀態，立即更新顯示

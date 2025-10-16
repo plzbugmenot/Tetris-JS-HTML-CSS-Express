@@ -20,7 +20,7 @@ let messageTimeoutId = null;
  * 處理計分板玩家點擊事件 (【最終簡化版】)
  */
 function handlePlayerClick(socketId, userName) {
-    const playerType = window.currentPlayerType;
+    const playerType = globalThis.currentPlayerType;
     const myId = window.socket.id;
 
     if (playerType === 'CHALLENGER') {
@@ -60,7 +60,7 @@ function handlePlayerClick(socketId, userName) {
  */
 function checkIfSpectator() {
     // 通過全域變數檢查（在socket.js中設置）
-    return window.currentPlayerType === 'SPECTATOR';
+    return globalThis.currentPlayerType === 'SPECTATOR';
 }
 
 /**
@@ -128,26 +128,36 @@ export function updateRoomStatus(challengers, spectators, maxPlayers, mode = 'mu
     const playersInfo = document.getElementById(DOM_IDS.PLAYERS_INFO);
 
     if (roomStatus) {
+        const derivedMode = (() => {
+            if (mode === 'multi' && challengers <= 1) {
+                return 'waiting';
+            }
+            return mode;
+        })();
+
         const modeClassMap = {
             single: 'status-chip--single',
             spectator: 'status-chip--spectator',
-            multi: 'status-chip--multi'
+            multi: 'status-chip--multi',
+            waiting: 'status-chip--waiting'
         };
         const labelMap = {
             single: '單機模式',
             spectator: '觀戰模式',
-            multi: '多人挑戰'
+            multi: '多人挑戰',
+            waiting: '等待挑戰者'
         };
 
         const metaMap = {
             single: `最大挑戰者: ${maxPlayers}`,
             spectator: `挑戰者: ${challengers} | 觀戰者: ${spectators}`,
-            multi: `挑戰者: ${challengers} | 觀戰者: ${spectators}`
+            multi: `挑戰者: ${challengers} | 觀戰者: ${spectators}`,
+            waiting: `挑戰者: ${challengers} | 觀戰者: ${spectators}`
         };
 
-        roomStatus.className = `status-chip ${modeClassMap[mode] || modeClassMap.multi}`;
-        const label = labelMap[mode] || labelMap.multi;
-        const meta = metaMap[mode] || metaMap.multi;
+        roomStatus.className = `status-chip ${modeClassMap[derivedMode] || modeClassMap.multi}`;
+        const label = labelMap[derivedMode] || labelMap.multi;
+        const meta = metaMap[derivedMode] || metaMap.multi;
 
         roomStatus.innerHTML = `
             <span class="status-chip__label">${label}</span>
@@ -242,7 +252,7 @@ function updateScoreboardInternal(players, gameState, scoreboard, scoreList) {
     });
 
     const myId = window.socket.id;
-    const playerType = window.currentPlayerType;
+    const playerType = globalThis.currentPlayerType;
     const currentPlayerIds = new Set();
 
     sortedPlayers.forEach((player, index) => {

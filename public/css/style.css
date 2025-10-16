@@ -689,6 +689,11 @@ body {
   50% {
     transform: translate(-50%, -50%) scale(1.2);
     opacity: 1;
+    .status-chip--waiting {
+      border-color: #ffd700;
+      box-shadow: 0 0 18px rgba(255, 215, 0, 0.25);
+      color: #ffd700;
+    }
   }
 
   100% {
