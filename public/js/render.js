@@ -181,7 +181,6 @@ function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
             <div class="panel-header">STASH</div>
             <div class="hold-board" id="hold-board-${player.socketID}"></div>
         </div>
-        <button id="mobile-hold-btn" class="mobile-hold-btn-style">STASH</button>
         <div class="stats-container" id="stats-container-${player.socketID}">
              <p id="kos-${player.socketID}">K.O.s: ${player.stats ? player.stats.kos : 0}</p>
              <p id="pieces-${player.socketID}">PIECES: ${player.stats ? player.stats.pieces : 0}</p>
@@ -197,7 +196,36 @@ function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
     const gameBoard = document.createElement('div');
     gameBoard.className = 'game-board';
     gameBoard.id = `board-${player.socketID}`;
-    playfieldColumn.appendChild(gameBoard);
+
+    if (isMobile && isMyPlayer) {
+        const playfieldStack = document.createElement('div');
+        playfieldStack.className = 'mobile-playfield-stack';
+
+        const controlsLeft = document.createElement('div');
+        controlsLeft.className = 'mobile-controls-inline mobile-controls-left';
+        controlsLeft.innerHTML = `
+            <div class="controls-dpad">
+                <button id="btn-left">◀</button>
+                <button id="btn-down">▼</button>
+            </div>`;
+
+        const controlsRight = document.createElement('div');
+        controlsRight.className = 'mobile-controls-inline mobile-controls-right';
+        controlsRight.innerHTML = `
+            <div class="controls-actions">
+                <button id="btn-right">▶</button>
+                <button id="btn-rotate">🔄</button>
+                <button id="btn-drop">⚡</button>
+                <button id="btn-hold">HOLD</button>
+            </div>`;
+
+        playfieldStack.appendChild(controlsLeft);
+        playfieldStack.appendChild(gameBoard);
+        playfieldStack.appendChild(controlsRight);
+        playfieldColumn.appendChild(playfieldStack);
+    } else {
+        playfieldColumn.appendChild(gameBoard);
+    }
 
     // Queue Column (Right)
     const queueColumn = document.createElement('div');

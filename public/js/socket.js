@@ -262,6 +262,7 @@ function setupSocketListeners() {
         const playersInfo = document.getElementById('players-info');
         if (playersInfo) {
             playersInfo.style.display = 'block';
+            playersInfo.classList.remove('is-hidden');
         }
     });
 

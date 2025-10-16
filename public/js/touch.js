@@ -15,6 +15,22 @@ const SWIPE_THRESHOLD = 50; // Minimum distance for a swipe
 const TAP_THRESHOLD = 20;   // Max distance for a tap
 const TAP_TIME_THRESHOLD = 200; // Max time in ms for a tap
 const HARD_DROP_VELOCITY = 0.5; // px/ms for a hard drop
+const REPEAT_DELAY = 120; // Continuous press repeat delay (ms)
+
+let controlsInitialized = false;
+const pointerBindings = new Map(); // pointerId -> buttonId
+const repeatIntervals = new Map(); // pointerId -> intervalId
+
+const CONTROL_ACTIONS = {
+    'btn-left': () => Socket.moveBlock(DIRECTIONS.LEFT),
+    'btn-right': () => Socket.moveBlock(DIRECTIONS.RIGHT),
+    'btn-down': () => Socket.moveBlock(DIRECTIONS.DOWN),
+    'btn-rotate': () => Socket.rotateBlock(),
+    'btn-drop': () => Socket.dropBlock(),
+    'btn-hold': () => Socket.holdBlock()
+};
+
+const REPEATABLE_BUTTONS = new Set(['btn-left', 'btn-right', 'btn-down', 'btn-rotate']);
 
 function handleGesture() {
     const dx = touchEndX - touchStartX;
@@ -57,32 +73,108 @@ function handleGesture() {
     }
 }
 
+function startControlAction(pointerId, buttonId, buttonEl) {
+    const action = CONTROL_ACTIONS[buttonId];
+    if (!action) return;
+
+    action();
+    pointerBindings.set(pointerId, buttonId);
+
+    if (REPEATABLE_BUTTONS.has(buttonId)) {
+        if (repeatIntervals.has(pointerId)) {
+            clearInterval(repeatIntervals.get(pointerId));
+        }
+        const intervalId = setInterval(action, REPEAT_DELAY);
+        repeatIntervals.set(pointerId, intervalId);
+    }
+
+    if (buttonEl && buttonEl.setPointerCapture) {
+        try {
+            buttonEl.setPointerCapture(pointerId);
+        } catch (_) {
+            // Ignore browsers that do not support pointer capture
+        }
+    }
+}
+
+function stopControlAction(pointerId) {
+    const buttonId = pointerBindings.get(pointerId);
+    if (!buttonId) return;
+
+    if (repeatIntervals.has(pointerId)) {
+        clearInterval(repeatIntervals.get(pointerId));
+        repeatIntervals.delete(pointerId);
+    }
+
+    pointerBindings.delete(pointerId);
+}
+
+function shouldHandleGesture(target) {
+    return !target.closest('.mobile-controls-inline');
+}
+
 export function initTouchControls() {
+    if (controlsInitialized) return;
+
     const gameContainer = document.getElementById('game-container');
-    const holdButton = document.getElementById('mobile-hold-btn');
+    if (!gameContainer) return;
 
-    if (!gameContainer || !holdButton) return;
+    document.addEventListener('pointerdown', (event) => {
+        const button = event.target.closest('.mobile-controls-inline button');
+        if (!button) return;
 
-    holdButton.addEventListener('click', () => {
-        console.log('Action: Stash (Hold)');
-        Socket.holdBlock();
-    });
+        const buttonId = button.id;
+        if (!CONTROL_ACTIONS[buttonId]) return;
+
+        event.preventDefault();
+        startControlAction(event.pointerId, buttonId, button);
+    }, { passive: false });
+
+    const pointerStopHandler = (event) => {
+        if (!pointerBindings.has(event.pointerId)) return;
+        stopControlAction(event.pointerId);
+        const button = event.target && event.target.closest('.mobile-controls-inline button');
+        if (button && button.releasePointerCapture) {
+            try {
+                button.releasePointerCapture(event.pointerId);
+            } catch (_) {
+                // Ignore if capture was not set
+            }
+        }
+    };
+
+    document.addEventListener('pointerup', pointerStopHandler, { passive: true });
+    document.addEventListener('pointercancel', pointerStopHandler, { passive: true });
+    document.addEventListener('pointerleave', pointerStopHandler, { passive: true });
 
     gameContainer.addEventListener('touchstart', (e) => {
+        if (!shouldHandleGesture(e.target)) {
+            return;
+        }
+
         touchStartX = e.changedTouches[0].screenX;
         touchStartY = e.changedTouches[0].screenY;
         touchStartTime = Date.now();
     }, { passive: true });
 
     gameContainer.addEventListener('touchmove', (e) => {
-        e.preventDefault(); // Prevent browser scrolling
+        if (!shouldHandleGesture(e.target)) {
+            return;
+        }
+
+        e.preventDefault();
     }, { passive: false });
 
     gameContainer.addEventListener('touchend', (e) => {
+        if (!shouldHandleGesture(e.target)) {
+            return;
+        }
+
         touchEndX = e.changedTouches[0].screenX;
         touchEndY = e.changedTouches[0].screenY;
         handleGesture();
     }, { passive: true });
 
     console.log('📱 Touch controls initialized.');
+    controlsInitialized = true;
 }

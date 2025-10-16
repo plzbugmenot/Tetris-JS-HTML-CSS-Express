@@ -223,6 +223,7 @@ export function updateScoreboard(players, gameState) {
  */
 function updateScoreboardInternal(players, gameState, scoreboard, scoreList) {
     scoreboard.style.display = 'flex';
+    scoreboard.classList.remove('is-hidden');
 
     const sortedPlayers = [...players].sort((a, b) => {
         const scoreDiff = (b.score || 0) - (a.score || 0);

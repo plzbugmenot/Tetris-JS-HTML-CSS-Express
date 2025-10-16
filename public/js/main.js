@@ -100,8 +100,8 @@ function initializeGame() {
     // 設定觸控按鈕的事件監聽
     if (window.innerWidth <= 768) {
         Touch.initTouchControls();
-    } else {
-        setupTouchControls(); // Keep legacy buttons for desktop/tablet
+    } else if (document.getElementById('btn-left')) {
+        setupTouchControls(); // Keep legacy buttons for desktop/tablet when present
     }
 
     isInitialized = true;

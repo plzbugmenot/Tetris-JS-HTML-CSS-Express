@@ -20,6 +20,20 @@ body {
   overflow-x: auto;
 }
 
+.is-hidden {
+  display: none;
+}
+
+#players-info.is-hidden,
+#scoreboard.is-hidden {
+  display: none;
+}
+
+.game-over-restart-msg {
+  color: #aaa;
+  font-size: 1rem;
+}
+
 #main-content {
   display: flex;
   flex-direction: row;
@@ -60,8 +74,68 @@ body {
   align-items: center;
 }
 
-.mobile-hold-btn-style {
+.mobile-controls-inline {
   display: none;
+  width: auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
+.mobile-controls-left {
+  align-items: flex-end;
+}
+
+.mobile-controls-right {
+  align-items: flex-start;
+}
+
+.mobile-controls-inline .controls-dpad,
+.mobile-controls-inline .controls-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mobile-controls-inline .dpad-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.mobile-controls-inline button {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(15, 61, 15, 0.6);
+  border: 1px solid #29d5ff;
+  color: #29d5ff;
+  font-size: 1.4rem;
+  font-family: "Share Tech Mono", monospace;
+  box-shadow: 0 0 6px rgba(41, 213, 255, 0.3);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-controls-inline button:active {
+  transform: scale(0.95);
+  box-shadow: 0 0 10px rgba(41, 213, 255, 0.5);
+}
+
+.mobile-playfield-stack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.mobile-playfield-stack .game-board {
+  flex: 1 1 0;
+  min-width: 200px;
 }
 
 .left-panel,
@@ -130,7 +204,6 @@ body {
   padding: 0.5rem;
   border-radius: 8px;
   border: 1px solid #0f3d0f;
-  box-shadow: none;
   font-size: 0.9rem;
 }
 
@@ -154,7 +227,6 @@ body {
   /* 支援絕對定位的上方方塊 */
   overflow: visible;
   /* 讓上方的方塊能顯示出來 */
-  box-shadow: none;
 }
 
 /* Block styles */
@@ -164,17 +236,17 @@ body {
   width: 25px;
   height: 25px;
   box-sizing: border-box;
-  border: 1px solid #0f3d0f; /* Dark green grid lines */
-  box-shadow: none;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+  border: 1px solid #29d5ff;
 }
 
-/* Color styles for blocks - Refined Cyber Theme */
 .block-0,
 .hold-block.block-0,
 .next-block.block-0 {
   background-color: #29d5ff;
   border: 1px solid #29d5ff;
-} /* I piece - Cyan */
+}
+
 .block-1,
 .hold-block.block-1,
 .next-block.block-1 {
@@ -212,15 +284,10 @@ body {
   border: 1px solid #ff8e0d;
 } /* Z piece - Orange */
 
-.block,
-.hold-block,
-.next-block {
-  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
-}
-
 .block-ground {
-  background-color: #0f3d0f; /* Use the frame color for landed blocks */
-  box-shadow: inset 0 0 4px #000;
+  background-color: #1fd16a;
+  border: 1px solid #2fff8d;
+  box-shadow: 0 0 6px rgba(47, 255, 141, 0.35), inset 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 .block-send {
@@ -286,9 +353,8 @@ body {
   width: 100%;
   text-align: center;
   z-index: 100;
-  display: none;
-  background: rgba(26, 26, 26, 0.95);
-  padding: 1rem 0;
+  border: 1px solid #29d5ff;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
   -webkit-backdrop-filter: blur(5px);
   backdrop-filter: blur(5px);
 }
@@ -345,6 +411,7 @@ body {
   text-align: center;
   box-shadow: 0 0 10px rgba(41, 213, 255, 0.5);
   font-family: "Share Tech Mono", monospace;
+  -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
 }
 
@@ -783,17 +850,6 @@ body {
   justify-content: space-between;
 }
 
-.score-item.clickable-player:hover {
-  background-color: rgba(0, 255, 0, 0.1) !important;
-  border-color: #008f11 !important;
-}
-
-.score-item.selected {
-  border-color: #00ff00 !important;
-  background-color: rgba(0, 255, 0, 0.05);
-  box-shadow: none;
-}
-
 /* 響應式設計 */
 @media (max-width: 1200px) {
   .game-container {
@@ -822,11 +878,6 @@ body {
     padding: 0;
     height: 100vh;
     justify-content: space-between;
-  }
-
-  #scoreboard,
-  .stats-container {
-    display: none !important;
   }
 
   .game-container {
@@ -860,29 +911,15 @@ body {
     flex: 1 1 25%;
   }
 
+  .stats-container {
+    display: block;
+  }
+
   .playfield-column {
     flex: 2 1 50%;
     padding: 0 5px;
     box-sizing: border-box;
     align-items: center;
-  }
-
-  .mobile-hold-btn-style {
-    display: block;
-    background: transparent;
-    border: 1px solid #29d5ff;
-    color: #29d5ff;
-    padding: 10px 20px;
-    font-family: "Share Tech Mono", monospace;
-    font-size: 1rem;
-    border-radius: 5px;
-    margin-top: 0.5rem;
-    width: 100%;
-  }
-
-  .mobile-hold-btn-style:active {
-    background: #29d5ff;
-    color: #04060a;
   }
 
   .game-board {
@@ -909,6 +946,37 @@ body {
   .left-panel,
   .right-panel {
     display: block !important;
+  }
+
+  .mobile-playfield-stack {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .mobile-playfield-stack .game-board {
+    flex: 1 1 auto;
+  }
+
+  .mobile-controls-inline {
+    display: flex;
+  }
+
+  .mobile-controls-left,
+  .mobile-controls-right {
+    gap: 0.75rem;
+  }
+
+  #scoreboard {
+    display: flex;
+    flex-direction: column;
+    order: 3;
+    width: 90%;
+    max-width: 420px;
+    margin: 0 auto 1rem;
+    height: auto;
   }
 
   .player-header {
@@ -938,6 +1006,8 @@ body {
     display: block;
     font-size: 0.7rem;
     color: #008f11;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .stat-value {
@@ -947,9 +1017,10 @@ body {
 
 @media (max-width: 480px) {
   .game-container {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 0.3rem;
-    padding: 0.3rem;
+    padding: 0.3rem 0;
   }
 
   .player-container {
@@ -961,8 +1032,12 @@ body {
     height: 315px;
   }
 
-  .block,
-  .hold-block,
+  .mobile-controls-inline .dpad-row {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
   .next-block {
     width: 15px;
     height: 15px;
@@ -991,6 +1066,7 @@ body {
   align-items: center;
   z-index: 2000;
   animation: fadeIn 0.5s;
+  -webkit-backdrop-filter: blur(5px);
   backdrop-filter: blur(5px);
 }
 
@@ -1176,146 +1252,5 @@ body {
   20%,
   80% {
     opacity: 1;
-  }
-}
-
-/* 響應式設計 - 觀戰者模式在小屏幕上的適配 */
-@media (max-width: 768px) {
-  #app-wrapper {
-    justify-content: center;
-  }
-
-  #main-content {
-    flex-grow: 0;
-  }
-
-  .game-header {
-    padding: 5px;
-  }
-
-  .player-container {
-    height: auto;
-  }
-
-  .game-board-area {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    width: 100%;
-    padding: 0 5px;
-    box-sizing: border-box;
-  }
-
-  .stash-column,
-  .queue-column {
-    flex: 1 1 25%;
-  }
-
-  .stash-column .stats-container {
-    display: none;
-  }
-
-  .mobile-hold-btn-style {
-    display: block;
-  }
-
-  .playfield-column {
-    flex: 2 1 50%;
-    padding: 0 5px;
-    box-sizing: border-box;
-  }
-
-  .game-board {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1 / 2;
-  }
-
-  .left-panel,
-  .right-panel {
-    display: block !important;
-  }
-
-  #scoreboard {
-    display: none !important;
-  }
-}
-
-/* 觸控按鈕的容器 (這部分大部分不變) */
-.touch-controls-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 15px;
-  box-sizing: border-box;
-  display: none;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.3);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
-  z-index: 1500;
-  touch-action: manipulation;
-}
-
-/* ==================== 核心修改區塊 ==================== */
-
-/* 新增：十字方向鍵 (D-pad) 的容器 */
-.controls-dpad {
-  display: flex;
-  flex-direction: column;
-  /* 讓上下兩行垂直排列 */
-  align-items: center;
-  /* 讓下方的「下」按鈕居中 */
-  gap: 5px;
-  /* 行之間的間距 */
-}
-
-/* 新增：D-pad 每一行的樣式 */
-.dpad-row {
-  display: flex;
-  gap: 20px;
-  /* 左右按鈕之間的間距 */
-}
-
-/* 舊的 .controls-left 已經不需要，這裡只保留 .controls-right */
-.controls-right {
-  display: flex;
-  gap: 10px;
-}
-
-/* ======================================================= */
-
-/* 按鈕通用樣式 (這部分不變) */
-.touch-controls-container button {
-  width: 60px;
-  height: 60px;
-  font-size: 24px;
-  color: #39ff14;
-  background: transparent;
-  border: 1px solid #39ff14;
-  border-radius: 50%;
-  -webkit-user-select: none;
-  user-select: none;
-  text-shadow: 0 0 5px #39ff14;
-}
-
-/* 新增：為瞬間下落按鈕的閃電圖示調整大小 */
-#btn-drop {
-  font-size: 20px;
-}
-
-/* 按下時的效果 (這部分不變) */
-.touch-controls-container button:active {
-  background: #39ff14;
-  color: #04060a;
-  box-shadow: 0 0 15px #39ff14;
-}
-
-/* 媒體查詢 (這部分不變) */
-@media (max-width: 768px) {
-  .touch-controls-container {
-    display: flex;
   }
 }

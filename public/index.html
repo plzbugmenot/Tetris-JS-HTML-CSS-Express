@@ -16,99 +16,74 @@
 </head>
 
 <body>
-<div id="app-wrapper">
-    <div id="register">
-        <input id="name" type="text" maxlength="10" placeholder="ENTER YOUR CODENAME" />
-        <button onclick="registerPlayer()" class="registerBtn">INITIATE CONNECTION</button>
-    </div>
-
-    <!-- 玩家信息區 -->
-    <header id="players-info" class="game-header" style="display: none; text-align: center;">
-        <div id="room-status"></div>
-        <button id="join-challenge-btn" onclick="requestJoinChallenge()">
-            JOIN THE ATTACK
-        </button>
-    </header>
-
-    <main id="main-content">
-        <!-- 動態遊戲區域 -->
-        <div id="game-container" class="game-container">
-            <!-- 玩家棋盤將動態生成在這裡 -->
+    <div id="app-wrapper">
+        <div id="register">
+            <input id="name" type="text" maxlength="10" placeholder="ENTER YOUR CODENAME" />
+            <button onclick="registerPlayer()" class="registerBtn">INITIATE CONNECTION</button>
         </div>
 
-        <!-- 右側計分板 -->
-        <div id="scoreboard" style="display: none;">
-            <h3>SYSTEM STATUS</h3>
-            <div id="score-list"></div>
-        </div>
-    </main>
+        <!-- 玩家信息區 -->
+        <header id="players-info" class="game-header is-hidden">
+            <div id="room-status"></div>
+            <button id="join-challenge-btn" onclick="requestJoinChallenge()">
+                JOIN THE ATTACK
+            </button>
+        </header>
 
-    <!-- 遊戲結束畫面 -->
-    <div id="game-over-overlay">
-        <div id="game-over-content">
-            <h1>CONNECTION LOST</h1>
-            <p id="game-over-message">All agents have been compromised.</p>
-            <div class="final-scores">
-                <h3>FINAL RANKING</h3>
-                <div id="final-score-list"></div>
+        <main id="main-content">
+            <!-- 動態遊戲區域 -->
+            <div id="game-container" class="game-container">
+                <!-- 玩家棋盤將動態生成在這裡 -->
             </div>
-            <p style="color: #aaa; font-size: 1rem;">Re-establishing connection in 3s...</p>
+
+            <!-- 右側計分板 -->
+            <div id="scoreboard" class="is-hidden">
+                <h3>SYSTEM STATUS</h3>
+                <div id="score-list"></div>
+            </div>
+        </main>
+
+        <!-- 遊戲結束畫面 -->
+        <div id="game-over-overlay">
+            <div id="game-over-content">
+                <h1>CONNECTION LOST</h1>
+                <p id="game-over-message">All agents have been compromised.</p>
+                <div class="final-scores">
+                    <h3>FINAL RANKING</h3>
+                    <div id="final-score-list"></div>
+                </div>
+                <p class="game-over-restart-msg">Re-establishing connection in 3s...</p>
+            </div>
         </div>
+
+        <div id="message-display"></div>
     </div>
 
-    <div id="message-display"></div>
-</div>
+    <script>
+        console.log("connecting...");
+
+        // 全域 socket 變數，供模組化的前端代碼使用
+        let socket;
+        let isSocketReady = false;
+
+        // 連接到 Socket.IO（自動使用當前頁面的 origin）
+        socket = io();
+        window.socket = socket; // 賦值給 window 以便前端模組訪問
+
+        // 監聽連接成功事件
+        socket.on('connect', () => {
+            console.log(`Socket connected successfully to ${window.location.origin}`);
+            isSocketReady = true;
+            // 觸發自定義事件，通知前端模組 socket 已準備好
+            window.dispatchEvent(new CustomEvent('socketReady'));
+        });
+
+        // 監聽連接錯誤
+        socket.on('connect_error', (error) => {
+            console.error('Socket connection error:', error);
+        });
+    </script>
+
 </body>
-
-<body>
-    <div id="touch-controls" class="touch-controls-container">
-
-        <div class="controls-dpad">
-            <div class="dpad-row">
-                <button id="btn-left">◀</button>
-                <button id="btn-right">▶</button>
-            </div>
-            <div class="dpad-row">
-                <button id="btn-down">▼</button>
-            </div>
-        </div>
-        <div class="controls-right">
-            <button id="btn-hold">HOLD</button>
-            <button id="btn-rotate">🔄</button>
-            <button id="btn-drop">⚡</button>
-        </div>
-    </div>
-
-    <div id="gesture-hint" class="gesture-hint">
-        Swipe to move, Tap to rotate
-    </div>
-</body>
-
-<script>
-    console.log("connecting...");
-
-    // 全域 socket 變數，供模組化的前端代碼使用
-    let socket;
-    let isSocketReady = false;
-
-    // 連接到 Socket.IO（自動使用當前頁面的 origin）
-    socket = io();
-    window.socket = socket; // 賦值給 window 以便前端模組訪問
-
-    // 監聽連接成功事件
-    socket.on('connect', () => {
-        console.log(`Socket connected successfully to ${window.location.origin}`);
-        isSocketReady = true;
-        // 觸發自定義事件，通知前端模組 socket 已準備好
-        window.dispatchEvent(new CustomEvent('socketReady'));
-    });
-
-    // 監聽連接錯誤
-    socket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
-    });
-
-
-</script>
 
 </html>
