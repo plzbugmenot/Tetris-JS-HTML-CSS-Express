@@ -106,23 +106,139 @@ body {
 }
 
 .mobile-controls-inline button {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: rgba(15, 61, 15, 0.6);
-  border: 1px solid #29d5ff;
-  color: #29d5ff;
-  font-size: 1.4rem;
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mobile-button {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  border: 1px solid rgba(41, 213, 255, 0.85);
+  background: linear-gradient(
+    135deg,
+    rgba(9, 18, 33, 0.95) 0%,
+    rgba(12, 5, 26, 0.9) 100%
+  );
+  box-shadow: 0 0 14px rgba(41, 213, 255, 0.28),
+    inset 0 0 18px rgba(2, 184, 255, 0.12);
+  position: relative;
+  overflow: hidden;
   font-family: "Share Tech Mono", monospace;
-  box-shadow: 0 0 6px rgba(41, 213, 255, 0.3);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  font-size: 0;
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+    border-color 0.12s ease;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-.mobile-controls-inline button:active {
-  transform: scale(0.95);
-  box-shadow: 0 0 10px rgba(41, 213, 255, 0.5);
+.mobile-button::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(41, 213, 255, 0.22),
+    transparent 58%
+  );
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.mobile-button::after {
+  content: attr(data-icon);
+  position: relative;
+  font-size: 1.65rem;
+  color: #29d5ff;
+  text-shadow: 0 0 8px rgba(41, 213, 255, 0.6);
+  line-height: 1;
+}
+
+.mobile-button:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: 0 0 10px rgba(41, 213, 255, 0.35),
+    inset 0 0 14px rgba(2, 184, 255, 0.2);
+}
+
+.mobile-button:focus-visible {
+  outline: 2px solid rgba(255, 116, 208, 0.7);
+  outline-offset: 3px;
+}
+
+.mobile-button--move {
+  border-color: rgba(41, 213, 255, 0.85);
+}
+
+.mobile-button--rotate {
+  border-color: rgba(255, 116, 208, 0.85);
+  box-shadow: 0 0 14px rgba(255, 116, 208, 0.3),
+    inset 0 0 18px rgba(255, 116, 208, 0.16);
+}
+
+.mobile-button--rotate::after {
+  color: #ff74d0;
+  text-shadow: 0 0 10px rgba(255, 116, 208, 0.6);
+}
+
+.mobile-button--drop {
+  border-color: rgba(57, 255, 20, 0.8);
+  box-shadow: 0 0 16px rgba(57, 255, 20, 0.28),
+    inset 0 0 18px rgba(57, 255, 20, 0.1);
+}
+
+.mobile-button--drop::after {
+  color: #39ff14;
+  text-shadow: 0 0 10px rgba(57, 255, 20, 0.55);
+}
+
+.mobile-button--hold {
+  width: 72px;
+  border-color: rgba(255, 179, 71, 0.85);
+  box-shadow: 0 0 16px rgba(255, 179, 71, 0.25),
+    inset 0 0 18px rgba(255, 179, 71, 0.12);
+}
+
+.mobile-button--hold::before {
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255, 179, 71, 0.24),
+    transparent 58%
+  );
+}
+
+.mobile-button--hold::after {
+  color: #ffb347;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+}
+
+@media (hover: hover) {
+  .mobile-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 16px rgba(41, 213, 255, 0.35),
+      inset 0 0 20px rgba(2, 184, 255, 0.18);
+  }
+
+  .mobile-button--rotate:hover {
+    box-shadow: 0 0 18px rgba(255, 116, 208, 0.4),
+      inset 0 0 22px rgba(255, 116, 208, 0.18);
+  }
+
+  .mobile-button--drop:hover {
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.42),
+      inset 0 0 24px rgba(57, 255, 20, 0.16);
+  }
+
+  .mobile-button--hold:hover {
+    box-shadow: 0 0 18px rgba(255, 179, 71, 0.38),
+      inset 0 0 22px rgba(255, 179, 71, 0.18);
+  }
 }
 
 .mobile-playfield-stack {
@@ -1199,6 +1315,23 @@ body {
   .game-board {
     width: 150px;
     height: 315px;
+  }
+
+  .mobile-button {
+    width: 56px;
+    height: 56px;
+  }
+
+  .mobile-button::after {
+    font-size: 1.45rem;
+  }
+
+  .mobile-button--hold {
+    width: 64px;
+  }
+
+  .mobile-button--hold::after {
+    font-size: 0.95rem;
   }
 
   .mobile-controls-inline .dpad-row {

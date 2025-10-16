@@ -205,18 +205,18 @@ function createPlayerBoard(player, mySocketId, isSecondaryView = false) {
         controlsLeft.className = 'mobile-controls-inline mobile-controls-left';
         controlsLeft.innerHTML = `
             <div class="controls-dpad">
-                <button id="btn-left">◀</button>
-                <button id="btn-down">▼</button>
+                <button id="btn-left" class="mobile-button mobile-button--move" data-icon="◀" aria-label="Move Left"></button>
+                <button id="btn-down" class="mobile-button mobile-button--move" data-icon="▼" aria-label="Soft Drop"></button>
             </div>`;
 
         const controlsRight = document.createElement('div');
         controlsRight.className = 'mobile-controls-inline mobile-controls-right';
         controlsRight.innerHTML = `
             <div class="controls-actions">
-                <button id="btn-right">▶</button>
-                <button id="btn-rotate">🔄</button>
-                <button id="btn-drop">⚡</button>
-                <button id="btn-hold">HOLD</button>
+                <button id="btn-right" class="mobile-button mobile-button--move" data-icon="▶" aria-label="Move Right"></button>
+                <button id="btn-rotate" class="mobile-button mobile-button--rotate" data-icon="⟳" aria-label="Rotate"></button>
+                <button id="btn-drop" class="mobile-button mobile-button--drop" data-icon="⚡" aria-label="Hard Drop"></button>
+                <button id="btn-hold" class="mobile-button mobile-button--hold" data-icon="H" aria-label="Hold Piece"></button>
             </div>`;
 
         playfieldStack.appendChild(controlsLeft);
