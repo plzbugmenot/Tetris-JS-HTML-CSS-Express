@@ -19,6 +19,7 @@ const socketIO = require('socket.io');
 // 導入 server 模組
 const config = require('./server/config');
 const { setupSocketHandlers, cleanup } = require('./server/socketHandlers');
+const logger = require('./server/logger');
 
 // 環境變數配置
 const SERVER_PORT = process.env.REACT_APP_SERVER_PORT || 3500;
@@ -60,15 +61,15 @@ function createServer() {
  */
 function handleServerError(err, port) {
   if (err.code === 'EADDRINUSE') {
-    console.error(`❌ 錯誤：端口 ${port} 已被占用！`);
-    console.log(`💡 請嘗試以下解決方案：`);
-    console.log(`   1. 關閉占用該端口的其他程序`);
-    console.log(`   2. 使用不同的端口（設置環境變數）`);
-    console.log(`   例如: $env:REACT_APP_SERVER_PORT="${port + 1}" (PowerShell)`);
-    console.log(`   或: set REACT_APP_SERVER_PORT=${port + 1} (CMD)`);
+    logger.error(`端口 ${port} 已被占用！`);
+    logger.section('如何處理');
+    logger.detail('1', '關閉占用該端口的其他程序');
+    logger.detail('2', '使用不同的端口（設定環境變數）');
+    logger.detail('PowerShell', `$env:REACT_APP_SERVER_PORT="${port + 1}"`);
+    logger.detail('CMD', `set REACT_APP_SERVER_PORT=${port + 1}`);
     process.exit(1);
   } else {
-    console.error(`❌ 服務器錯誤:`, err);
+    logger.error('服務器錯誤', err.message || err.code);
     process.exit(1);
   }
 }
@@ -77,43 +78,42 @@ function handleServerError(err, port) {
  * 啟動應用
  */
 function startApplication() {
-  console.log('\n' + '='.repeat(60));
-  console.log('🎮  多人俄羅斯方塊遊戲服務器');
-  console.log('='.repeat(60) + '\n');
+  logger.banner('CYBER GRID SERVER', '多人俄羅斯方塊 · Neon Control Room');
 
   // 創建整合服務器
   const { server, port, host } = createServer();
 
   // 啟動服務器
   server.listen(port, host, () => {
-    console.log(`✅ 服務器啟動成功`);
-    console.log(`   地址: http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`);
-    console.log(`   靜態文件: ✓`);
-    console.log(`   Socket.IO: ✓`);
-    console.log(`   挑戰者人數: 無限制`);
-    console.log(`\n` + '='.repeat(60));
-    console.log(`🚀 請在瀏覽器中打開: http://localhost:${port}`);
-    console.log('='.repeat(60) + '\n');
+    logger.success('服務器啟動成功');
+    logger.section('服務狀態');
+    const resolvedHost = host === '0.0.0.0' ? 'localhost' : host;
+    const endpointUrl = `http://${resolvedHost}:${port}`;
+    logger.detail('地址', endpointUrl);
+    logger.detail('靜態文件', '啟用');
+    logger.detail('Socket.IO', '啟用');
+    logger.detail('挑戰者人數', '無限制');
+    logger.footer(endpointUrl);
   }).on('error', (err) => {
     handleServerError(err, port);
   });
 
   // 優雅關閉
   process.on('SIGINT', () => {
-    console.log('\n👋 接收到關閉信號，正在關閉服務器...');
+    logger.warn('接收到關閉信號，正在關閉服務器...');
 
     // 清理所有定時器和資源
     cleanup();
 
     // 關閉服務器
     server.close(() => {
-      console.log('✅ 服務器已安全關閉');
+      logger.success('服務器已安全關閉');
       process.exit(0);
     });
 
     // 設置強制退出定時器（10秒後強制退出）
     setTimeout(() => {
-      console.log('⚠️ 強制退出服務器');
+      logger.warn('強制退出服務器');
       process.exit(1);
     }, 10000);
   });

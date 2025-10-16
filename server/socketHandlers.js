@@ -6,6 +6,7 @@
 const config = require('./config');
 const gameState = require('./gameState');
 const gameLogic = require('./gameLogic');
+const logger = require('./logger');
 
 // 遊戲廣播計時器
 let gameBroadcast = null;
@@ -17,7 +18,7 @@ let continueGameTimeouts = new Map(); // 用於追蹤玩家繼續遊玩的確認
  */
 function setupSocketHandlers(io) {
     io.on('connect', (socket) => {
-        console.log('✅ 客戶端已連接:', socket.id);
+        logger.event('SOCKET', '客戶端已連接', socket.id);
 
         // 新玩家加入
         socket.on('newUser', (data) => {
@@ -26,7 +27,7 @@ function setupSocketHandlers(io) {
 
         // 測試連接
         socket.on('test', () => {
-            console.log('🔧 測試連接正常');
+            logger.event('SOCKET', '測試連接正常', socket.id);
         });
 
         // 方塊旋轉
@@ -100,18 +101,18 @@ function handleNewUser(io, socket, data) {
     const challengers = gameState.getChallengers();
     const spectators = gameState.getSpectators();
 
-    if (allUsers.find(u => u.socketID === data.socketID)) {
-        console.log('⚠️ 玩家已存在:', data.socketID);
+    if (allUsers.some(u => u.socketID === data.socketID)) {
+        logger.warn('玩家已存在', data.socketID);
         return;
     }
 
     // 檢查遊戲狀態一致性：如果沒有挑戰者但遊戲狀態還是 GAME，重置為 READY
     if (gameState.getGameState() === config.GAME && challengers.length === 0) {
-        console.log('🔧 檢測到遊戲狀態不一致，重置為 READY');
+        logger.event('SYSTEM', '檢測到遊戲狀態不一致，重置為 READY');
         gameState.setGameState(config.READY);
     }
 
-    let playerType = config.PLAYER_TYPE_SPECTATOR;
+    let playerType;
     let playerId = '';
 
     // 如果沒有挑戰者，新玩家成為挑戰者；否則成為觀戰者
@@ -131,7 +132,7 @@ function handleNewUser(io, socket, data) {
     );
 
     const userTypeText = playerType === config.PLAYER_TYPE_CHALLENGER ? '挑戰者' : '觀戰者';
-    console.log(`👤 ${newUser.userName} 以${userTypeText}身份加入 (${playerId})`);
+    logger.event('PLAYER', `${newUser.userName} 以${userTypeText}身份加入`, playerId);
 
     const sendData = {
         newUser: newUser,
@@ -145,7 +146,7 @@ function handleNewUser(io, socket, data) {
     io.emit('newUserResponse', sendData);
 
     if (playerType === config.PLAYER_TYPE_CHALLENGER && gameState.getChallengers().length === 1) {
-        console.log(`🎮 第一位玩家加入，自動開始單機遊戲！`);
+        logger.event('GAME', '第一位玩家加入，自動開始單機遊戲！');
         setTimeout(() => {
             handleStartGame(io, socket);
         }, 500);
@@ -171,7 +172,7 @@ function handleJoinChallenge(io, socket) {
         const updatedUser = gameState.findUser(socket.id);
         updatedUser.who = `USER${gameState.getChallengers().length}`;
 
-        console.log(`✅ ${updatedUser.userName} 從觀戰者轉為挑戰者 (${updatedUser.who})`);
+        logger.success(`${updatedUser.userName} 從觀戰者轉為挑戰者`, updatedUser.who);
 
         io.emit('playerJoinedChallenge', {
             socketID: socket.id,
@@ -188,7 +189,7 @@ function handleJoinChallenge(io, socket) {
 
         // 如果這是第一位挑戰者且遊戲狀態為 READY，自動開始遊戲
         if (gameState.getChallengers().length === 1 && gameState.getGameState() === config.READY) {
-            console.log(`🎮 觀戰者轉為挑戰者，自動開始單機遊戲！`);
+            logger.event('GAME', '觀戰者轉為挑戰者，自動開始單機遊戲！');
             setTimeout(() => {
                 handleStartGame(io, socket);
             }, 500);
@@ -273,7 +274,7 @@ function handleHoldBlock(io, data) {
  * 處理遊戲結束
  */
 function handleGameOver(io, socket) {
-    console.log('🎮 遊戲結束');
+    logger.event('GAME', '遊戲結束');
     gameState.setGameState(config.READY);
     socket.emit('readyStateEmit');
     if (gameBroadcast) {
@@ -296,7 +297,7 @@ function handleStartGame(io, socket) {
         return;
     }
 
-    console.log(`🎮 遊戲開始！模式: ${challengers.length === 1 ? '單機' : '多人'}`);
+    logger.event('GAME', `遊戲開始`, challengers.length === 1 ? '單機模式' : '多人模式');
     gameState.setGameState(config.GAME);
     gameState.resetAllPlayers(challengers);
 
@@ -311,7 +312,7 @@ function handleStartGame(io, socket) {
             if (player.playerType === config.PLAYER_TYPE_CHALLENGER && player.state !== config.LOSE && player.state !== config.ELIMINATED) {
                 const processedPlayer = gameLogic.processPlayerTick(player);
                 // Update play time statistics
-                if (processedPlayer.stats && processedPlayer.stats.startTime) {
+                if (processedPlayer.stats?.startTime) {
                     processedPlayer.stats.playTime = Math.floor((Date.now() - processedPlayer.stats.startTime) / 1000);
                 }
                 return processedPlayer;
@@ -343,8 +344,10 @@ function handleStartGame(io, socket) {
 function processAttacksAndBroadcasts(io, users) {
     const challengers = users.filter(u => u.playerType === config.PLAYER_TYPE_CHALLENGER);
 
-    users.forEach(attacker => {
-        if (!attacker.clearedLineNumbers) return;
+    for (const attacker of users) {
+        if (!attacker.clearedLineNumbers) {
+            continue;
+        }
 
         io.emit('lineCleared', {
             socketID: attacker.socketID,
@@ -395,7 +398,7 @@ function processAttacksAndBroadcasts(io, users) {
         delete attacker.attackPower;
         delete attacker.luckyEvent;
         delete attacker.leveledUp;
-    });
+    }
 }
 
 
@@ -409,25 +412,25 @@ function checkGameOver(io) {
     const activePlayers = challengers.filter(u => u.state !== config.ELIMINATED && u.state !== config.LOSE);
     let losers = [];
 
-    activePlayers.forEach(player => {
+    for (const player of activePlayers) {
         if (gameLogic.isGameOver(player.itemGroundBlock) === config.LOSE) {
             player.state = config.ELIMINATED;
             losers.push(player);
             // 發送繼續遊玩確認詢問，但不立即發送 playerEliminated
             askContinueGame(io, player);
         }
-    });
+    }
 
     // 更新其他玩家的 KO 統計
-    losers.forEach(loser => {
-        challengers.forEach(player => {
+    for (const loser of losers) {
+        for (const player of challengers) {
             if (player.socketID !== loser.socketID && player.state !== config.ELIMINATED && player.state !== config.LOSE) {
                 if (player.stats) {
                     player.stats.kos += 1;
                 }
             }
-        });
-    });
+        }
+    }
 
     const remainingPlayers = challengers.filter(p => p.state !== config.ELIMINATED && p.state !== config.LOSE);
 
@@ -449,13 +452,13 @@ function checkGameOver(io) {
  * 詢問被淘汰的玩家是否繼續遊玩
  */
 function askContinueGame(io, player) {
-    console.log(`⏰ 詢問玩家 ${player.userName} 是否繼續遊玩`);
+    logger.event('GAME', `詢問是否繼續遊玩`, player.userName);
 
     // 暫停自動重啟定時器，避免衝突
     if (autoRestartTimer) {
         clearTimeout(autoRestartTimer);
         autoRestartTimer = null;
-        console.log('⏸️ 暫停自動重啟定時器，等待玩家回應');
+        logger.info('暫停自動重啟定時器，等待玩家回應');
     }
 
     // 先觸發棋盤淘汰效果
@@ -477,7 +480,7 @@ function askContinueGame(io, player) {
 
     // 設置超時定時器（1.5秒淘汰效果 + 10秒倒數）
     const timeoutId = setTimeout(() => {
-        console.log(`⏱️ 玩家 ${player.userName} 未在時限內回應，轉為觀戰者`);
+        logger.warn('玩家未在時限內回應，轉為觀戰者', player.userName);
         // 將玩家設為觀戰者
         player.playerType = config.PLAYER_TYPE_SPECTATOR;
         player.state = config.SPECTATOR;
@@ -503,15 +506,15 @@ function askContinueGame(io, player) {
         // 檢查是否需要重新開始遊戲（如果沒有其他挑戰者）
         const remainingChallengers = gameState.getChallengers();
         if (remainingChallengers.length === 0) {
-            console.log('📴 沒有挑戰者，3秒後結束遊戲');
+            logger.warn('沒有挑戰者，3秒後結束遊戲');
             // 延遲 3 秒結束遊戲，給新玩家時間加入
             setTimeout(() => {
                 const currentChallengers = gameState.getChallengers();
                 if (currentChallengers.length === 0) {
-                    console.log('📴 確認沒有挑戰者，遊戲結束');
+                    logger.warn('確認沒有挑戰者，遊戲結束');
                     endGame(io, '所有玩家都已退出');
                 } else {
-                    console.log('🎉 有新挑戰者加入，繼續遊戲');
+                    logger.success('有新挑戰者加入，繼續遊戲');
                 }
             }, 3000);
         }
@@ -525,7 +528,7 @@ function askContinueGame(io, player) {
  * 結束遊戲並廣播結果
  */
 function endGame(io, message) {
-    console.log(`🏁 遊戲結束: ${message}`);
+    logger.event('GAME', '遊戲結束', message);
     gameState.setGameState(config.READY);
     gameStartTime = null; // 重置遊戲開始時間
 
@@ -536,9 +539,9 @@ function endGame(io, message) {
     }
 
     // 清理所有繼續遊玩確認的定時器
-    continueGameTimeouts.forEach((timeoutId) => {
+    for (const timeoutId of continueGameTimeouts.values()) {
         clearTimeout(timeoutId);
-    });
+    }
     continueGameTimeouts.clear();
 
     if (gameBroadcast) {
@@ -564,7 +567,7 @@ function endGame(io, message) {
             const player = gameState.getChallengers()[0];
             const playerSocket = io.sockets.sockets.get(player.socketID);
             if (playerSocket) {
-                console.log('🔄 自動重啟單人遊戲');
+                logger.event('GAME', '自動重啟單人遊戲');
                 handleStartGame(io, playerSocket);
             }
         }
@@ -580,7 +583,7 @@ function handleContinueGameResponse(io, socket, data) {
     const player = gameState.findUser(socket.id);
     if (!player) return;
 
-    console.log(`🎮 玩家 ${player.userName} 回應繼續遊玩: ${data.continue}`);
+    logger.event('GAME', `玩家回應繼續遊玩`, `${player.userName} › ${data.continue}`);
 
     // 清理該玩家的超時定時器
     const timeoutId = continueGameTimeouts.get(socket.id);
@@ -602,7 +605,7 @@ function handleContinueGameResponse(io, socket, data) {
         // 立即開始新遊戲
         setTimeout(() => {
             if (gameState.getChallengers().length === 1) {
-                console.log('🎮 玩家選擇繼續，立即開始新遊戲');
+                logger.success('玩家選擇繼續，立即開始新遊戲');
                 handleStartGame(io, socket);
             }
         }, 1000);
@@ -625,15 +628,15 @@ function handleContinueGameResponse(io, socket, data) {
         // 檢查是否需要結束遊戲（如果沒有其他挑戰者）
         const remainingChallengers = gameState.getChallengers();
         if (remainingChallengers.length === 0) {
-            console.log('📴 沒有挑戰者，3秒後結束遊戲');
+            logger.warn('沒有挑戰者，3秒後結束遊戲');
             // 延遲 3 秒結束遊戲，給新玩家時間加入
             setTimeout(() => {
                 const currentChallengers = gameState.getChallengers();
                 if (currentChallengers.length === 0) {
-                    console.log('📴 確認沒有挑戰者，遊戲結束');
+                    logger.warn('確認沒有挑戰者，遊戲結束');
                     endGame(io, '所有玩家都已退出');
                 } else {
-                    console.log('🎉 有新挑戰者加入，繼續遊戲');
+                    logger.success('有新挑戰者加入，繼續遊戲');
                 }
             }, 3000);
         }
@@ -650,7 +653,7 @@ function handlePlayerDisconnect(io, socket) {
     const disconnectedUser = gameState.findUser(socket.id);
     if (!disconnectedUser) return;
 
-    console.log(`👋 ${disconnectedUser.playerType}離開：${disconnectedUser.userName}`);
+    logger.event('PLAYER', '玩家離線', `${disconnectedUser.userName} ｜ ${disconnectedUser.playerType}`);
 
     // 清理該玩家的繼續遊玩確認定時器
     const timeoutId = continueGameTimeouts.get(socket.id);
@@ -665,7 +668,7 @@ function handlePlayerDisconnect(io, socket) {
     if (autoRestartTimer) {
         clearTimeout(autoRestartTimer);
         autoRestartTimer = null;
-        console.log('🧹 清理自動重啟定時器');
+        logger.info('清理自動重啟定時器');
     }
 
     // 如果遊戲中挑戰者為空，結束遊戲
@@ -684,27 +687,27 @@ function handlePlayerDisconnect(io, socket) {
  * 清理所有定時器和資源
  */
 function cleanup() {
-    console.log('🧹 清理服務器資源...');
+    logger.event('SYSTEM', '清理服務器資源...');
 
     // 清理遊戲廣播定時器
     if (gameBroadcast) {
         clearInterval(gameBroadcast);
         gameBroadcast = null;
-        console.log('✅ 遊戲廣播定時器已清理');
+        logger.success('遊戲廣播定時器已清理');
     }
 
     // 清理自動重啟定時器
     if (autoRestartTimer) {
         clearTimeout(autoRestartTimer);
         autoRestartTimer = null;
-        console.log('✅ 自動重啟定時器已清理');
+        logger.success('自動重啟定時器已清理');
     }
 
     // 重置遊戲狀態
     gameState.setGameState(config.READY);
     gameStartTime = null;
 
-    console.log('✅ 所有資源已清理完成');
+    logger.success('所有資源已清理完成');
 }
 
 module.exports = {
