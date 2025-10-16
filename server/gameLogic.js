@@ -36,6 +36,30 @@ function getNextBlock(player) {
 
 
 /**
+ * 累積單顆方塊的下落統計
+ * @param {Object} stats - 玩家統計資料
+ * @param {Object} overrides - 額外要寫入的屬性
+ * @param {number} timestamp - 計算使用的當前時間戳
+ * @returns {Object|undefined} 更新後的統計資料
+ */
+function finalizePieceStats(stats, overrides = {}, timestamp = Date.now()) {
+    if (!stats) return stats;
+
+    const updated = { ...stats, ...overrides };
+    updated.pieces = (updated.pieces || 0) + 1;
+
+    if (stats.currentPieceStartTime) {
+        const pieceDropTime = timestamp - stats.currentPieceStartTime;
+        updated.dropTime = (updated.dropTime || 0) + pieceDropTime;
+        updated.avgDropTime = updated.pieces > 0 ? Math.round(updated.dropTime / updated.pieces) : 0;
+    }
+
+    updated.currentPieceStartTime = timestamp;
+    return updated;
+}
+
+
+/**
  * 初始化地面方塊
  * @param {number} level - 玩家等級
  * @returns {Array} 初始地面方塊陣列
@@ -355,13 +379,8 @@ function dropBlock(player) {
     // 3. 如果沒有消行，只需獲取下一個方塊並返回
     if (linesCleared === 0) {
         const nextBlockData = getNextBlock(lockedPlayer);
-        let updatedStats = lockedPlayer.stats ? { ...lockedPlayer.stats, pieces: lockedPlayer.stats.pieces + 1 } : undefined;
-        if (updatedStats && updatedStats.currentPieceStartTime) {
-            const pieceDropTime = Date.now() - updatedStats.currentPieceStartTime;
-            updatedStats.dropTime += pieceDropTime;
-            updatedStats.avgDropTime = updatedStats.pieces > 0 ? Math.round(updatedStats.dropTime / updatedStats.pieces) : 0;
-            updatedStats.currentPieceStartTime = Date.now(); // Reset for next piece
-        }
+        const statsTimestamp = Date.now();
+        const updatedStats = finalizePieceStats(lockedPlayer.stats, {}, statsTimestamp);
         return {
             ...lockedPlayer,
             ...nextBlockData,
@@ -382,13 +401,7 @@ function dropBlock(player) {
     const newScore = (lockedPlayer.score || 0) + baseScore + comboBonus;
     const attackPower = calculateAttackPower(linesCleared, newLevel, newCombo);
     const newSpeed = Math.max(5, config.ACTION_INIT_TIME - Math.floor(newLevel / 2));
-    let updatedStats = lockedPlayer.stats ? { ...lockedPlayer.stats, currentSpeed: newSpeed, pieces: lockedPlayer.stats.pieces + 1 } : undefined;
-    if (updatedStats && updatedStats.currentPieceStartTime) {
-        const pieceDropTime = Date.now() - updatedStats.currentPieceStartTime;
-        updatedStats.dropTime += pieceDropTime;
-        updatedStats.avgDropTime = updatedStats.pieces > 0 ? Math.round(updatedStats.dropTime / updatedStats.pieces) : 0;
-        updatedStats.currentPieceStartTime = Date.now(); // Reset for next piece
-    }
+    const updatedStats = finalizePieceStats(lockedPlayer.stats, { currentSpeed: newSpeed }, now);
 
     // 5. 返回最終的、完全更新的狀態
     return {
@@ -593,10 +606,13 @@ function processPlayerTick(player) {
             // 3. 如果沒有消行，只需獲取下一個方塊並返回
             if (linesCleared === 0) {
                 const nextBlockData = getNextBlock(lockedPlayer);
+                const statsTimestamp = Date.now();
+                const updatedStats = finalizePieceStats(lockedPlayer.stats, {}, statsTimestamp);
                 return {
                     ...lockedPlayer,
                     ...nextBlockData,
                     actionTime: config.ACTION_INIT_TIME,
+                    stats: updatedStats,
                 };
             }
 
@@ -612,7 +628,7 @@ function processPlayerTick(player) {
             const newScore = (lockedPlayer.score || 0) + baseScore + comboBonus;
             const attackPower = calculateAttackPower(linesCleared, newLevel, newCombo);
             const newSpeed = Math.max(5, config.ACTION_INIT_TIME - Math.floor(newLevel / 2));
-            const updatedStats = lockedPlayer.stats ? { ...lockedPlayer.stats, currentSpeed: newSpeed, pieces: lockedPlayer.stats.pieces + 1 } : undefined;
+            const updatedStats = finalizePieceStats(lockedPlayer.stats, { currentSpeed: newSpeed }, now);
 
             // 5. 返回最終的、完全更新的狀態
             return {
