@@ -9,6 +9,8 @@ import { renderAllPlayers } from './render.js'; // 導入渲染函數
 // 防抖變數
 let updateScoreboardTimer = null;
 let messageTimeoutId = null;
+let helpOverlayInitialized = false;
+let helpOverlayLastTrigger = null;
 
 /**
  * 處理計分板玩家點擊事件 (【偵錯版本】)
@@ -114,6 +116,120 @@ export function showMessage(message, type = 'info') {
     messageTimeoutId = setTimeout(() => {
         messageDisplay.classList.add('is-hidden');
     }, 3200);
+}
+
+export function setupHelpOverlay() {
+    if (helpOverlayInitialized) {
+        return;
+    }
+
+    const trigger = document.getElementById('help-overlay-trigger');
+    const overlayElement = document.getElementById('help-overlay');
+    const closeButton = document.getElementById('help-overlay-close');
+
+    if (!trigger || !overlayElement || !closeButton) {
+        return;
+    }
+
+    if (typeof HTMLDialogElement === 'undefined' || !(overlayElement instanceof HTMLDialogElement)) {
+        trigger.style.display = 'none';
+        return;
+    }
+
+    const overlay = overlayElement;
+
+    const focusableSelectors = 'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
+    overlay.setAttribute('aria-hidden', 'true');
+
+    const openOverlay = () => {
+        helpOverlayLastTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+        if (!overlay.open) {
+            overlay.showModal();
+        }
+
+        overlay.setAttribute('aria-hidden', 'false');
+        requestAnimationFrame(() => {
+            closeButton.focus();
+        });
+    };
+
+    const closeOverlay = () => {
+        if (overlay.open) {
+            overlay.close();
+        }
+
+        overlay.setAttribute('aria-hidden', 'true');
+
+        if (helpOverlayLastTrigger && typeof helpOverlayLastTrigger.focus === 'function') {
+            helpOverlayLastTrigger.focus();
+        } else {
+            trigger.focus();
+        }
+
+        helpOverlayLastTrigger = null;
+    };
+
+    const handleKeyDown = (event) => {
+        if (overlay.getAttribute('aria-hidden') === 'true') {
+            return;
+        }
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeOverlay();
+            return;
+        }
+
+        if (event.key !== 'Tab') {
+            return;
+        }
+
+        const focusable = overlay.querySelectorAll(focusableSelectors);
+        if (focusable.length === 0) {
+            event.preventDefault();
+            closeButton.focus();
+            return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey) {
+            if (document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            }
+        } else if (document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    };
+
+    trigger.addEventListener('click', (event) => {
+        event.preventDefault();
+        openOverlay();
+    });
+
+    closeButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        closeOverlay();
+    });
+
+    overlay.addEventListener('cancel', (event) => {
+        event.preventDefault();
+        closeOverlay();
+    });
+
+    overlay.addEventListener('click', (event) => {
+        if (event.target === overlay) {
+            closeOverlay();
+        }
+    });
+
+    overlay.addEventListener('keydown', handleKeyDown);
+
+    helpOverlayInitialized = true;
 }
 
 /**
@@ -706,4 +822,5 @@ export default {
     showRegisterForm,
     showContinueGameDialog,
     switchToSpectatorMode,
+    setupHelpOverlay,
 };

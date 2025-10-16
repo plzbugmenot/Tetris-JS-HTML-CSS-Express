@@ -94,6 +94,8 @@ function initializeGame() {
     // 顯示控制說明
     Keyboard.showControls();
 
+    UI.setupHelpOverlay();
+
     // 新增觀戰功能
     setupSpectatorSwitch();
 
