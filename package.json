@@ -1,19 +1,39 @@
 {
-    "name": "server",
-    "version": "1.0.0",
-    "description": "",
+    "name": "tetris-multiplayer-server",
+    "version": "2.0.0",
+    "description": "多人連線俄羅斯方塊遊戲服務器",
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "nodemon index.js"
+        "start": "node index.js",
+        "dev": "nodemon index.js",
+        "build": "echo \"No build step required for Node.js backend\"",
+        "docker:build": "docker build -t tetris-game:latest .",
+        "docker:run": "docker run -p 8800:8800 -p 3500:3500 --name tetris-game tetris-game:latest",
+        "docker:stop": "docker stop tetris-game && docker rm tetris-game",
+        "docker:compose:up": "docker-compose up -d",
+        "docker:compose:down": "docker-compose down",
+        "docker:compose:logs": "docker-compose logs -f",
+        "docker:compose:rebuild": "docker-compose up -d --build"
     },
-    "keywords": [],
+    "keywords": [
+        "tetris",
+        "multiplayer",
+        "socketio",
+        "game"
+    ],
     "author": "",
     "license": "ISC",
     "dependencies": {
         "cors": "^2.8.5",
         "express": "^4.18.1",
-        "nodemon": "^2.0.19",
         "socket.io": "^4.5.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.10"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=9.0.0"
     }
 }

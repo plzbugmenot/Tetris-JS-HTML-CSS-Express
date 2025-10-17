@@ -2,50 +2,159 @@
 <html lang="en">
 
 <head>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Tetris</title>
+    <title>CYBER TRICKSTER</title>
     <script src="./socket.io/socket.io.js"></script>
-    <script src="game.js" defer></script>
+    <!-- 使用模組化的主入口 -->
+    <script type="module" src="js/main.js"></script>
 </head>
 
 <body>
-    <div id="register">
-        <input id="name" type="text" maxlength="3" />
-        <button onclick="sendMessage()" class="registerBtn">start</button>
-    </div>
-    <div class="game-body">
-        <div class="top-board">
-            <div id="pre-game-board"></div>
-            <div class="pre-state-board"></div>
-            <div id="pre-game-board-other"></div>
+    <div id="app-wrapper">
+        <div id="register">
+            <input id="name" type="text" maxlength="10" placeholder="ENTER YOUR CODENAME" />
+            <button onclick="registerPlayer()" class="registerBtn">INITIATE CONNECTION</button>
         </div>
-        <div class="main-board">
-            <div id="game-board"></div>
-            <div class="state-board">
-                <div class="state-name">
-                    <div id="user1-title"></div>
-                    <div>vs</div>
-                    <div id="user2-title"></div>
-                </div>
-                <div id="state-start">
 
+        <!-- 玩家信息區 -->
+        <header id="players-info" class="game-header is-hidden">
+            <div id="room-status"></div>
+            <button id="join-challenge-btn" class="cyber-button cyber-button--primary" onclick="requestJoinChallenge()">
+                JOIN THE ATTACK
+            </button>
+        </header>
+
+        <main id="main-content">
+            <!-- 動態遊戲區域 -->
+            <div id="game-container" class="game-container">
+                <!-- 玩家棋盤將動態生成在這裡 -->
+            </div>
+
+            <!-- 右側計分板 -->
+            <div id="scoreboard" class="is-hidden">
+                <div class="scoreboard-header">
+                    <h3>SYSTEM STATUS</h3>
+                    <button id="help-overlay-trigger" class="cyber-button cyber-button--ghost cyber-button--compact"
+                        type="button" aria-haspopup="dialog" aria-controls="help-overlay">FIELD MANUAL</button>
                 </div>
-                <div class="state-level">
-                    <div id="user1-level"></div>
-                    <div id="user2-level"></div>
+                <div id="score-list"></div>
+            </div>
+        </main>
+
+        <!-- 遊戲說明 overlay -->
+        <dialog id="help-overlay" class="help-overlay" aria-modal="true" aria-labelledby="help-overlay-title"
+            aria-hidden="true">
+            <div class="help-overlay__card">
+                <header class="help-overlay__header">
+                    <div>
+                        <p class="help-overlay__eyebrow">CYBER OPS FIELD MANUAL</p>
+                        <h2 id="help-overlay-title">Mission Protocols</h2>
+                        <p class="help-overlay__subtitle">核心規則、攻擊流程與觀戰技巧總整理。</p>
+                    </div>
+                    <button id="help-overlay-close" class="help-overlay__close" type="button"
+                        aria-label="關閉說明"><span>✕</span></button>
+                </header>
+                <div class="help-overlay__content">
+                    <section class="help-overlay__section">
+                        <h3 class="help-overlay__section-title">任務目標</h3>
+                        <ul class="help-overlay__list">
+                            <li>單人：盡可能清除方塊並提升 <span>Security Level</span>，維持據點運作。</li>
+                            <li>多人：最後一位仍在線的挑戰者獲勝；被垃圾行推滿或時間到則淘汰。</li>
+                            <li>觀戰者可隨時加入挑戰，或在計分板點擊玩家切換視角。</li>
+                        </ul>
+                    </section>
+                    <section class="help-overlay__section">
+                        <h3 class="help-overlay__section-title">攻擊與防禦矩陣</h3>
+                        <ul class="help-overlay__list">
+                            <li>一次消除多行或連續 combo 會將垃圾行隨機送到仍在戰鬥的對手。</li>
+                            <li>等級提升會加快落下速度，但也強化攻擊威力與獲得的 EXP。</li>
+                            <li>幸運事件與 KO 會在計分板顯示，保持注意以掌握局勢。</li>
+                        </ul>
+                    </section>
+                    <section class="help-overlay__section help-overlay__section--grid">
+                        <h3 class="help-overlay__section-title">操作熱鍵</h3>
+                        <div class="help-overlay__grid">
+                            <div>
+                                <p class="help-overlay__label">鍵盤</p>
+                                <ul class="help-overlay__list help-overlay__list--inline">
+                                    <li><kbd>←</kbd>/<kbd>A</kbd> 左移　<kbd>→</kbd>/<kbd>D</kbd> 右移</li>
+                                    <li><kbd>↓</kbd>/<kbd>S</kbd> 加速下落　<kbd>↑</kbd>/<kbd>W</kbd> 旋轉</li>
+                                    <li><kbd>Space</kbd> 瞬間下落　<kbd>Shift</kbd>/<kbd>C</kbd> 暫存</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="help-overlay__label">觸控</p>
+                                <ul class="help-overlay__list help-overlay__list--inline">
+                                    <li><span class="help-overlay__chip">青色箭頭</span> 左/右移動方塊。</li>
+                                    <li><span class="help-overlay__chip help-overlay__chip--rotate">粉色旋轉</span> 旋轉；<span
+                                            class="help-overlay__chip help-overlay__chip--drop">綠色閃電</span> 瞬間下落。</li>
+                                    <li><span class="help-overlay__chip help-overlay__chip--hold">琥珀 HOLD</span>
+                                        暫存方塊，可每回合使用一次。</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="help-overlay__section">
+                        <h3 class="help-overlay__section-title">繼續遊玩流程</h3>
+                        <ul class="help-overlay__list">
+                            <li>遭淘汰後會先播放崩潰動畫，再彈出「是否繼續」詢問。</li>
+                            <li>10 秒內選擇繼續即保留挑戰者席位並立即重啟；逾時會切換成觀戰者。</li>
+                        </ul>
+                    </section>
+                    <footer class="help-overlay__footer">
+                        <p>想加入戰鬥？按下 <strong>JOIN THE ATTACK</strong> 或在計分板選擇目標。</p>
+                    </footer>
                 </div>
             </div>
-            <div id="game-board-other"></div>
+        </dialog>
+
+        <!-- 遊戲結束畫面 -->
+        <div id="game-over-overlay">
+            <div id="game-over-content">
+                <h1>CONNECTION LOST</h1>
+                <p id="game-over-message">All agents have been compromised.</p>
+                <div class="final-scores">
+                    <h3>FINAL RANKING</h3>
+                    <div id="final-score-list"></div>
+                </div>
+                <p class="game-over-restart-msg">Re-establishing connection in 3s...</p>
+            </div>
         </div>
-        <div id="footer-board">
-        </div>
+
+        <div id="message-display" class="message-banner is-hidden"></div>
+    </div>
+
+    <script>
+        console.log("connecting...");
+
+        // 全域 socket 變數，供模組化的前端代碼使用
+        let socket;
+        let isSocketReady = false;
+
+        // 連接到 Socket.IO（自動使用當前頁面的 origin）
+        socket = io();
+        globalThis.socket = socket; // 暴露給前端模組使用
+
+        // 監聽連接成功事件
+        socket.on('connect', () => {
+            console.log(`Socket connected successfully to ${globalThis.location.origin}`);
+            isSocketReady = true;
+            // 觸發自定義事件，通知前端模組 socket 已準備好
+            globalThis.dispatchEvent(new CustomEvent('socketReady'));
+        });
+
+        // 監聽連接錯誤
+        socket.on('connect_error', (error) => {
+            console.error('Socket connection error:', error);
+        });
+    </script>
+
 </body>
-<script>
-    console.log("connecting...");
-    const socket = io.connect("http://192.168.144.110:8800");
-</script>
 
 </html>
